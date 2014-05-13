@@ -39,8 +39,8 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
     float3 towardsLight = pointOnLight - rec_position;
     lightDistance = optix::length(towardsLight);
     towardsLight = towardsLight / lightDistance;
-    float n_dot_l = maxf(0, optix::dot(rec_normal, towardsLight));
-    lightFactor *= n_dot_l / (M_PIf*lightDistance*lightDistance);
+	float n_dot_l = maxf(0, optix::dot(rec_normal, towardsLight));
+    lightFactor *= n_dot_l / (M_PIf*lightDistance*lightDistance); // vmarz: FIXME misses area factor. Should use divide by M_2_PIf instead as in uniform hemispherical pdf?
 
     if(light.lightType == Light::AREA)
     {

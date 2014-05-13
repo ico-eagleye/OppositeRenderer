@@ -67,7 +67,7 @@ public:
     optix::float3 eye, lookat, up;
     float hfov, vfov;
     float aperture;
-    optix::float3 lookdir, camera_u, camera_v;
+    optix::float3 lookdir, camera_u, camera_v; // vmarz: uv vectors on film/projection plane
     AspectRatioMode aspectRatioMode;
 };
 

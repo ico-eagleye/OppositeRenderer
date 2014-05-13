@@ -52,7 +52,7 @@ RT_PROGRAM void generateRay()
 
     float2 screen = make_float2( outputBuffer.size() );
     float2 sample = getRandomUniformFloat2(&radiancePrd.randomState);
-    float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f;
+    float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f; // vmarz: map pixle pos to [-1,1]
 
     float3 rayOrigin = camera.eye;
     float3 rayDirection = normalize(d.x*camera.camera_u + d.y*camera.camera_v + camera.lookdir);
@@ -64,7 +64,7 @@ RT_PROGRAM void generateRay()
     float3 finalRadiance = make_float3(0);
 
     int numShadowSamples = ptDirectLightSampling ? 1 : 0;
-    int numPaths = ptDirectLightSampling ? 5 : 10;
+    int numPaths = ptDirectLightSampling ? 5 : 10;	// path length
 
     for(int i = 0; i < numPaths; i++) // Paths
     {
@@ -90,11 +90,12 @@ RT_PROGRAM void generateRay()
                 Light & light = lights[randomLightIndex];
                 float scale = numLights;
 
+				// vmarz: for more advanced materials need to brdf for given dir applied to attenuation
                 float3 lightContrib = scale*getLightContribution(light, radiancePrd.position, radiancePrd.normal, sceneRootObject, radiancePrd.randomState);
                 accumLightRadiancePreBrdf += lightContrib;
             }
 
-            float3 directRadiance = radiancePrd.attenuation*accumLightRadiancePreBrdf/numShadowSamples;
+            float3 directRadiance = radiancePrd.attenuation*accumLightRadiancePreBrdf/numShadowSamples; // vmarz: FIXME will fail if numShadowSamples=0
             finalRadiance += directRadiance;
             
             ray.origin = radiancePrd.position;
