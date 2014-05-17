@@ -75,11 +75,13 @@
   </widget>
   <widget class="QStatusBar" name="statusBarObject">
    <property name="styleSheet">
-    <string notr="true">QStatusBar
-{
-border-top: 1px solid rgb(166, 166, 166);
-padding-right:40px;
-}</string>
+    <string notr="true">
+      QStatusBar
+      {
+      border-top: 1px solid rgb(166, 166, 166);
+      padding-right:40px;
+      }
+    </string>
    </property>
    <property name="sizeGripEnabled">
     <bool>false</bool>
