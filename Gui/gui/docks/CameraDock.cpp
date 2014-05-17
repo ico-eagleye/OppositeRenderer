@@ -19,13 +19,11 @@ CameraDock::CameraDock(QWidget *parent, Camera & camera, PPMSettingsModel & ppmM
     m_outputModel(outputModel)
 {
     ui->setupUi(this);
-    this->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
     this->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
     connect(ui->updateSettingsButton, SIGNAL(pressed()), this, SLOT(onUpdate()));
     connect(ui->cornellButton, SIGNAL(pressed()), this, SLOT(onCornell()));
     connect(ui->sponzaButton, SIGNAL(pressed()), this, SLOT(onSponza()));
     connect(ui->conferenceButton, SIGNAL(pressed()), this, SLOT(onConference()));
-
 
     onCameraUpdated();
 }

@@ -15,12 +15,10 @@ OutputDock::OutputDock(QWidget *parent, OutputSettingsModel & model) :
     m_model(model)
 {
     ui->setupUi(this);
-    this->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
     this->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
     connect(ui->updateSettingsButton, SIGNAL(pressed()), this, SLOT(onFormSubmitted()));
     connect(&m_model, SIGNAL(resolutionUpdated()), this, SLOT(onOutputSettingsModelUpdated()));
     connect(&m_model, SIGNAL(gammaUpdated()), this, SLOT(onOutputSettingsModelUpdated()));
-
 
     onOutputSettingsModelUpdated();
 }

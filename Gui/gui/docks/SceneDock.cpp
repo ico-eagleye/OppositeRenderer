@@ -15,7 +15,6 @@ SceneDock::SceneDock(QWidget *parent, SceneManager & sceneManager) :
     ui(new Ui::SceneDock)
 {
     ui->setupUi(this);
-    this->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
     this->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
     connect(&sceneManager, SIGNAL(sceneUpdated()), this, SLOT(onSceneUpdated()));
     connect(&sceneManager, SIGNAL(sceneLoadingNew()), this, SLOT(onSceneLoadingNew()));

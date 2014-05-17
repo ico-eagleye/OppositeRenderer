@@ -63,6 +63,12 @@ MainWindowBase::MainWindowBase(Application& application)
     SceneDock* sceneDock = new SceneDock(this, application.getSceneManager());
     this->addDockWidget(Qt::RightDockWidgetArea, sceneDock);
 
+	// Show/hide dock toggle menu
+	menuDocks->addAction(outputDock->toggleViewAction());
+	menuDocks->addAction(cameraDock->toggleViewAction());
+	menuDocks->addAction(ppmDock->toggleViewAction());
+	menuDocks->addAction(sceneDock->toggleViewAction());
+
     // Status Bar Running Status and Time
 
     m_statusbar_runningStatusLabel = new QLabel(this);
@@ -78,7 +84,7 @@ MainWindowBase::MainWindowBase(Application& application)
     m_statusbar_renderMethodLabel = new QLabel(this);
     this->statusBar()->addPermanentWidget(m_statusbar_renderMethodLabel, 1);
     m_statusbar_renderMethodLabel->setGeometry(100, 0, 100, 12);
-
+		
     // Render Widget
 
     m_renderWidget = new RenderWidget(centralwidget, application.getCamera(), application.getOutputSettingsModel());

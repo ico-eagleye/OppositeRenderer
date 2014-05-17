@@ -17,7 +17,6 @@ PPMDock::PPMDock(QWidget *parent, const Application & application, PPMSettingsMo
     m_PPMSettingsModel(PPMSettingsModel)
 {
     ui->setupUi(this);
-    this->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
     this->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
     connect(ui->updateSettingsButton, SIGNAL(pressed()), this, SLOT(onFormSubmitted()));
     connect(&PPMSettingsModel, SIGNAL(updated()), this, SLOT(onModelUpdated()));

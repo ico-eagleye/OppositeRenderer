@@ -160,6 +160,7 @@ void RenderWidget::mouseMoveEvent( QMouseEvent* event )
     emit cameraUpdated();
 }
 
+// vmarz: FIXME called after all closable docks closed, need to repaind the viewport
 void RenderWidget::resizeEvent( QResizeEvent* event )
 {
     m_mouse.handleResize(event->size().width(), event->size().height());
