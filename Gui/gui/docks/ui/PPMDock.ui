@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string> Progressive Photon Mapping</string>
+   <string>Progressive Photon Mapping</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout">
