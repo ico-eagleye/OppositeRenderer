@@ -69,7 +69,7 @@ int main( int argc, char** argv )
         MainWindowBase mainWindow(application);
         //mainWindow.showMaximized();
 		mainWindow.show();
-		mainWindow.resize(1400,900);
+		mainWindow.resize(1200,700);
         int returnCode = qApplication.exec();
         application.wait();
 
