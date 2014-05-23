@@ -47,6 +47,7 @@ RT_PROGRAM void generateRay()
 
     modifyRayForDepthOfField(camera, rayOrigin, rayDirection, radiancePrd.randomState);
     
+	// vmarz: traces until hits diffuse surface
     Ray ray(rayOrigin, rayDirection, RayType::RADIANCE, 0.001f);
     rtTrace(sceneRootObject, ray, radiancePrd);
     

@@ -32,6 +32,7 @@ RT_PROGRAM void kernel()
     // Use radiance value if we do not hit a non-specular surface
     if(!(rec.flags & PRD_HIT_NON_SPECULAR))
     {
+		// vmarz: rec.radiance set by DiffuseEmitter
         if((rec.flags & PRD_HIT_EMITTER) && !(rec.flags & PRD_HIT_SPECULAR))
         {
             directRadianceBuffer[launchIndex] = fminf(rec.radiance, make_float3(1));
@@ -63,6 +64,8 @@ RT_PROGRAM void kernel()
             float scale = numLights;
             float3 lightContrib = getLightContribution(light, rec.position, rec.normal, sceneRootObject, randomStates[launchIndex]);
             avgLightRadiance += scale * lightContrib;
+			// vmarz: scaled by number of lights because picking one light to sample in each iteration
+			// Should scale by MIS here
         }
 
         directRadiance = rec.attenuation*avgLightRadiance/numShadowSamples;

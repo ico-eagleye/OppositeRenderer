@@ -176,7 +176,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_context["photons"]->set( m_photons );
     m_context["photonsSize"]->setUint( NUM_PHOTONS );
 
-
+#pragma region Acceleration structure
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_STOCHASTIC_HASH
 
     optix::Buffer photonsHashTableCount = m_context->createBuffer(RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, NUM_PHOTONS);
@@ -213,6 +213,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_context["hashmapOffsetTable"]->set( m_hashmapOffsetTable );
 
 #endif
+#pragma endregion
 
     //
     // Volumetric Photon Spheres buffer

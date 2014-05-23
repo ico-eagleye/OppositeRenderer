@@ -52,7 +52,7 @@ RT_PROGRAM void generateRay()
 
     float2 screen = make_float2( outputBuffer.size() );
     float2 sample = getRandomUniformFloat2(&radiancePrd.randomState);
-    float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f; // vmarz: map pixle pos to [-1,1]
+    float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f; // vmarz: map pixel pos to [-1,1]
 
     float3 rayOrigin = camera.eye;
     float3 rayDirection = normalize(d.x*camera.camera_u + d.y*camera.camera_v + camera.lookdir);
