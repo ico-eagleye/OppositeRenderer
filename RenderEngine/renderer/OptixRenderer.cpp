@@ -466,6 +466,16 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         else
         {
           
+			// Trace viewing rays
+            {
+                nvtx::ScopedRange r("OptixEntryPoint::RAYTRACE_PASS");
+                sutilCurrentTime( &t0 );
+                m_context->launch( OptixEntryPoint::PPM_RAYTRACE_PASS,
+                    static_cast<unsigned int>(m_width),
+                    static_cast<unsigned int>(m_height) );
+                sutilCurrentTime( &t1 );
+            }
+
             // Update PPM Radius for next photon tracing pass
 
             const float ppmAlpha = details.getPPMAlpha();
@@ -501,7 +511,6 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             //
             // Photon Tracing
             //
-
             {
                 nvtx::ScopedRange r( "OptixEntryPoint::PHOTON_PASS" );
                 m_context->launch( OptixEntryPoint::PPM_PHOTON_PASS,
@@ -552,16 +561,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_context->launch(OptixEntryPoint::PPM_INDIRECT_RADIANCE_ESTIMATION_PASS,
                     0, 0);
             }
-
-            // Trace viewing rays
-            {
-                nvtx::ScopedRange r("OptixEntryPoint::RAYTRACE_PASS");
-                sutilCurrentTime( &t0 );
-                m_context->launch( OptixEntryPoint::PPM_RAYTRACE_PASS,
-                    static_cast<unsigned int>(m_width),
-                    static_cast<unsigned int>(m_height) );
-                sutilCurrentTime( &t1 );
-            }
+			           
     
             //
             // PPM Indirect Estimation (using the photon map)
