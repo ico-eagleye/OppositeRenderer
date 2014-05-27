@@ -83,6 +83,7 @@ RT_PROGRAM void generator()
     photonPrd.weight = 1.0f;
     photonPrd.randomState = randomStates[launchIndex];
 
+	// vmarz?: pick based on light power?
     int lightIndex = 0;
     if(lights.size() > 1)
     {

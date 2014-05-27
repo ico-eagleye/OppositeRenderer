@@ -42,7 +42,8 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
 	float n_dot_l = maxf(0, optix::dot(rec_normal, towardsLight));
 	lightFactor *= n_dot_l / (M_PIf*lightDistance*lightDistance);
 	// vmarz: 
-	// area light: dividing by PI and not 1/area because light source specified in terms of power not radiance (P=L/(Pi*A))
+	// area light: dividing by PI and not 1/area because light source specified in terms of power not radiance 
+	//		P=L*Pi*A for diffuse area light, [PBR 627], Rendering slides
 	// point light: intensity I = P/(4*Pi), radiance L=I/r^2
 
     if(light.lightType == Light::AREA)
