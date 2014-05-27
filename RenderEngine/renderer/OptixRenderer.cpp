@@ -123,19 +123,23 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     //optix::Acceleration acceleration = m_context->createAcceleration("Bvh", "Bvh");
     //group->setAcceleration(acceleration);
     
-    // Display buffer
-
     // Ray Trace OptixEntryPoint Output Buffer
-
     m_raytracePassOutputBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT );
     m_raytracePassOutputBuffer->setFormat( RT_FORMAT_USER );
     m_raytracePassOutputBuffer->setElementSize( sizeof( Hitpoint ) );
     m_raytracePassOutputBuffer->setSize( m_width, m_height );
     m_context["raytracePassOutputBuffer"]->set( m_raytracePassOutputBuffer );
 
+	// Path Tracing ray generation OptixEntryPoint
+    {
+        Program generatorProgram = m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "generateRay" );
+        Program exceptionProgram =  m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "exception" );
+        Program missProgram = m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "miss" );
+        m_context->setRayGenerationProgram( OptixEntryPoint::PT_RAYTRACE_PASS, generatorProgram );
+        m_context->setExceptionProgram(OptixEntryPoint::PT_RAYTRACE_PASS, exceptionProgram);
+    }
 
-    // Ray OptixEntryPoint Generation Program
-
+    // PPM Ray Generation OptixEntryPoint
     {
         Program generatorProgram = m_context->createProgramFromPTXFile( "RayGeneratorPPM.cu.ptx", "generateRay" );
         Program exceptionProgram = m_context->createProgramFromPTXFile( "RayGeneratorPPM.cu.ptx", "exception" );
@@ -147,19 +151,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         m_context->setMissProgram(RayType::RADIANCE_IN_PARTICIPATING_MEDIUM, missProgram);
     }
 
-    // Path Tracing ray generation
-    {
-        Program generatorProgram = m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "generateRay" );
-        Program exceptionProgram =  m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "exception" );
-        Program missProgram = m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "miss" );
-        m_context->setRayGenerationProgram( OptixEntryPoint::PT_RAYTRACE_PASS, generatorProgram );
-        m_context->setExceptionProgram(OptixEntryPoint::PT_RAYTRACE_PASS, exceptionProgram);
-    }
-
-    //
-    // Photon Tracing OptixEntryPoint
-    //
-
+    // PPM Photon Tracing OptixEntryPoint
     {
         Program generatorProgram = m_context->createProgramFromPTXFile( "PhotonGenerator.cu.ptx", "generator" );
         Program exceptionProgram = m_context->createProgramFromPTXFile( "PhotonGenerator.cu.ptx", "exception" );
@@ -257,7 +249,6 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     //
     // Indirect Radiance Estimation Buffer
     //
-
     m_indirectRadianceBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
     m_context["indirectRadianceBuffer"]->set( m_indirectRadianceBuffer );
     
@@ -272,7 +263,6 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     //
     // Direct Radiance Estimation Buffer
     //
-
     m_directRadianceBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
     m_context["directRadianceBuffer"]->set( m_directRadianceBuffer );
 
@@ -300,10 +290,10 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_OUTPUT_PASS, program );
     }
 
+
     //
     // Random state buffer (must be large enough to give states to both photons and image pixels)
-    //
-  
+    //  
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
     m_randomStatesBuffer->setFormat( RT_FORMAT_USER );
     m_randomStatesBuffer->setElementSize( sizeof( RandomState ) );
@@ -313,7 +303,6 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     //
     // Light sources buffer
     //
-
     m_lightBuffer = m_context->createBuffer(RT_BUFFER_INPUT);
     m_lightBuffer->setFormat(RT_FORMAT_USER);
     m_lightBuffer->setElementSize(sizeof(Light));
@@ -323,9 +312,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     //
     // Debug buffers
     //
-
     createGpuDebugBuffers();
-
 
     m_initialized = true;
 
