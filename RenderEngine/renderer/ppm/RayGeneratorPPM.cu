@@ -19,11 +19,11 @@ using namespace optix;
 rtDeclareVariable(rtObject, sceneRootObject, , );
 rtBuffer<Hitpoint, 2> raytracePassOutputBuffer;
 rtBuffer<RandomState, 2> randomStates;
-rtDeclareVariable(float, ppmDefaultRadius2, , );
+//rtDeclareVariable(float, ppmDefaultRadius2, , );		// vmarz: was not used
 rtDeclareVariable(Camera, camera, , );
-rtDeclareVariable(float, camera_aperture, , );
+//rtDeclareVariable(float, camera_aperture, , );		// vmarz: was not used
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
-rtDeclareVariable(float, iterationNumber, , );
+//rtDeclareVariable(float, iterationNumber, , );		// vmarz: was not used
 rtDeclareVariable(RadiancePRD, radiancePrd, rtPayload, );
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
