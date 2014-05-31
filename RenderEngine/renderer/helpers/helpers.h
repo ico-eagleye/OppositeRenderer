@@ -17,7 +17,6 @@
 #endif
 
 // Create ONB from normalized normal (code: Physically Based Rendering, Pharr & Humphreys pg. 63)
-
 static  __device__ __inline__ void createCoordinateSystem( const optix::float3& N, optix::float3& U, optix::float3& V/*, optix::float3& W*/ )
 {
     using namespace optix;
