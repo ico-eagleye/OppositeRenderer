@@ -10,7 +10,7 @@ struct PhotonPRD
 {
     optix::float3 power;
     float weight;
-    optix::uint pm_index;
+    optix::uint pm_index;			// vmarz: index of the first photon stored by a given light path/thread
     optix::uint numStoredPhotons;
     optix::uint depth;
     RandomState randomState;

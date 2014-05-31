@@ -27,7 +27,7 @@ rtDeclareVariable(uint, maxPhotonDepositsPerEmitted, , );
 rtDeclareVariable(uint, photonLaunchWidth, , );
 rtBuffer<Light, 1> lights;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
-rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
+//rtDeclareVariable(uint2, launchDim, rtLaunchDim, );		// vmarz: comment out unused
 rtDeclareVariable(Sphere, sceneBoundingSphere, , );
 
 #if ENABLE_RENDER_DEBUG_OUTPUT

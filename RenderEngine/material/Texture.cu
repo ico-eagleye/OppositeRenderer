@@ -109,6 +109,7 @@ RT_PROGRAM void closestHitPhoton()
     // Record hit if it has bounced at least once
     if(photonPrd.depth >= 1)
     {
+		// vmarz: worldShadingNormal actually is not being stored in photon
         Photon photon (photonPrd.power, hitPoint, ray.direction, worldShadingNormal);
         STORE_PHOTON(photon);
     }

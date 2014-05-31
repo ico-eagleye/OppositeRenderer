@@ -88,7 +88,7 @@ RT_PROGRAM void generateRay()
             {
                 int randomLightIndex = int(getRandomUniformFloat(&randomStates[launchIndex])*numLights);
                 Light & light = lights[randomLightIndex];
-                float scale = numLights;
+                float scale = numLights; // vmarz: scales by numLights to apply light pick pdf (equivavelnt to dividing by 1/numLights)
 
 				// vmarz: for more advanced materials need to brdf for given dir applied to attenuation
                 float3 lightContrib = scale*getLightContribution(light, radiancePrd.position, radiancePrd.normal, sceneRootObject, radiancePrd.randomState);

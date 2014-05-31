@@ -23,7 +23,8 @@
 
 using namespace optix;
 
-rtDeclareVariable(float4, plane, , );
+rtDeclareVariable(float4, plane, , ); // vmarz: xyz=normal, w=dot(normal, anchor)=D dist to plane form origin
+									  // in plane definition in Hesse normal form
 rtDeclareVariable(float3, v1, , );
 rtDeclareVariable(float3, v2, , );
 rtDeclareVariable(float3, anchor, , );
@@ -38,16 +39,20 @@ rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 RT_PROGRAM void intersect(int primIdx)
 {
   float3 n = make_float3( plane );
-  float dt = dot(ray.direction, n );
-  float t = (plane.w - dot(n, ray.origin))/dt;
-  if( t > ray.tmin && t < ray.tmax ) {
+  float dt = dot(ray.direction, n );			// vmarz: cos between ray dir and n
+  float t = (plane.w - dot(n, ray.origin))/dt;	// (dist to plane - len origin proj on n) / scaled by cos [e.g. t grows angle grows]
+  if( t > ray.tmin && t < ray.tmax ) 
+  {
     float3 p = ray.origin + ray.direction * t;
     float3 vi = p - anchor;
     float a1 = dot(v1, vi);
-    if(a1 >= 0 && a1 <= 1){
+    if(a1 >= 0 && a1 <= 1)			// vmarz: comparing with 1 because v1 was scaled by 1./length^2,
+	{								// so any dot products with it cannot be bigger than original v1 length
       float a2 = dot(v2, vi);
-      if(a2 >= 0 && a2 <= 1){
-        if( rtPotentialIntersection( t ) ) {
+      if(a2 >= 0 && a2 <= 1)
+	  {
+        if( rtPotentialIntersection( t ) ) 
+		{
           shadingNormal = geometricNormal = n;
           texcoord = make_float3(a1,a2,0);
           lgt_idx = lgt_instance;
@@ -61,6 +66,7 @@ RT_PROGRAM void intersect(int primIdx)
 RT_PROGRAM void bounds (int, float result[6])
 {
   // v1 and v2 are scaled by 1./length^2.  Rescale back to normal for the bounds computation.
+  // vmarz: NOTE not scaled by lenght, so v1, v2 are not unit vectors
   const float3 tv1  = v1 / dot( v1, v1 );
   const float3 tv2  = v2 / dot( v2, v2 );
   const float3 p00  = anchor;
