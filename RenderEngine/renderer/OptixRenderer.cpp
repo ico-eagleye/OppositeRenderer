@@ -26,6 +26,7 @@
 #include "util/sutil.h"
 #include "scene/IScene.h"
 #include "renderer/helpers/nsight.h"
+#include "renderer/vcm/PathVertex.h"
 
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_UNIFORM_GRID
 const unsigned int OptixRenderer::PHOTON_GRID_MAX_SIZE = 100*100*100;
@@ -139,7 +140,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         m_context->setExceptionProgram(OptixEntryPoint::PT_RAYTRACE_PASS, exceptionProgram);
     }
 
-    // PPM Ray Generation OptixEntryPoint
+    // PPM Ray Generation Program OptixEntryPoint
     {
         Program generatorProgram = m_context->createProgramFromPTXFile( "RayGeneratorPPM.cu.ptx", "generateRay" );
         Program exceptionProgram = m_context->createProgramFromPTXFile( "RayGeneratorPPM.cu.ptx", "exception" );
@@ -289,7 +290,17 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         Program program = m_context->createProgramFromPTXFile( "Output.cu.ptx", "kernel" );
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_OUTPUT_PASS, program );
     }
+	
+	// VCM light vertex buffer
+	m_lightVertexBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
+    m_lightVertexBuffer->setFormat( RT_FORMAT_USER );
+	m_lightVertexBuffer->setElementSize( sizeof( PathVertex ) );
+	m_lightVertexBuffer->setSize( 1, 1 );
+	m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
 
+	m_lightVertexCountBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
+	m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_SHORT, m_width, m_height );
+	m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
 
     //
     // Random state buffer (must be large enough to give states to both photons and image pixels)
@@ -313,7 +324,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     // Debug buffers
     //
     createGpuDebugBuffers();
-
+	m_context->setPrintEnabled(true);
     m_initialized = true;
 
     //printf("Num CPU threads: %d\n", m_context->getCPUNumThreads());

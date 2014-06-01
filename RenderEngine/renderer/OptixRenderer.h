@@ -86,4 +86,8 @@ private:
 
     // Volumetric
     optix::GeometryGroup m_volumetricPhotonsRoot;
+
+	// VCM
+	optix::Buffer m_lightVertexBuffer;
+	optix::Buffer m_lightVertexCountBuffer;
 };

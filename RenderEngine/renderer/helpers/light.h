@@ -11,6 +11,7 @@
 #include "helpers.h"
 #include "renderer/ShadowPRD.h"
 #include "renderer/TransmissionPRD.h"
+#include "renderer/helpers/samplers.h"
 
 optix::float3 __inline __device__ getLightContribution(const Light & light, const optix::float3 & rec_position, 
     const optix::float3 & rec_normal, const rtObject & rootObject, RandomState & randomState)
@@ -74,4 +75,37 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
     }
 
     return optix::make_float3(0);
+};
+
+
+optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & aRandomState,
+											float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
+											float & oDirectPdfA, float & oCosThetaLight)
+{
+	float3 radiance = optix::make_float3(0);
+	float2 dirRnd = getRandomUniformFloat2(&aRandomState);
+
+    if(aLight.lightType == Light::AREA)
+    {
+        float2 posRnd = getRandomUniformFloat2(&aRandomState);
+        oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
+		oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
+		oEmissionPdfW *= aLight.inverseArea;
+		oDirectPdfA = aLight.inverseArea;
+		radiance = aLight.Lemit * oCosThetaLight;
+    }
+    else if(aLight.lightType == Light::POINT)
+    {
+        oPosition = aLight.position;
+		oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
+		oDirectPdfA = oEmissionPdfW;
+		radiance = aLight.intensity;
+    }
+    else if(aLight.lightType == Light::SPOT)
+    {
+        // Todo find correct direct light for spot light
+    }
+	
+	oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
+    return radiance;
 };

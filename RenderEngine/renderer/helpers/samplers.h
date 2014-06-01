@@ -8,9 +8,10 @@
 #include "helpers.h"
 
 // Get a random direction from the hemisphere of direction around normalized normal, 
-// sampled with the cosine distribution p(theta, phi) = cos(theta)/PI
-
-static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::float3 & normal, const optix::float2& sample)
+// sampled with the cosine distribution p(theta, phi) = cos(theta)/PI. In oPdfW returns PDF with 
+// respect to solid angle measure
+static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::float3 & normal, const optix::float2& sample,
+																   float * oPdfW = NULL)
 {
     using namespace optix;
 
@@ -22,12 +23,13 @@ static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::
 
     float3 U, V;
     createCoordinateSystem(normal, U, V);
+	if (oPdfW)
+		*oPdfW = ys * M_1_PIf;
 
     return optix::normalize(xs*U + ys*normal + zs*V);
 }
 
 // Sample unit hemisphere around (normalized) normal
-
 static __device__ __inline__ optix::float3 sampleUnitHemisphere(const optix::float3 & normal, const optix::float2& sample)
 {
     optix::float3 U, V;
@@ -41,7 +43,7 @@ static __device__ __inline__ optix::float3 sampleUnitHemisphere(const optix::flo
     return optix::normalize(U*x + V*y + normal*z);
 }
 
-static __device__ __inline__ optix::float3 sampleUnitSphere(const optix::float2& sample)
+static __device__ __inline__ optix::float3 sampleUnitSphere(const optix::float2& sample, float * oPdfW = NULL)
 {
     optix::float3 v;
     v.z = sample.x;
@@ -49,6 +51,9 @@ static __device__ __inline__ optix::float3 sampleUnitSphere(const optix::float2&
     float r = sqrtf(1.f-v.z*v.z);
     v.x = r*cosf(t);
     v.y = r*sinf(t);
+	if (oPdfW)
+		*oPdfW = 0.25f * M_1_PIf;
+
     return v;
 }
 
@@ -62,12 +67,18 @@ static __device__ __inline__ optix::float2 sampleUnitDisc(const optix::float2& s
 }
 
 // Sample disc (normal must be normalized)
-
 static __device__ float3 sampleDisc(const float2 & sample, const float3 & center, const float radius, const float3 & normal)
 {
     float3 U, V;
     createCoordinateSystem( normal, U, V);
     float2 unitDisc = sampleUnitDisc(sample);
     return center + radius * ( U*unitDisc.x + V*unitDisc.y );
+}
+
+// Applies MIS power
+static __device__ __inline__ float Mis(const float & aPdf)
+{
+	// balance heuristic for now
+	return aPdf;
 }
 
