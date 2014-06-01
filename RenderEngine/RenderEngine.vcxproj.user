@@ -6,4 +6,7 @@
     <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
     <ShowAllFiles>true</ShowAllFiles>
   </PropertyGroup>
+  <PropertyGroup>
+    <ShowAllFiles>true</ShowAllFiles>
+  </PropertyGroup>
 </Project>

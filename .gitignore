@@ -24,3 +24,5 @@ ui_*.h
 *.suo
 /Debug
 /x64
+Debug
+Release

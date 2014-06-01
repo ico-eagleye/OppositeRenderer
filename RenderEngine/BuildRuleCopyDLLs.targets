@@ -1,29 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup>
-    <DllFiles Include="$(QTDIR)\bin\Qt5Cored.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\Qt5Guid.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\Qt5Networkd.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\Qt5OpenGLd.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\Qt5Widgetsd.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\icudt51.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\icuin51.dll"/>
-    <DllFiles Include="$(QTDIR)\bin\icuuc51.dll"/>
-    <DllFiles Include="$(GLEW_PATH)\bin\Release\x64\*.dll"/>
+  
+  <!-- QT path. Default x64, otherwise Win32. -->
+  <PropertyGroup>
+	<QTDIR_MSVC>$(QTDIR)</QTDIR_MSVC>
+	<QTDIR_MSVC Condition="'$(Platform)'=='Win32'">$(QTDIR_msvc2010)</QTDIR_MSVC>
+  </PropertyGroup>
+  
+  <!-- QT libs -->
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Cored.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Guid.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Networkd.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5OpenGLd.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Widgetsd.dll"/>
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Core.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Gui.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Network.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5OpenGL.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\Qt5Widgets.dll"/>
+  </ItemGroup>
+
+  <!-- Libs x64 --> 
+  <ItemGroup Condition="'$(Platform)'=='x64'">
     <DllFiles Include="$(ASSIMP_PATH)\bin\x64\*.dll"/>
     <DllFiles Include="$(OPTIX_PATH)\bin64\optix.1.dll"/>
     <DllFiles Include="$(OPTIX_PATH)\bin64\optixu.1.dll"/>
-    <DllFiles Include="$(NVTOOLSEXT_PATH)\bin\x64\*.dll"/>
-    <!--<DllFiles Include="$(CUDA_PATH)\bin\*64_55.dll"/>-->
+  </ItemGroup>
+  
+  <!-- Libs Win32 --> 
+  <ItemGroup Condition="'$(Platform)'=='Win32'">
+    <DllFiles Include="$(ASSIMP_PATH)\bin\x86\*.dll"/>
+    <DllFiles Include="$(OPTIX_PATH)\bin\optix.1.dll"/>
+    <DllFiles Include="$(OPTIX_PATH)\bin\optixu.1.dll"/>
   </ItemGroup>
 
-  <Target Name="CopyDLLs" AfterTargets="AfterLink" Inputs="@(DllFiles)" Outputs="@(DllFiles->'$(OutputPath)%(Filename)%(Extension)')">
-    <Message Text="Copying Dependency &quot;%(DllFiles.Identity)&quot; Dlls into target dir" Importance="High" />
-    <Copy SourceFiles="@(DllFiles)" DestinationFolder="$(OutputPath)" RetryDelayMilliseconds="30000"/>
+  <!-- Libs with auto derived paths -->  
+  <ItemGroup>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\icudt51.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\icuin51.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\icuuc51.dll"/>
+	<DllFiles Include="$(GLEW_PATH)\bin\Release\$(Platform)\*.dll"/>
+	<DllFiles Include="$(NVTOOLSEXT_PATH)\bin\$(Platform)\*.dll"/>
+  </ItemGroup>
+ 
+  <!-- Using VS2010 $(OutputPath) copies files to $(SolutionDir)$(Platform)$(Configuration) -->
+  <Target Name="CopyDLLs" AfterTargets="AfterLink" Inputs="@(DllFiles)" Outputs="@(DllFiles->'$(OutDir)%(Filename)%(Extension)')">
+    <Message Text="Copying Dependency &quot;%(DllFiles.Identity)&quot; Dlls into target dir $(OutDir)." Importance="High" />
+    <Copy SourceFiles="@(DllFiles)" DestinationFolder="$(OutDir)" RetryDelayMilliseconds="30000"/>
   </Target>
 
   <Target Name="RemoveDLLs" AfterTargets="AfterClean" >
-    <Delete Files="$(OutputPath)%(DllFiles.Filename).dll" />
+    <Delete Files="$(OutDir)%(DllFiles.Filename).dll" />
   </Target>
 </Project>
 
