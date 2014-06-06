@@ -16,9 +16,12 @@
 #include "renderer/helpers/helpers.h"
 #include "renderer/helpers/samplers.h"
 #include "renderer/helpers/store_photon.h"
+#include "renderer/vcm/SubpathPRD.h"
+#include "renderer/vcm/PathVertex.h"
 
 using namespace optix;
 
+rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(RadiancePRD, radiancePrd, rtPayload, );
 rtDeclareVariable(PhotonPRD, photonPrd, rtPayload, );
@@ -42,10 +45,10 @@ rtDeclareVariable(unsigned int, photonsSize,,);
 rtBuffer<unsigned int, 1> photonsHashTableCount;
 #endif
 
+
 /*
 // Radiance Program
 */
-
 RT_PROGRAM void closestHitRadiance()
 {
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -65,7 +68,6 @@ RT_PROGRAM void closestHitRadiance()
 /*
 // Photon Program
 */
-
 RT_PROGRAM void closestHitPhoton()
 {
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -110,3 +112,99 @@ RT_PROGRAM void closestHitPhoton()
     optix::Ray newRay( hitPoint, newPhotonDirection, RayType::PHOTON, 0.0001 );
     rtTrace(sceneRootObject, newRay, photonPrd);
 }
+
+
+rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
+rtBuffer<ushort, 2> lightVertexCountBuffer;
+
+
+// Light subpath program
+RT_PROGRAM void closestHitLight()
+{
+	uint2 idx = make_uint2(launchIndex.y * launchDim.x + launchIndex.x, launchIndex.y);
+	lightVertexCountBuffer[idx]++;
+
+	// vmarz TODO make sure shading normals used correctly
+    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;
+
+	// Update MIS quantities before storing at the vertex
+
+	// vmarz TODO infinite lights need attitional handling
+	SubpathPRD lightPrd;
+	float hitCosTheta = dot(worldShadingNormal, -ray.direction);
+	if (hitCosTheta < 0) return;	// vmarz TODO check validity
+
+	float misFactor = 1.0f / Mis(fabs(hitCosTheta));
+	lightPrd.dVCM *= misFactor;  // vmarz?: need abs here?
+	lightPrd.dVC *= misFactor;
+	lightPrd.dVM *= misFactor;
+
+	PathVertex lightVertex;
+	lightVertex.hitPoint = hitPoint;
+	lightVertex.throughput = lightPrd.throughput;
+	lightVertex.pathDepth = lightPrd.depth;
+	lightVertex.dVCM = lightPrd.dVCM;
+	lightVertex.dVC = lightPrd.dVC;
+	lightVertex.dVM = lightPrd.dVM;
+	// vmarz TODO store material bsdf
+
+	// store path vertex
+
+	// vmarz TODO connect to camera
+	// vmarz TODO check max path length
+	
+	// Russian Roulette
+	float contProb = luminanceCIE(Kd); // vmarz TODO precompute
+	float rrSample = getRandomUniformFloat(&lightPrd.randomState);
+	if (contProb < rrSample)
+	{
+		lightPrd.done = 1;
+		return;
+	}
+
+	// next event
+	// vmarz TODO MIS initialized during light emission or new dir 
+	// bsdf sample, vmarz TODO handle multiple bsdf components
+	float3 bsdfFactor = Kd * M_1_PIf;
+	float bsdfDirPdfW;
+	float cosThetaOut;
+	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
+	lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
+
+	float bsdfRevPdfW; // vmarz TODO
+	// check component cont prob	
+	// vmarz TODO MIS weights VCM 990
+
+	bsdfDirPdfW *= contProb;
+	bsdfRevPdfW *= contProb;
+
+	lightPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
+	lightPrd.origin = hitPoint;
+}
+
+//struct PathVertex
+//{
+//	optix::float3 hitPoint;
+//  optix::float3 throughput;
+//  float pathDepth;
+//	float dVCM;
+//	float dVC;
+//	float dVM;
+//	// bsdf data
+//	optix::uint materialID;
+//};
+
+//struct SubpathPRD
+//{
+//  optix::float3 origin;
+//	optix::float3 direction;
+//	optix::float3 throughput;
+//  optix::uint depth;
+//  RandomState randomState;
+//	float dVCM;
+//	float dVC;
+//	float dVM;
+//	//uint  mIsFiniteLight :  1; // Just generate by finite light
+//  //uint  mSpecularPath  :  1; // All scattering events so far were specular
+//};

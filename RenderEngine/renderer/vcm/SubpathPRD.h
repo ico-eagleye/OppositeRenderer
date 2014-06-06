@@ -16,6 +16,7 @@ struct SubpathPRD
 	float dVCM;
 	float dVC;
 	float dVM;
+	optix::uint done;
 	//uint  mIsFiniteLight :  1; // Just generate by finite light
     //uint  mSpecularPath  :  1; // All scattering events so far were specular
 };
