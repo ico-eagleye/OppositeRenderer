@@ -74,6 +74,7 @@ static __device__ void generatePhotonOriginAndDirection(const Light& light, Rand
     }
 }
 
+
 RT_PROGRAM void generator()
 {
     PhotonPRD photonPrd;
@@ -123,16 +124,17 @@ RT_PROGRAM void generator()
 
 }
 
+
 rtDeclareVariable(PhotonPRD, photonPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     OPTIX_DEBUG_PRINT(photonPrd.depth, "Photon missed geometry.\n");
 }
 
+
 //
 // Exception handler program
 //
-
 rtDeclareVariable(float3, exceptionErrorColor, , );
 RT_PROGRAM void exception()
 {
