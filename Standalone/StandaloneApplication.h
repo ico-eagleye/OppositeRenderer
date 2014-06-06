@@ -17,6 +17,7 @@ class StandaloneApplication : public Application
 public:
     StandaloneApplication(QApplication & qApplication, const ComputeDevice & device);
     ~StandaloneApplication(void);
+	void startRenderManager();
     void wait();
 private:
     StandaloneRenderManager m_renderManager;

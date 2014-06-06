@@ -58,7 +58,6 @@ int main( int argc, char** argv )
         out << deviceNumber << endl;
 
         ComputeDevice device = repo.at(deviceNumber);
-
         StandaloneApplication application = StandaloneApplication(qApplication, device);
 
         // Run application
@@ -70,6 +69,9 @@ int main( int argc, char** argv )
         //mainWindow.showMaximized();
 		mainWindow.show();
 		mainWindow.resize(1200,700);
+
+		// vmarz: start render manager after MainWindow initialization when all signals/slots hooked up
+		application.startRenderManager();
         int returnCode = qApplication.exec();
         application.wait();
 
