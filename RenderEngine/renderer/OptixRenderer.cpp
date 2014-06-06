@@ -290,6 +290,25 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 		SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT );
 	m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
 
+	// VCM programs
+	{
+		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generator" );
+		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
+		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
+		m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_PASS, generatorProgram);
+		m_context->setMissProgram(OptixEntryPoint::VCM_LIGHT_PASS, missProgram);
+		m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_PASS, exceptionProgram);
+	}
+	{
+		// vmarz TODO FIX
+		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generator" );
+		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
+		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
+		m_context->setRayGenerationProgram(OptixEntryPoint::VCM_CAMERA_PASS, generatorProgram);
+		m_context->setMissProgram(OptixEntryPoint::VCM_CAMERA_PASS, missProgram);
+		m_context->setExceptionProgram(OptixEntryPoint::VCM_CAMERA_PASS, exceptionProgram);
+	}
+
     // Random state buffer (must be large enough to give states to both photons and image pixels)
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
     m_randomStatesBuffer->setFormat( RT_FORMAT_USER );
