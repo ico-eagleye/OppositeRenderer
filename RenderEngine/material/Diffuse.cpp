@@ -37,7 +37,6 @@ optix::Material Diffuse::getOptixMaterial(optix::Context & context)
 /*
 // Register any material-dependent values to be available in the optix program.
 */
-
 void Diffuse::registerGeometryInstanceValues(optix::GeometryInstance & instance )
 {
     instance["Kd"]->setFloat(this->Kd);
