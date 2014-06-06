@@ -42,6 +42,10 @@ const unsigned int OptixRenderer::PHOTON_LAUNCH_HEIGHT = 1024;
 const unsigned int OptixRenderer::EMITTED_PHOTONS_PER_ITERATION = OptixRenderer::PHOTON_LAUNCH_WIDTH*OptixRenderer::PHOTON_LAUNCH_HEIGHT;
 const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_PER_ITERATION*OptixRenderer::MAX_PHOTON_COUNT;
 
+// VCM
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 128;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 128;
+
 using namespace optix;
 
 inline unsigned int pow2roundup(unsigned int x)
@@ -208,9 +212,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 #endif
 #pragma endregion
 
-    //
     // Volumetric Photon Spheres buffer
-    //
 #if ENABLE_PARTICIPATING_MEDIA
     {
         m_volumetricPhotonsBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
@@ -237,55 +239,40 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         m_context["volumetricPhotonsRoot"]->set(m_volumetricPhotonsRoot);
     }
 
-    //
     // Clear Volumetric Photons Program
-    //
-
     {
         Program program = m_context->createProgramFromPTXFile( "VolumetricPhotonInitialize.cu.ptx", "kernel" );
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_CLEAR_VOLUMETRIC_PHOTONS_PASS, program );
     }
 #endif
 
-    //
     // Indirect Radiance Estimation Buffer
-    //
     m_indirectRadianceBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
     m_context["indirectRadianceBuffer"]->set( m_indirectRadianceBuffer );
     
-    //
     // Indirect Radiance Estimation Program
-    //
     {
         Program program = m_context->createProgramFromPTXFile( "IndirectRadianceEstimation.cu.ptx", "kernel" );
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_INDIRECT_RADIANCE_ESTIMATION_PASS, program );
     }
 
-    //
     // Direct Radiance Estimation Buffer
-    //
     m_directRadianceBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
     m_context["directRadianceBuffer"]->set( m_directRadianceBuffer );
 
-    //
     // Direct Radiance Estimation Program
-    //
     {
         Program program = m_context->createProgramFromPTXFile( "DirectRadianceEstimation.cu.ptx", "kernel" );
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_DIRECT_RADIANCE_ESTIMATION_PASS, program );
     }
 
-    //
     // Output Buffer
-    //
     {
         m_outputBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
         m_context["outputBuffer"]->set(m_outputBuffer);
     }
 
-    //
     // Output Program
-    //
     {
         Program program = m_context->createProgramFromPTXFile( "Output.cu.ptx", "kernel" );
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_OUTPUT_PASS, program );
@@ -299,30 +286,25 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 	m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
 
 	m_lightVertexCountBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
-	m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_SHORT, m_width, m_height );
+	m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_SHORT, 
+		SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT );
 	m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
 
-    //
     // Random state buffer (must be large enough to give states to both photons and image pixels)
-    //  
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
     m_randomStatesBuffer->setFormat( RT_FORMAT_USER );
     m_randomStatesBuffer->setElementSize( sizeof( RandomState ) );
     m_randomStatesBuffer->setSize( PHOTON_LAUNCH_WIDTH, PHOTON_LAUNCH_HEIGHT );
     m_context["randomStates"]->set(m_randomStatesBuffer);
 
-    //
     // Light sources buffer
-    //
     m_lightBuffer = m_context->createBuffer(RT_BUFFER_INPUT);
     m_lightBuffer->setFormat(RT_FORMAT_USER);
     m_lightBuffer->setElementSize(sizeof(Light));
     m_lightBuffer->setSize(1);
     m_context["lights"]->set( m_lightBuffer );
 
-    //
     // Debug buffers
-    //
     createGpuDebugBuffers();
 	m_context->setPrintEnabled(true);
     m_initialized = true;
@@ -449,21 +431,19 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         m_context["iterationNumber"]->setFloat( static_cast<float>(iterationNumber));
         m_context["localIterationNumber"]->setUint((unsigned int)localIterationNumber);
 
-        if(renderMethod == RenderMethod::PATH_TRACING)
+        if (renderMethod == RenderMethod::PATH_TRACING)
         {
-            {
-                m_context["ptDirectLightSampling"]->setInt(1);
-                nvtx::ScopedRange r("OptixEntryPoint::PT_RAYTRACE_PASS");
-                sutilCurrentTime( &t0 );
-                m_context->launch( OptixEntryPoint::PT_RAYTRACE_PASS,
-                    static_cast<unsigned int>(m_width),
-                    static_cast<unsigned int>(m_height) );
-                sutilCurrentTime( &t1 );
-            }
+            m_context["ptDirectLightSampling"]->setInt(1);
+            nvtx::ScopedRange r("OptixEntryPoint::PT_RAYTRACE_PASS");
+            sutilCurrentTime( &t0 );
+            m_context->launch( OptixEntryPoint::PT_RAYTRACE_PASS,
+                static_cast<unsigned int>(m_width),
+                static_cast<unsigned int>(m_height) );
+            sutilCurrentTime( &t1 );
         }
-        else
-        {
-          
+        else if (renderMethod == RenderMethod::PROGRESSIVE_PHOTON_MAPPING)
+        {          
+#pragma region PROGRESSIVE PHOTON MAPPING
 			// Trace viewing rays
             {
                 nvtx::ScopedRange r("OptixEntryPoint::RAYTRACE_PASS");
@@ -475,7 +455,6 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             }
 
             // Update PPM Radius for next photon tracing pass
-
             const float ppmAlpha = details.getPPMAlpha();
             m_context["ppmAlpha"]->setFloat(ppmAlpha);
             const float ppmRadiusSquared = PPMRadius*PPMRadius;
@@ -488,17 +467,13 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 #if ENABLE_PARTICIPATING_MEDIA
             m_context["volumetricRadius"]->setFloat(0.033/0.033*PPMRadius);
             
-            //
             // Clear volume photons
-            //
-
             {
                 nvtx::ScopedRange r( "OptixEntryPoint::PPM_CLEAR_VOLUMETRIC_PHOTONS_PASS" );
                 m_context->launch( OptixEntryPoint::PPM_CLEAR_VOLUMETRIC_PHOTONS_PASS, NUM_VOLUMETRIC_PHOTONS);
             }
 #endif
             // Set up the uniform grid bounds
-
             #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_STOCHASTIC_HASH
             {
                 nvtx::ScopedRange r("initializeStochasticHashPhotonMap()");
@@ -506,9 +481,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             }
             #endif
 
-            //
             // Photon Tracing
-            //
             {
                 nvtx::ScopedRange r( "OptixEntryPoint::PHOTON_PASS" );
                 m_context->launch( OptixEntryPoint::PPM_PHOTON_PASS,
@@ -521,9 +494,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
             debugOutputPhotonTracing();
 
-            //
             // Create Photon Map
-            //
             {
                 nvtx::ScopedRange r( "Creating photon map" );
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_KD_TREE_CPU
@@ -533,11 +504,8 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 #endif
             }
 
-
 #if ENABLE_PARTICIPATING_MEDIA
-            //
             // Rebuild the volumetric photons BVH
-            //
             {
                 double t0, t1;
                 sutilCurrentTime( &t0 );
@@ -551,45 +519,38 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             }
 #endif
 
-            //
             // Transfer any data from the photon acceleration structure build to the GPU (trigger an empty launch)
-            //
             {
                 nvtx::ScopedRange r("Transfer photon map to GPU");
                 m_context->launch(OptixEntryPoint::PPM_INDIRECT_RADIANCE_ESTIMATION_PASS,
                     0, 0);
             }
-			           
     
-            //
             // PPM Indirect Estimation (using the photon map)
-            //
-
             {
                 nvtx::ScopedRange r("OptixEntryPoint::INDIRECT_RADIANCE_ESTIMATION");
                 m_context->launch(OptixEntryPoint::PPM_INDIRECT_RADIANCE_ESTIMATION_PASS,
                     m_width, m_height);
             }
 
-            //
             // Direct Radiance Estimation
-            //
-
             {
                 nvtx::ScopedRange r("OptixEntryPoint::PPM_DIRECT_RADIANCE_ESTIMATION_PASS");
                 m_context->launch(OptixEntryPoint::PPM_DIRECT_RADIANCE_ESTIMATION_PASS,
                     m_width, m_height);
             }
 
-            //
             // Combine indirect and direct buffers in the output buffer
-            //
-
             nvtx::ScopedRange r("OptixEntryPoint::PPM_OUTPUT_PASS");
             m_context->launch(OptixEntryPoint::PPM_OUTPUT_PASS,
                 m_width, m_height);
-
+#pragma endregion PROGRESSIVE PHOTON MAPPING
         }
+		else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
+		{
+
+
+		}
 
         double end;
         sutilCurrentTime( &end );
