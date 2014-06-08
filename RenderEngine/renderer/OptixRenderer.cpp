@@ -659,7 +659,7 @@ void OptixRenderer::debugOutputPhotonTracing()
             }
         }
         buffer->unmap();
-        double visitedAvg = double(sumVisited)/(numNotZero);
+        double visitedAvg = 0 < numNotZero ? double(sumVisited)/(numNotZero) : 0;
         printf("  Average cells visited during indirect estimation  (per pixel): %.4f\n", visitedAvg);
     }
 
@@ -677,7 +677,7 @@ void OptixRenderer::debugOutputPhotonTracing()
             }
         }
         buffer->unmap();
-        double visitedAvg = double(sumVisited)/(numNotZero);
+        double visitedAvg = 0 < numNotZero ? double(sumVisited)/(numNotZero) : 0;
         printf("  Average photons visited during indirect estimation (per pixel): %.4f\n", visitedAvg);
     }
 
