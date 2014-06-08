@@ -142,6 +142,14 @@ void MainWindowBase::onChangeRenderMethodPT()
     emit renderRestart();
 }
 
+
+void MainWindowBase::onChangeRenderMethodVCM()
+{
+    m_application.setRenderMethod(RenderMethod::BIDIRECTIONAL_PATH_TRACING);
+    emit renderRestart();
+}
+
+
 void MainWindowBase::onConfigureGPUDevices()
 {
     /*QDialog* dialog = new QDialog(this);

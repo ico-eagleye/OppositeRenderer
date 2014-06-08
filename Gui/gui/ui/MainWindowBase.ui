@@ -21,7 +21,16 @@
     <string notr="true"/>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
    </layout>
@@ -35,12 +44,11 @@
      <height>21</height>
     </rect>
    </property>
-    <widget class="QMenu" name="menuDocks">
-     <property name="title">
-       <string>Docks</string>
-     </property>
-     <addaction name="actionDockOutput"/>
-    </widget>
+   <widget class="QMenu" name="menuDocks">
+    <property name="title">
+     <string>Docks</string>
+    </property>
+   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
@@ -57,6 +65,7 @@
      </property>
      <addaction name="actionProgressive_Photon_Mapping"/>
      <addaction name="actionPath_Tracing"/>
+     <addaction name="actionVCM_Bidirectional_Path_Tracing"/>
     </widget>
     <addaction name="menuRender_method"/>
     <addaction name="actionRenderStatusToggle"/>
@@ -162,6 +171,11 @@
     <string>Save image as .PPM</string>
    </property>
   </action>
+  <action name="actionVCM_Bidirectional_Path_Tracing">
+   <property name="text">
+    <string>VCM Bidirectional Path Tracing</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -261,7 +275,23 @@
     </hint>
    </hints>
   </connection>
-  <connection>
+   <connection>
+     <sender>actionVCM_Bidirectional_Path_Tracing</sender>
+     <signal>triggered()</signal>
+     <receiver>MainWindowBase</receiver>
+     <slot>onChangeRenderMethodVCM()</slot>
+     <hints>
+       <hint type="sourcelabel">
+         <x>-1</x>
+         <y>-1</y>
+       </hint>
+       <hint type="destinationlabel">
+         <x>509</x>
+         <y>405</y>
+       </hint>
+     </hints>
+   </connection>
+   <connection>
    <sender>actionConfigure_GPU_devices</sender>
    <signal>triggered()</signal>
    <receiver>MainWindowBase</receiver>
