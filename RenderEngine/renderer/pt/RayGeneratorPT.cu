@@ -126,10 +126,10 @@ RT_PROGRAM void generateRay()
 //
 // Exception handler program
 //
-
 RT_PROGRAM void exception()
 {
-    printf("Exception Radiance PT!\n");
+    printf("Exception Radiance PT! \n");
+    rtPrintExceptionDetails();
     radiancePrd.flags = PRD_ERROR;
     radiancePrd.attenuation = make_float3(0,0,1);
 }
@@ -137,7 +137,6 @@ RT_PROGRAM void exception()
 //
 // Miss program
 //
-
 RT_PROGRAM void miss()
 {
     radiancePrd.flags = PRD_MISS;

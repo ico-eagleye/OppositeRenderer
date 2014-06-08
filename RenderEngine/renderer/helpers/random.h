@@ -8,6 +8,7 @@
 
 #include "renderer/RandomState.h"
 #include <stdint.h>
+#include <float.h>
 
 #ifdef USE_CHEAP_RANDOM
 
@@ -54,18 +55,21 @@ static void __device__ initializeRandomState(RandomState* state, unsigned int se
     curand_init(seed+index, 0, 0, state);
 }
 
-// Return a float from 0,1
+// Return a float in range [0,1)
 static __device__ __inline__ float getRandomUniformFloat( RandomState* state )
 {
-    return curand_uniform(state);
+    // Currand generates values in range (0,1]
+    return curand_uniform(state) - FLT_EPSILON;
 }
 
 #endif
 
+// Return a float in range [0,1)
 static __device__ __inline__ optix::float2 getRandomUniformFloat2( RandomState* state )
 {
+    // Currand generates values in range (0,1]
     optix::float2 sample;
-    sample.x = getRandomUniformFloat(state);
-    sample.y = getRandomUniformFloat(state);
+    sample.x = getRandomUniformFloat(state) - FLT_EPSILON;
+    sample.y = getRandomUniformFloat(state) - FLT_EPSILON;
     return sample;
 }
