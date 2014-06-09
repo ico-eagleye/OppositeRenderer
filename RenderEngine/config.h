@@ -34,3 +34,5 @@
 #define PATH_TRACING_RR_START_DEPTH 3
 
 #define USE_CHEAP_RANDOM 0 // vmarz: cheap random seems broken (generates weird results)
+
+#define ENABLE_MESH_HITS_COUNTING 0

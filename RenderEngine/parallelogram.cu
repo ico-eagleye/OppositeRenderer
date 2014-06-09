@@ -22,6 +22,7 @@
 
 #include <optix_world.h>
 #include <optix_cuda.h>
+#include "config.h"
 
 using namespace optix;
 
@@ -62,7 +63,9 @@ RT_PROGRAM void intersect(int primIdx)
 					shadingNormal = geometricNormal = n;
 					texcoord = make_float3(a1,a2,0);
 					lgt_idx = lgt_instance;
+#if ENABLE_MESH_HITS_COUNTING
 					atomicAdd(&hitsPerMeshBuffer[meshId], 1);
+#endif
 					rtReportIntersection( 0 );
 				}
 			}

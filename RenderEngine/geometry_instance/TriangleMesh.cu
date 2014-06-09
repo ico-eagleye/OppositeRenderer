@@ -88,7 +88,9 @@ RT_PROGRAM void mesh_intersect(int primIdx)
                 textureCoordinate = t1*beta + t2*gamma + t0*(1.0f-beta-gamma);
             }
 
+#if ENABLE_MESH_HITS_COUNTING
 			atomicAdd(&hitsPerMeshBuffer[meshId], 1);
+#endif
             rtReportIntersection(0);
         }
     }
