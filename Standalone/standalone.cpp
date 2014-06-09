@@ -68,7 +68,7 @@ int main( int argc, char** argv )
         MainWindowBase mainWindow(application);
         //mainWindow.showMaximized();
 		mainWindow.show();
-		mainWindow.resize(1200,700);
+		mainWindow.resize(1150,700);
 
 		// vmarz: start render manager after MainWindow initialization when all signals/slots hooked up
 		application.startRenderManager();
