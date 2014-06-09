@@ -74,6 +74,7 @@ MainWindowBase::MainWindowBase(Application& application)
 	menuDocks->addAction(cameraDock->toggleViewAction());
 	menuDocks->addAction(ppmDock->toggleViewAction());
 	menuDocks->addAction(sceneDock->toggleViewAction());
+    menuDocks->addAction(consoleDock->toggleViewAction());
 
     // Status Bar Running Status and Time
 
