@@ -6,6 +6,7 @@
 
 #pragma once 
 
+#include "config.h"
 #include "renderer/RandomState.h"
 #include <stdint.h>
 #include <float.h>
