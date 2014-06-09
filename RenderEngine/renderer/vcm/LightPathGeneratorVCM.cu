@@ -35,7 +35,7 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 rtDeclareVariable(Sphere, sceneBoundingSphere, , );
 
-// VCN
+// VCM
 rtDeclareVariable(float, misVcWeightFactor, , ); // vmarz TODO set
 rtDeclareVariable(float, misVmWeightFactor, , ); // vmarz TODO set
 
@@ -65,38 +65,40 @@ rtBuffer<ushort, 2> lightVertexCountBuffer;
 RT_PROGRAM void generator()
 {
 	SubpathPRD lightPrd;
-	lightPrd.depth = 0;
-	lightPrd.randomState = randomStates[launchIndex];
+	//lightPrd.depth = 0;
+    lightPrd.done = 0;
+	//lightPrd.randomState = randomStates[launchIndex];
 	//lightPrd.dVC = 0;
 	//lightPrd.dVM = 0;
 	//lightPrd.dVCM = 0;
-    lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+    //lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 
 	// vmarz?: pick based on light power?
-	int lightIndex = 0;
-	if (1 < lights.size())
-	{
-		float sample = getRandomUniformFloat(&lightPrd.randomState);
-		lightIndex = intmin((int)(sample*lights.size()), lights.size()-1);
-	}
+	//int lightIndex = 0;
+	//if (1 < lights.size())
+	//{
+	//	float sample = getRandomUniformFloat(&lightPrd.randomState);
+	//	lightIndex = intmin((int)(sample*lights.size()), lights.size()-1);
+	//}
 
-	const Light light = lights[lightIndex];
-	const float inverseLightPickPdf = lights.size();
+	//const Light light = lights[lightIndex];
+	//const float inverseLightPickPdf = lights.size();
 
-	float3 rayOrigin;
-	float3 rayDirection;
-	float emissionPdfW;
-	float directPdfW;
-	float cosAtLight;
-	lightPrd.throughput = lightEmit(light, lightPrd.randomState, rayOrigin, rayDirection, emissionPdfW, directPdfW, cosAtLight);
-	// vmarz?: do something similar as done for photon, emit towards scene when light far from scene?
-	// check if photons normally missing the scene accounted for?
-	
-	// Set init data
-	emissionPdfW *= inverseLightPickPdf;
-	directPdfW *= inverseLightPickPdf;
+    const Light light = lights[0];
+	float3 rayOrigin = make_float3( 343.0f, 548.7999f, 227.0f);
+	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
+	//float emissionPdfW;
+	//float directPdfW;
+	//float cosAtLight;
+	//lightPrd.throughput = lightEmit(light, lightPrd.randomState, rayOrigin, rayDirection, emissionPdfW, directPdfW, cosAtLight);
+	//// vmarz?: do something similar as done for photon, emit towards scene when light far from scene?
+	//// check if photons normally missing the scene accounted for?
+	//
+	//// Set init data
+	//emissionPdfW *= inverseLightPickPdf;
+	//directPdfW *= inverseLightPickPdf;
 
-	lightPrd.throughput /= emissionPdfW;
+	//lightPrd.throughput /= emissionPdfW;
 	//lightPrd.isFinite = isDelta.isFinite ... vmarz?
 
 	//lightPrd.dVCM = Mis(directPdfW / emissionPdfW);
@@ -108,33 +110,38 @@ RT_PROGRAM void generator()
 	//	lightPrd.dVC = Mis(usedCosLight / emissionPdfW);
 	//}
 
-	lightPrd.dVM = lightPrd.dVC * misVcWeightFactor;
+	//lightPrd.dVM = lightPrd.dVC * misVcWeightFactor;
 
 	// Trace
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
 	
-	for (;;)
+    for (int i=0;;i++)
 	{
-        if ( launchIndex.x + launchIndex.y == 0)
+        if ((launchIndex.x + launchIndex.y) != 0)
         {
-            //printf("Got it. %d\n", launchIndex.y);
-            printf("Gen %d,%d - Dep %d - Dir %f %f %f\n", lightPrd.depth, launchIndex.x, launchIndex.y, rayDirection.x,
-                rayDirection.y, rayDirection.z);
-            rtTrace( sceneRootObject, lightRay, lightPrd );
-            //printf("Gen. traced depth %d\n", lightPrd.depth);
+            printf("Gen %d - idx %d,%d - break\n", i, launchIndex.x, launchIndex.y);
+            break;
         }
-        else
-            lightPrd.done = 1;
+        
+        printf("Gen %d - idx %d,%d - Dir %f %f %f\n", i, launchIndex.x, launchIndex.y, 
+            rayDirection.x, rayDirection.y, rayDirection.z);
+        rtTrace( sceneRootObject, lightRay, lightPrd );
 
-		if (lightPrd.done) break;
-        //if (2 < lightPrd.depth)
-        //    break;
+		if (lightPrd.done) 
+        {
+            printf("Gen %d - idx %d,%d - break\n", i, launchIndex.x, launchIndex.y);
+            break;
+        }
+        //else
+        //    lightPrd.done = 1;
 
         lightRay.origin = lightPrd.origin;
         lightRay.direction = lightPrd.direction;
+        printf("Gen %d - idx %d,%d - isdone %d \n", i, launchIndex.x, launchIndex.y, i, lightPrd.done);
 	}
 
 	randomStates[launchIndex] = lightPrd.randomState;
+    printf("Done idx %d,%d \n", launchIndex.x, launchIndex.y);
 }
 
 
@@ -200,6 +207,7 @@ RT_PROGRAM void generator()
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
+    printf("Miss %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
     lightPrd.done = 1;
     OPTIX_DEBUG_PRINT(lightPrd.depth, "Light ray missed geometry.\n");
 }

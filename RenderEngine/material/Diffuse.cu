@@ -123,8 +123,12 @@ rtBuffer<ushort, 2> lightVertexCountBuffer;
  // Light subpath program
 RT_PROGRAM void closestHitLight()
 {
+    printf("  Diffuse hit idx %d, %d \n", launchIndex.x, launchIndex.y);
+    lightPrd.done = 1;
+    return;
+
     if ( launchIndex.x + launchIndex.y == 0 )
-        printf("Diffuse hit %d\n", lightPrd.depth);
+        printf("  Diffuse hit id %d %d dep %d\n", launchIndex.x, launchIndex.y, lightPrd.depth);
     //else
     //{  
     //    lightPrd.done = 1;
@@ -167,7 +171,7 @@ RT_PROGRAM void closestHitLight()
 	// vmarz TODO store material bsdf
 
 	// store path vertex
-	//lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+	lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 
 	// vmarz TODO connect to camera
 	// vmarz TODO check max path length
@@ -180,6 +184,8 @@ RT_PROGRAM void closestHitLight()
 
 	if (contProb < rrSample)
 	{
+        if ( launchIndex.x + launchIndex.y == 0 )
+            printf("  Diff %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
 		lightPrd.done = 1;
 		return;
 	}
