@@ -4,7 +4,7 @@
   <!-- QT path. Default x64, otherwise Win32. -->
   <PropertyGroup>
 	<QTDIR_MSVC>$(QTDIR)</QTDIR_MSVC>
-	<QTDIR_MSVC Condition="'$(Platform)'=='Win32'">$(QTDIR_msvc2010)</QTDIR_MSVC>
+	<QTDIR_MSVC Condition="'$(Platform)'=='Win32'">$(QTDIR32)</QTDIR_MSVC>
   </PropertyGroup>
   
   <!-- QT libs -->
