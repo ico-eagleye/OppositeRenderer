@@ -68,6 +68,7 @@ inline float max(float a, float b)
 
 OptixRenderer::OptixRenderer() : 
     m_initialized(false),
+    m_lightVertexCountEstimated(false),
     m_width(10),
     m_height(10)
 {
@@ -322,6 +323,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
 #if ENABLE_RENDER_DEBUG_EXCEPTIONS
 	m_context->setPrintEnabled(true); // vmarz: needed for rtPrint calls in cuda kernels (note: printf doesn't need this)
+    m_context->setPrintBufferSize(100000000u); 
     m_context->setExceptionEnabled(RTexception::RT_EXCEPTION_ALL , true); // vmarz: only stack overflow exception enabled by default
 #endif
     //m_context->setTimeoutCallback()
