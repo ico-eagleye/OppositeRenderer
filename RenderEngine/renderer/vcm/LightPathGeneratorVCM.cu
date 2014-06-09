@@ -5,6 +5,7 @@
 */
 
 #include <optix.h>
+#include <optix_cuda.h>
 #include <optixu/optixu_math_namespace.h>
 #include <cuda_runtime.h>
 #include "config.h"
@@ -15,8 +16,6 @@
 #include "renderer/helpers/samplers.h"
 #include "renderer/helpers/random.h"
 #include "renderer/helpers/light.h"
-#include "renderer/ppm/Photon.h"
-#include "renderer/ppm/PhotonPRD.h"
 #include "math/Sphere.h"
 
 #include "renderer/vcm/PathVertex.h"
@@ -26,10 +25,7 @@
 using namespace optix;
 
 rtDeclareVariable(rtObject, sceneRootObject, , );
-rtBuffer<Photon, 1> photons;
 rtBuffer<RandomState, 2> randomStates;
-rtDeclareVariable(uint, maxPhotonDepositsPerEmitted, , );
-rtDeclareVariable(uint, photonLaunchWidth, , );
 rtBuffer<Light, 1> lights;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
