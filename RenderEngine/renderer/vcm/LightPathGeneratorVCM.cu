@@ -205,7 +205,6 @@ RT_PROGRAM void miss()
 {
     printf("Miss %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
     lightPrd.done = 1;
-    OPTIX_DEBUG_PRINT(lightPrd.depth, "Light ray missed geometry.\n");
 }
 
 
