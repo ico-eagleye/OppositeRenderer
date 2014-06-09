@@ -26,6 +26,7 @@ public:
     RENDER_ENGINE_EXPORT_API virtual const char* getSceneName() const;
     RENDER_ENGINE_EXPORT_API static const char* getCornellSceneName();
     RENDER_ENGINE_EXPORT_API virtual unsigned int getNumTriangles() const;
+	RENDER_ENGINE_EXPORT_API virtual unsigned int getNumMeshes() const;
     RENDER_ENGINE_EXPORT_API virtual AAB getSceneAABB() const;
 
 private:
@@ -35,7 +36,14 @@ private:
     optix::Program m_pgram_intersection;
     QVector<Light> m_sceneLights;
     AAB m_sceneAABB;
-    optix::GeometryInstance createParallelogram(optix::Context & context, const optix::float3& anchor, const optix::float3& offset1, const optix::float3& offset2, Material & material);
+    optix::GeometryInstance createParallelogram(
+		unsigned int meshId,
+		optix::Context & context,
+		const optix::float3& anchor,
+		const optix::float3& offset1,
+		const optix::float3& offset2,
+		Material & material
+	);
 
 };
 #endif

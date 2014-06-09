@@ -9,6 +9,7 @@
 #include "renderer/OptixRenderer.h"
 #include <QString>
 #include <QMessageBox>
+#include <QStandardPaths>
 #include "RenderWidget.hxx"
 #include "gui/AboutWindow.hxx"
 #include "gui/ComputeDeviceInformationWidget.hxx"
@@ -17,6 +18,7 @@
 #include "gui/docks/PPMDock.hxx"
 #include "gui/docks/CameraDock.hxx"
 #include "gui/docks/SceneDock.hxx"
+#include "gui/docks/ConsoleDock.hxx"
 #include "ComputeDeviceRepository.h"
 #include "scene/SceneFactory.h"
 #include "config.h"
@@ -62,6 +64,10 @@ MainWindowBase::MainWindowBase(Application& application)
 
     SceneDock* sceneDock = new SceneDock(this, application.getSceneManager());
     this->addDockWidget(Qt::RightDockWidgetArea, sceneDock);
+
+	// Console Dock
+	ConsoleDock *consoleDock = new ConsoleDock(this);
+	this->addDockWidget(Qt::BottomDockWidgetArea, consoleDock);
 
 	// Show/hide dock toggle menu
 	menuDocks->addAction(outputDock->toggleViewAction());
@@ -160,7 +166,7 @@ void MainWindowBase::onConfigureGPUDevices()
 void MainWindowBase::onOpenSceneFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
-                        "Open a scene", tr("Scene files (*.dae *.blend *.3ds);;Any(*.*)"));
+        "Open a scene", tr("Scene files (*.dae *.blend *.3ds);;Any(*.*)"));
     if(fileName.length() > 0)
     {
         m_lastOpenedSceneFile = QFileInfo(fileName);
