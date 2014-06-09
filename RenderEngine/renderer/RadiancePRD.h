@@ -6,6 +6,7 @@
 
 #pragma once
 #include "RandomState.h"
+#include "config.h"
 
 struct RadiancePRD
 {

@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "renderer/RandomState.h"
+#include "renderer/helpers/helpers.h"
 #include <stdint.h>
 #include <float.h>
 
@@ -60,7 +61,7 @@ static void __device__ initializeRandomState(RandomState* state, unsigned int se
 static __device__ __inline__ float getRandomUniformFloat( RandomState* state )
 {
     // Currand generates values in range (0,1]
-    return curand_uniform(state) - FLT_EPSILON;
+    return maxf(curand_uniform(state) - FLT_EPSILON, 0.0f);
 }
 
 #endif
@@ -70,7 +71,7 @@ static __device__ __inline__ optix::float2 getRandomUniformFloat2( RandomState* 
 {
     // Currand generates values in range (0,1]
     optix::float2 sample;
-    sample.x = getRandomUniformFloat(state) - FLT_EPSILON;
-    sample.y = getRandomUniformFloat(state) - FLT_EPSILON;
+    sample.x = getRandomUniformFloat(state);
+    sample.y = getRandomUniformFloat(state);
     return sample;
 }

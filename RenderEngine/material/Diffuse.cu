@@ -62,7 +62,8 @@ RT_PROGRAM void closestHitRadiance()
     radiancePrd.depth++; // vmarz: using for debugging (was already defined in struct)
     if(radiancePrd.flags & PRD_PATH_TRACING)
     {
-        radiancePrd.randomNewDirection = sampleUnitHemisphereCos(worldShadingNormal, getRandomUniformFloat2(&radiancePrd.randomState));
+        float2 sample = getRandomUniformFloat2(&radiancePrd.randomState);
+        radiancePrd.randomNewDirection = sampleUnitHemisphereCos(worldShadingNormal, sample);
     }
 }
 

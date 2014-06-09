@@ -128,7 +128,7 @@ RT_PROGRAM void generateRay()
 //
 RT_PROGRAM void exception()
 {
-    printf("Exception Radiance PT! depth %d \n", radiancePrd.depth);
+    printf("Exception Radiance PT!\n");
     rtPrintExceptionDetails();
     radiancePrd.flags = PRD_ERROR;
     radiancePrd.attenuation = make_float3(0,0,1);
