@@ -92,4 +92,6 @@ private:
 	const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
 	optix::Buffer m_lightVertexBuffer;
 	optix::Buffer m_lightVertexCountBuffer;
+	bool m_lightVertexCountEstimated;
+	unsigned int m_lightVertexCount;
 };

@@ -60,14 +60,17 @@ rtBuffer<unsigned int, 2> debugPhotonPathLengthBuffer;
 //    //uint  mSpecularPath  :  1; // All scattering events so far were specular
 //};
 
+rtBuffer<ushort, 2> lightVertexCountBuffer;
+
 RT_PROGRAM void generator()
 {
 	SubpathPRD lightPrd;
 	lightPrd.depth = 0;
 	lightPrd.randomState = randomStates[launchIndex];
-	lightPrd.dVC = 0;
-	lightPrd.dVM = 0;
-	lightPrd.dVCM = 0;
+	//lightPrd.dVC = 0;
+	//lightPrd.dVM = 0;
+	//lightPrd.dVCM = 0;
+    lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 
 	// vmarz?: pick based on light power?
 	int lightIndex = 0;
@@ -96,31 +99,42 @@ RT_PROGRAM void generator()
 	lightPrd.throughput /= emissionPdfW;
 	//lightPrd.isFinite = isDelta.isFinite ... vmarz?
 
-	lightPrd.dVCM = Mis(directPdfW / emissionPdfW);
+	//lightPrd.dVCM = Mis(directPdfW / emissionPdfW);
 
 	// e.g. if not delta ligth
-	if (!light.isDelta)
-	{
-		const float usedCosLight = light.isFinite ? cosAtLight : 1.f;
-		lightPrd.dVC = Mis(usedCosLight / emissionPdfW);
-	}
+	//if (!light.isDelta)
+	//{
+	//	const float usedCosLight = light.isFinite ? cosAtLight : 1.f;
+	//	lightPrd.dVC = Mis(usedCosLight / emissionPdfW);
+	//}
 
 	lightPrd.dVM = lightPrd.dVC * misVcWeightFactor;
 
-	for (;;)
-	{
-
-	}
-
 	// Trace
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
-	rtTrace( sceneRootObject, lightRay, lightPrd );
+	
+	for (;;)
+	{
+        if ( launchIndex.x + launchIndex.y == 0)
+        {
+            //printf("Got it. %d\n", launchIndex.y);
+            printf("Gen %d,%d - Dep %d - Dir %f %f %f\n", lightPrd.depth, launchIndex.x, launchIndex.y, rayDirection.x,
+                rayDirection.y, rayDirection.z);
+            rtTrace( sceneRootObject, lightRay, lightPrd );
+            //printf("Gen. traced depth %d\n", lightPrd.depth);
+        }
+        else
+            lightPrd.done = 1;
+
+		if (lightPrd.done) break;
+        //if (2 < lightPrd.depth)
+        //    break;
+
+        lightRay.origin = lightPrd.origin;
+        lightRay.direction = lightPrd.direction;
+	}
 
 	randomStates[launchIndex] = lightPrd.randomState;
-
-#if ENABLE_RENDER_DEBUG_OUTPUT
-	debugPhotonPathLengthBuffer[launchIndex] = lightPrd.depth;
-#endif
 }
 
 
@@ -186,6 +200,7 @@ RT_PROGRAM void generator()
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
+    lightPrd.done = 1;
     OPTIX_DEBUG_PRINT(lightPrd.depth, "Light ray missed geometry.\n");
 }
 
@@ -195,5 +210,6 @@ rtDeclareVariable(float3, exceptionErrorColor, , );
 RT_PROGRAM void exception()
 {
     printf("Exception Light ray!\n");
+    rtPrintExceptionDetails();
     lightPrd.throughput = make_float3(0,0,0);
 }

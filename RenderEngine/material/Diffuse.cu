@@ -59,6 +59,7 @@ RT_PROGRAM void closestHitRadiance()
     radiancePrd.normal = worldShadingNormal;
     radiancePrd.position = hitPoint;
     radiancePrd.lastTHit = tHit;
+    radiancePrd.depth++; // vmarz: using for debugging (was already defined in struct)
     if(radiancePrd.flags & PRD_PATH_TRACING)
     {
         radiancePrd.randomNewDirection = sampleUnitHemisphereCos(worldShadingNormal, getRandomUniformFloat2(&radiancePrd.randomState));
@@ -118,27 +119,42 @@ rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 rtBuffer<ushort, 2> lightVertexCountBuffer;
 
 
-// Light subpath program
+ // Light subpath program
 RT_PROGRAM void closestHitLight()
 {
-	uint2 idx = make_uint2(launchIndex.y * launchDim.x + launchIndex.x, launchIndex.y);
-	lightVertexCountBuffer[idx]++;
+    if ( launchIndex.x + launchIndex.y == 0 )
+        printf("Diffuse hit %d\n", lightPrd.depth);
+    //else
+    //{  
+    //    lightPrd.done = 1;
+    //    return;
+    //}
 
 	// vmarz TODO make sure shading normals used correctly
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
+    if ( launchIndex.x + launchIndex.y == 0 )
+    {
+        printf("  Hit point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+        printf("  Hit normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
+    }
 	// Update MIS quantities before storing at the vertex
 
 	// vmarz TODO infinite lights need attitional handling
-	SubpathPRD lightPrd;
 	float hitCosTheta = dot(worldShadingNormal, -ray.direction);
 	if (hitCosTheta < 0) return;	// vmarz TODO check validity
+
+    if ( launchIndex.x + launchIndex.y == 0 )
+    {
+        printf("  Cos theta %f \n", hitCosTheta);
+    }
 
 	float misFactor = 1.0f / Mis(fabs(hitCosTheta));
 	lightPrd.dVCM *= misFactor;  // vmarz?: need abs here?
 	lightPrd.dVC *= misFactor;
 	lightPrd.dVM *= misFactor;
+	lightPrd.depth++;
 
 	PathVertex lightVertex;
 	lightVertex.hitPoint = hitPoint;
@@ -150,6 +166,7 @@ RT_PROGRAM void closestHitLight()
 	// vmarz TODO store material bsdf
 
 	// store path vertex
+	//lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 
 	// vmarz TODO connect to camera
 	// vmarz TODO check max path length
@@ -157,6 +174,9 @@ RT_PROGRAM void closestHitLight()
 	// Russian Roulette
 	float contProb = luminanceCIE(Kd); // vmarz TODO precompute
 	float rrSample = getRandomUniformFloat(&lightPrd.randomState);
+    if ( launchIndex.x + launchIndex.y == 0 )
+        printf("  Cont %f RR %f \n", contProb, rrSample);
+
 	if (contProb < rrSample)
 	{
 		lightPrd.done = 1;
@@ -171,6 +191,11 @@ RT_PROGRAM void closestHitLight()
 	float cosThetaOut;
 	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
 	lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
+
+    if ( launchIndex.x + launchIndex.y == 0 )
+    {
+        printf("  New dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+    }
 
 	float bsdfRevPdfW; // vmarz TODO
 	// check component cont prob	
