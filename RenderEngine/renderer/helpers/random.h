@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <float.h>
 
-#ifdef USE_CHEAP_RANDOM
+#if USE_CHEAP_RANDOM
 
 /*
 The fast/cheap random generation scheme courtesy of 

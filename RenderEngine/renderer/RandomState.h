@@ -5,10 +5,9 @@
 */
 
 #pragma once
+#include "config.h"
 
-//#define USE_CHEAP_RANDOM
-
-#ifdef USE_CHEAP_RANDOM
+#if USE_CHEAP_RANDOM
 #include <stdint.h>
 typedef uint32_t RandomState;
 #else
