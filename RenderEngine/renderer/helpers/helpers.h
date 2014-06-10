@@ -5,12 +5,17 @@
 */
 
 #pragma once
+#include "config.h"
+#define PRINTF printf
+//#define PRINTF rtPrintf
 
-#if 0
+#if ENABLE_RENDER_DEBUG_OUTPUT
 #define OPTIX_DEBUG_PRINT(depth, str, ...) \
-    if(launchIndex.x == 0 && launchIndex.y == 0){ rtPrintf("%d %d: ", launchIndex.x, launchIndex.y); \
-        for(int i = 0; i < depth; i++){rtPrintf(" ");} \
-        rtPrintf(str, __VA_ARGS__); \
+    if (launchIndex.x == 0 && launchIndex.y == 0) \
+    {  \
+        PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
+        for(int i = 0; i < depth; i++) { PRINTF(" "); } \
+        PRINTF(str, __VA_ARGS__); \
     }
 #else
 #define OPTIX_DEBUG_PRINT(depth, str, ...) // nothing
