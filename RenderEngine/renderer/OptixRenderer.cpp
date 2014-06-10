@@ -432,7 +432,9 @@ void OptixRenderer::compile()
 void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsigned long long localIterationNumber, float PPMRadius, 
                                         bool createOutput, const RenderServerRenderRequestDetails & details)
 {
+#if ENABLE_RENDER_DEBUG_OUTPUT
     printf("----------------------- %d Local: %d\n", iterationNumber, localIterationNumber);
+#endif
     if(!m_initialized)
     {
         throw std::exception("Traced before OptixRenderer was initialized.");
