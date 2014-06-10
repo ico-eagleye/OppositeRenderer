@@ -9,7 +9,7 @@
 #if 0
 #define OPTIX_DEBUG_PRINT(depth, str, ...) \
     if(launchIndex.x == 0 && launchIndex.y == 0){ rtPrintf("%d %d: ", launchIndex.x, launchIndex.y); \
-        for(int i = 0; i < depth; i++){printf(" ");} \
+        for(int i = 0; i < depth; i++){rtPrintf(" ");} \
         rtPrintf(str, __VA_ARGS__); \
     }
 #else
