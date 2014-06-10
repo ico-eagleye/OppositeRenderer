@@ -124,12 +124,12 @@ rtBuffer<ushort, 2> lightVertexCountBuffer;
  // Light subpath program
 RT_PROGRAM void closestHitLight()
 {
-    printf("  Diffuse hit idx %d, %d \n", launchIndex.x, launchIndex.y);
+    rtPrintf("  Diffuse hit idx %d, %d \n", launchIndex.x, launchIndex.y);
     lightPrd.done = 1;
     return;
 
     if ( launchIndex.x + launchIndex.y == 0 )
-        printf("  Diffuse hit id %d %d dep %d\n", launchIndex.x, launchIndex.y, lightPrd.depth);
+        rtPrintf("  Diffuse hit id %d %d dep %d\n", launchIndex.x, launchIndex.y, lightPrd.depth);
     //else
     //{  
     //    lightPrd.done = 1;
@@ -142,8 +142,8 @@ RT_PROGRAM void closestHitLight()
 
     if ( launchIndex.x + launchIndex.y == 0 )
     {
-        printf("  Hit point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
-        printf("  Hit normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
+        rtPrintf("  Hit point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+        rtPrintf("  Hit normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
     }
 	// Update MIS quantities before storing at the vertex
 
@@ -153,7 +153,7 @@ RT_PROGRAM void closestHitLight()
 
     if ( launchIndex.x + launchIndex.y == 0 )
     {
-        printf("  Cos theta %f \n", hitCosTheta);
+        rtPrintf("  Cos theta %f \n", hitCosTheta);
     }
 
 	float misFactor = 1.0f / Mis(fabs(hitCosTheta));
@@ -181,12 +181,12 @@ RT_PROGRAM void closestHitLight()
 	float contProb = luminanceCIE(Kd); // vmarz TODO precompute
 	float rrSample = getRandomUniformFloat(&lightPrd.randomState);
     if ( launchIndex.x + launchIndex.y == 0 )
-        printf("  Cont %f RR %f \n", contProb, rrSample);
+        rtPrintf("  Cont %f RR %f \n", contProb, rrSample);
 
 	if (contProb < rrSample)
 	{
         if ( launchIndex.x + launchIndex.y == 0 )
-            printf("  Diff %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
+            rtPrintf("  Diff %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
 		lightPrd.done = 1;
 		return;
 	}
@@ -202,7 +202,7 @@ RT_PROGRAM void closestHitLight()
 
     if ( launchIndex.x + launchIndex.y == 0 )
     {
-        printf("  New dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+        rtPrintf("  New dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
     }
 
 	float bsdfRevPdfW; // vmarz TODO

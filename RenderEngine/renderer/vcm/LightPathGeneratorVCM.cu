@@ -115,17 +115,17 @@ RT_PROGRAM void generator()
 	{
         if ((launchIndex.x + launchIndex.y) != 0)
         {
-            printf("Gen %d - idx %d,%d - break\n", i, launchIndex.x, launchIndex.y);
+            rtPrintf("Gen %d - idx %d,%d - break\n", i, launchIndex.x, launchIndex.y);
             break;
         }
         
-        printf("Gen %d - idx %d,%d - Dir %f %f %f\n", i, launchIndex.x, launchIndex.y, 
+        rtPrintf("Gen %d - idx %d,%d - Dir %f %f %f\n", i, launchIndex.x, launchIndex.y, 
             rayDirection.x, rayDirection.y, rayDirection.z);
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
 		if (lightPrd.done) 
         {
-            printf("Gen %d - idx %d,%d - break\n", i, launchIndex.x, launchIndex.y);
+            rtPrintf("Gen %d - idx %d,%d - break\n", i, launchIndex.x, launchIndex.y);
             break;
         }
         //else
@@ -133,11 +133,11 @@ RT_PROGRAM void generator()
 
         lightRay.origin = lightPrd.origin;
         lightRay.direction = lightPrd.direction;
-        printf("Gen %d - idx %d,%d - isdone %d \n", i, launchIndex.x, launchIndex.y, i, lightPrd.done);
+        rtPrintf("Gen %d - idx %d,%d - isdone %d \n", i, launchIndex.x, launchIndex.y, i, lightPrd.done);
 	}
 
 	randomStates[launchIndex] = lightPrd.randomState;
-    printf("Done idx %d,%d \n", launchIndex.x, launchIndex.y);
+    rtPrintf("Done idx %d,%d \n", launchIndex.x, launchIndex.y);
 }
 
 
@@ -203,7 +203,7 @@ RT_PROGRAM void generator()
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
-    printf("Miss %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
+    rtPrintf("Miss %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
     lightPrd.done = 1;
 }
 
@@ -212,7 +212,7 @@ RT_PROGRAM void miss()
 rtDeclareVariable(float3, exceptionErrorColor, , );
 RT_PROGRAM void exception()
 {
-    printf("Exception Light ray!\n");
+    rtPrintf("Exception Light ray!\n");
     rtPrintExceptionDetails();
     lightPrd.throughput = make_float3(0,0,0);
 }

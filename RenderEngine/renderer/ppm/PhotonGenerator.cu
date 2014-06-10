@@ -139,6 +139,6 @@ RT_PROGRAM void miss()
 rtDeclareVariable(float3, exceptionErrorColor, , );
 RT_PROGRAM void exception()
 {
-    printf("Exception Photon!\n");
+    rtPrintf("Exception Photon!\n");
     photonPrd.power = make_float3(0,0,0);
 }

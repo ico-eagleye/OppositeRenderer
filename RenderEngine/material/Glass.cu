@@ -140,7 +140,7 @@ RT_PROGRAM void anyHitRadiance()
     if( (isHitFromOutside && ray.ray_type == RayType::RADIANCE_IN_PARTICIPATING_MEDIUM) || 
         (!isHitFromOutside && ray.ray_type == RayType::RADIANCE ))
     {
-        //printf("Ignore int' tHit=%.4f", tHit);
+        //rtPrintf("Ignore int' tHit=%.4f", tHit);
         rtIgnoreIntersection();
     }
 }
@@ -201,7 +201,7 @@ RT_PROGRAM void anyHitPhoton()
     if( (isHitFromOutside && ray.ray_type == RayType::PHOTON_IN_PARTICIPATING_MEDIUM) || 
         (!isHitFromOutside && ray.ray_type == RayType::PHOTON ))
     {
-        //printf("Ignore int' tHit=%.4f", tHit);
+        //rtPrintf("Ignore int' tHit=%.4f", tHit);
         rtIgnoreIntersection();
     }
 }

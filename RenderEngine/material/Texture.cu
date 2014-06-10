@@ -119,8 +119,8 @@ RT_PROGRAM void closestHitPhoton()
     float3 value3 = make_float3(value.x, value.y, value.z);
     photonPrd.power *= value3;
 #ifdef OPTIX_MATERIAL_DUMP
-    for(int i = 0; i<photonPrd.depth;i++) printf("\t"); 
-        printf("Hit diffuse at P(%.2f %.2f %.2f) t=%.3f\n", hitPoint.x, hitPoint.y, hitPoint.z, tHit);
+    for(int i = 0; i<photonPrd.depth;i++) rtPrintf("\t"); 
+        rtPrintf("Hit diffuse at P(%.2f %.2f %.2f) t=%.3f\n", hitPoint.x, hitPoint.y, hitPoint.z, tHit);
 #endif
 
     photonPrd.weight *= fmaxf(value3);

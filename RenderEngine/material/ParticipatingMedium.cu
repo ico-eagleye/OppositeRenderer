@@ -140,7 +140,7 @@ RT_PROGRAM void closestHitPhoton()
     int depth = photonPrd.depth;
 
     if(launchIndex.x == 185000)
-    printf("", photonPrd.depth-1);// line necessary due to optix bug...
+    rtPrintf("", photonPrd.depth-1);// line necessary due to optix bug...
 
     //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Probing [0,t] ...\n");
 
@@ -151,7 +151,7 @@ RT_PROGRAM void closestHitPhoton()
     Ray newRay(hitPoint, ray.direction, RayType::PHOTON_IN_PARTICIPATING_MEDIUM, 0.001, scatterLocationT);
     rtTrace(sceneRootObject, newRay, photonPrd);
 #ifdef OPTIX_MATERIAL_DUMP
-    for(int i = 0; i<depth;i++) printf("\t");
+    for(int i = 0; i<depth;i++) rtPrintf("\t");
 #endif
     // If depth is unmodified, no surface was hit from hitpoint to scatterLocation, so we store it as a scatter event.
     // We also scatter a photon in a new direction sampled by the phase function at this location.

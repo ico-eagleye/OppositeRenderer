@@ -82,7 +82,7 @@ RT_PROGRAM void miss()
 
 RT_PROGRAM void exception()
 {
-    printf("Exception Radiance!\n");
+    rtPrintf("Exception Radiance!\n");
     radiancePrd.flags = PRD_ERROR;
     radiancePrd.attenuation = make_float3(0.f,0.f,1.f);
 }
