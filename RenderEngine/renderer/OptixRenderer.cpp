@@ -420,8 +420,17 @@ void OptixRenderer::compile()
 {
     try
     {
+#if ENABLE_RENDER_DEBUG_OUTPUT
+        printf("Context validation\n");
+#endif
         m_context->validate();
+#if ENABLE_RENDER_DEBUG_OUTPUT
+        printf("Done\nContext compilation... ");
+#endif
         m_context->compile();
+#if ENABLE_RENDER_DEBUG_OUTPUT
+        printf("Done\n");
+#endif
     }
     catch(const Exception& e)
     {
@@ -600,6 +609,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 int dummy = 1;
 
                 {
+                    printf("  OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS launch\n");
 			        nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS");
 			        sutilCurrentTime( &t0 );
 			        m_context->launch( OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS,
