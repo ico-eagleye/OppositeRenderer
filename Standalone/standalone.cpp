@@ -24,6 +24,7 @@ int main( int argc, char** argv )
 
     QTextStream out(stdout);
     QTextStream in(stdin);
+    setbuf(stdout, NULL);   // vmarz: disable stdout buffering, otherwise printf output doesn't show up consistently
 
     try
     {
