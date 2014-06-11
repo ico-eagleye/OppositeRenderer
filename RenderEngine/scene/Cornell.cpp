@@ -180,12 +180,12 @@ optix::Group Cornell::getSceneRootGroup(optix::Context & context)
     for (int i = 0; i < gis.size(); ++i )
         geometry_group->setChild( i, gis[i] );
 
-    geometry_group->setAcceleration(context->createAcceleration("Sbvh", "Bvh"));
+    geometry_group->setAcceleration(context->createAcceleration("Sbvh", "Bvh")); // vmarz TODO test Trbvh
 
     optix::Group gro = context->createGroup();
     gro->setChildCount(1);
     gro->setChild(0, geometry_group);
-    optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh");
+    optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh"); // vmarz TODO test Trbvh
     gro->setAcceleration(acceleration);
 
     return gro;

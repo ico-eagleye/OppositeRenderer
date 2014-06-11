@@ -484,7 +484,8 @@ void Scene::loadDefaultSceneCamera()
         Camera::KeepHorizontal );
 }
 
-optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node, QVector<optix::Geometry> & geometries, QVector<Material*> & materials)
+optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node,
+                                     QVector<optix::Geometry> & geometries, QVector<Material*> & materials)
 {
     if(node->mNumMeshes > 0)
     {
@@ -509,7 +510,7 @@ optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node, QVe
         }
 
         {
-            optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh");
+            optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh"); // vmarz TODO test Trbvh
             acceleration->setProperty( "vertex_buffer_name", "vertexBuffer" );
             acceleration->setProperty( "index_buffer_name", "indexBuffer" );
             geometryGroup->setAcceleration( acceleration );
@@ -517,7 +518,6 @@ optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node, QVe
         }
 
         // Create group that contains the GeometryInstance
-
         optix::Group group = context->createGroup();
         group->setChildCount(1);
         group->setChild(0, geometryGroup);
@@ -544,7 +544,7 @@ optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node, QVe
         if(groups.size() > 0)
         {
             optix::Group group = context->createGroup(groups.begin(), groups.end());
-            optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh");
+            optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh");  // vmarz TODO test Trbvh
             group->setAcceleration( acceleration );
             return group;
         }
