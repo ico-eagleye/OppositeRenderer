@@ -252,5 +252,7 @@
     <CudaCompile Include="material\Texture.cu">
       <Filter>material</Filter>
     </CudaCompile>
+    <CudaCompile Include="material\DiffuseDbg.cu" />
+    <CudaCompile Include="renderer\vcm\LightPathGeneratorVCMDbg.cu" />
   </ItemGroup>
 </Project>

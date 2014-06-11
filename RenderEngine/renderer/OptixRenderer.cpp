@@ -296,9 +296,9 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 	// VCM programs
 	{
 		// vmarz TODO FIX
-		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generator" );
-		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
-		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
+		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "generatorDbg" );
+		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "exception" );
+		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "miss");
 		m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, generatorProgram);
 		m_context->setMissProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, missProgram);
 		m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, exceptionProgram);
@@ -323,7 +323,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
 #if ENABLE_RENDER_DEBUG_EXCEPTIONS
 	m_context->setPrintEnabled(true); // vmarz: needed for rtPrint calls in cuda kernels (note: printf doesn't need this)
-    m_context->setPrintBufferSize(100000000u); 
+    m_context->setPrintBufferSize(10000000u); 
     m_context->setExceptionEnabled(RTexception::RT_EXCEPTION_ALL , true); // vmarz: only stack overflow exception enabled by default
 #endif
     //m_context->setTimeoutCallback()
@@ -421,7 +421,7 @@ void OptixRenderer::compile()
     try
     {
 #if ENABLE_RENDER_DEBUG_OUTPUT
-        printf("Context validation\n");
+        printf("Context validation... ");
 #endif
         m_context->validate();
 #if ENABLE_RENDER_DEBUG_OUTPUT
@@ -604,12 +604,14 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 // Transfer any data to the GPU (trigger an empty launch)
                 m_context->launch( OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS,
                     static_cast<unsigned int>(0),
-                    static_cast<unsigned int>(0) );
-                
+                    static_cast<unsigned int>(0) );                
                 int dummy = 1;
 
                 {
-                    printf("  OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS launch\n");
+#if ENABLE_RENDER_DEBUG_OUTPUT
+                    printf("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS launch dim %d x %d\n",
+                        SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT);
+#endif
 			        nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS");
 			        sutilCurrentTime( &t0 );
 			        m_context->launch( OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS,

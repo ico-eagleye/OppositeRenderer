@@ -124,43 +124,28 @@ rtBuffer<ushort, 2> lightVertexCountBuffer;
  // Light subpath program
 RT_PROGRAM void closestHitLight()
 {
-    rtPrintf("  Diffuse hit idx %d, %d \n", launchIndex.x, launchIndex.y);
-    lightPrd.done = 1;
-    return;
+    lightPrd.depth++;	
 
-    if ( launchIndex.x + launchIndex.y == 0 )
-        rtPrintf("  Diffuse hit id %d %d dep %d\n", launchIndex.x, launchIndex.y, lightPrd.depth);
-    //else
-    //{  
-    //    lightPrd.done = 1;
-    //    return;
-    //}
-
-	// vmarz TODO make sure shading normals used correctly
+    // vmarz TODO make sure shading normals used correctly
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
-    if ( launchIndex.x + launchIndex.y == 0 )
-    {
-        rtPrintf("  Hit point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
-        rtPrintf("  Hit normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
-    }
-	// Update MIS quantities before storing at the vertex
+    OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - rayDir %f %f %f\n", ray.direction.x, ray.direction.y, ray.direction.z);
+    OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+    OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
+
+    // Update MIS quantities before storing at the vertex
 
 	// vmarz TODO infinite lights need attitional handling
 	float hitCosTheta = dot(worldShadingNormal, -ray.direction);
 	if (hitCosTheta < 0) return;	// vmarz TODO check validity
 
-    if ( launchIndex.x + launchIndex.y == 0 )
-    {
-        rtPrintf("  Cos theta %f \n", hitCosTheta);
-    }
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - cos theta %f \n", hitCosTheta);
 
 	float misFactor = 1.0f / Mis(fabs(hitCosTheta));
 	lightPrd.dVCM *= misFactor;  // vmarz?: need abs here?
 	lightPrd.dVC *= misFactor;
 	lightPrd.dVM *= misFactor;
-	lightPrd.depth++;
 
 	PathVertex lightVertex;
 	lightVertex.hitPoint = hitPoint;
@@ -180,13 +165,11 @@ RT_PROGRAM void closestHitLight()
 	// Russian Roulette
 	float contProb = luminanceCIE(Kd); // vmarz TODO precompute
 	float rrSample = getRandomUniformFloat(&lightPrd.randomState);
-    if ( launchIndex.x + launchIndex.y == 0 )
-        rtPrintf("  Cont %f RR %f \n", contProb, rrSample);
+    
+    OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - cont %f RR %f \n", contProb, rrSample);
 
 	if (contProb < rrSample)
 	{
-        if ( launchIndex.x + launchIndex.y == 0 )
-            rtPrintf("  Diff %d,%d - Dep %d - done\n", launchIndex.x, launchIndex.y, lightPrd.depth);
 		lightPrd.done = 1;
 		return;
 	}
@@ -200,10 +183,7 @@ RT_PROGRAM void closestHitLight()
 	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
 	lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
 
-    if ( launchIndex.x + launchIndex.y == 0 )
-    {
-        rtPrintf("  New dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
-    }
+    OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 
 	float bsdfRevPdfW; // vmarz TODO
 	// check component cont prob	
@@ -214,30 +194,56 @@ RT_PROGRAM void closestHitLight()
 
 	lightPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
 	lightPrd.origin = hitPoint;
+    OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
+
+    if (lightPrd.depth == 2)
+    {
+        lightPrd.done = 1;
+        return;
+    }
 }
 
-//struct PathVertex
-//{
-//	optix::float3 hitPoint;
-//  optix::float3 throughput;
-//  float pathDepth;
-//	float dVCM;
-//	float dVC;
-//	float dVM;
-//	// bsdf data
-//	optix::uint materialID;
-//};
 
-//struct SubpathPRD
-//{
-//  optix::float3 origin;
-//	optix::float3 direction;
-//	optix::float3 throughput;
-//  optix::uint depth;
-//  RandomState randomState;
-//	float dVCM;
-//	float dVC;
-//	float dVM;
-//	//uint  mIsFiniteLight :  1; // Just generate by finite light
-//  //uint  mSpecularPath  :  1; // All scattering events so far were specular
-//};
+RT_PROGRAM void closestHitLightDbg()
+{
+    lightPrd.depth++;    
+    if (0.5f < getRandomUniformFloat(&lightPrd.randomState))
+	{
+		lightPrd.done = 1;
+		return;
+	}
+
+    //float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;
+    lightPrd.origin = hitPoint;
+    lightPrd.direction = -ray.direction;
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+
+	//float hitCosTheta = dot(worldShadingNormal, -ray.direction);
+	//if (hitCosTheta < 0) return;
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - cos theta %f \n", hitCosTheta);
+
+	// store path vertex
+	//lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+	
+	// Russian Roulette
+	//float contProb = luminanceCIE(Kd);
+	//float rrSample = getRandomUniformFloat(&lightPrd.randomState);    
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - cont %f RR %f \n", contProb, rrSample);
+	//if (0.5f < rrSample)
+	//{
+	//	lightPrd.done = 1;
+	//	return;
+	//}
+
+	// New dir
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);	
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
+
+    // Doesn't crash if code below uncommented
+    //if (lightPrd.depth == 1)
+    //{
+    //    lightPrd.done = 1;
+    //    return;
+    //}
+}

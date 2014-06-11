@@ -100,8 +100,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DLL;RENDER_ENGINE_DLL;WIN32;_WINDOWS;_DEBUG;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OPTIX_PATH)/include;$(OPTIX_PATH)/include/optixu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -135,6 +134,8 @@
       <KeepDir>$(IntDir)</KeepDir>
       <GenerateLineInfo>false</GenerateLineInfo>
       <Optimization>InheritFromHost</Optimization>
+      <MaxRegCount />
+      <AdditionalOptions>-D_USE_MATH_DEFINES -DNOMINMAX -DCUDA_64_BIT_DEVICE_CODE --compiler-options /D_USE_MATH_DEFINES -DNVCC --disable-warnings %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -372,6 +373,7 @@
     <CudaCompile Include="geometry_instance\AAB.cu" />
     <CudaCompile Include="geometry_instance\Sphere.cu" />
     <CudaCompile Include="geometry_instance\TriangleMesh.cu" />
+    <CudaCompile Include="material\DiffuseDbg.cu" />
     <CudaCompile Include="material\DiffuseEmitter.cu" />
     <CudaCompile Include="material\Mirror.cu" />
     <CudaCompile Include="material\Texture.cu" />
@@ -418,6 +420,7 @@
     <CudaCompile Include="renderer\vcm\LightPathGeneratorVCM.cu">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
+    <CudaCompile Include="renderer\vcm\LightPathGeneratorVCMDbg.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
