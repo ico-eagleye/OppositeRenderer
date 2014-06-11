@@ -6,17 +6,32 @@
 
 #pragma once
 #include "config.h"
-#define PRINTF printf
-//#define PRINTF rtPrintf
+//#define PRINTF printf
+#define PRINTF rtPrintf
 
 #if ENABLE_RENDER_DEBUG_OUTPUT
+
+#if PRINTF
 #define OPTIX_DEBUG_PRINT(depth, str, ...) \
     if (launchIndex.x == 0 && launchIndex.y == 0) \
     {  \
-        PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
-        for(int i = 0; i < depth; i++) { PRINTF(" "); } \
+    PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
+    for(int i = 0; i < depth; i++) { PRINTF(" "); } \
         PRINTF(str, __VA_ARGS__); \
     }
+
+#else
+
+// With rtPrintf use single output. Multiple consecutive can "Error in rtPrintf format string"
+// exception - http://celarek.at/2014/05/why-you-should-never-use-nvidia-optix/
+// Some say it's indication of memory corruption somewhere.. investigating.
+#define OPTIX_DEBUG_PRINT(depth, str, ...) \
+    if (launchIndex.x == 0 && launchIndex.y == 0) \
+    {  \
+        PRINTF(str, __VA_ARGS__); \
+    }
+#endif
+
 #else
 #define OPTIX_DEBUG_PRINT(depth, str, ...) // nothing
 #endif
