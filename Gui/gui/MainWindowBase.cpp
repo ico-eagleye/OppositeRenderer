@@ -192,11 +192,12 @@ void MainWindowBase::onRunningStatusChanged()
 void MainWindowBase::onRenderMethodChanged()
 {
     QString str;
-    if(m_application.getRenderMethod() == RenderMethod::PATH_TRACING)
+    RenderMethod::E rm = m_application.getRenderMethod();
+    if (rm == RenderMethod::PATH_TRACING)
     {
         str = "Path Tracing";
     }
-    else
+    else if (rm == RenderMethod::PROGRESSIVE_PHOTON_MAPPING)
     {
         str = "Progressive Photon Mapping";
         if(ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_UNIFORM_GRID)
@@ -211,6 +212,10 @@ void MainWindowBase::onRenderMethodChanged()
         {
             str += " (Stochastic hash)";
         }
+    }
+    else
+    {
+        str = "Bidirectional Path Tracing";
     }
 
     m_statusbar_renderMethodLabel->setText(QString("Render method: ") + str);
