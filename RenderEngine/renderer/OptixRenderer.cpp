@@ -420,17 +420,11 @@ void OptixRenderer::compile()
 {
     try
     {
-#if ENABLE_RENDER_DEBUG_OUTPUT
         printf("Context validation... ");
-#endif
         m_context->validate();
-#if ENABLE_RENDER_DEBUG_OUTPUT
         printf("Done\nContext compilation... ");
-#endif
         m_context->compile();
-#if ENABLE_RENDER_DEBUG_OUTPUT
         printf("Done\n");
-#endif
     }
     catch(const Exception& e)
     {
