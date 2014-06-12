@@ -510,7 +510,9 @@ optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node,
         }
 
         {
-            optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh"); // vmarz TODO test Trbvh
+            // vmarz: Changed to Trbvh. Sbvh can cause weird hangs 
+            // https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
+            optix::Acceleration acceleration = context->createAcceleration("Trbvh", "Bvh");
             acceleration->setProperty( "vertex_buffer_name", "vertexBuffer" );
             acceleration->setProperty( "index_buffer_name", "indexBuffer" );
             geometryGroup->setAcceleration( acceleration );
@@ -544,7 +546,7 @@ optix::Group Scene::getGroupFromNode(optix::Context & context, aiNode* node,
         if(groups.size() > 0)
         {
             optix::Group group = context->createGroup(groups.begin(), groups.end());
-            optix::Acceleration acceleration = context->createAcceleration("Sbvh", "Bvh");  // vmarz TODO test Trbvh
+            optix::Acceleration acceleration = context->createAcceleration("Trbvh", "Bvh");
             group->setAcceleration( acceleration );
             return group;
         }
