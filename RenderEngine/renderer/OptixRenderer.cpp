@@ -271,7 +271,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
     // Output Buffer
     {
-        m_outputBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
+        m_outputBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
         m_context["outputBuffer"]->set(m_outputBuffer);
     }
 
