@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ 
+  <!-- QT path. Default x64, otherwise Win32. -->
+  <PropertyGroup>
+	<QTDIR_MSVC>$(QTDIR)</QTDIR_MSVC>
+	<QTDIR_MSVC Condition="'$(Platform)'=='Win32'">$(QTDIR32)</QTDIR_MSVC>
+  </PropertyGroup>
   
   <ItemGroup>
     <UIFiles Include="$(MSBuildProjectDirectory)\**\*.ui" />
@@ -8,12 +14,12 @@
   
   <Target Name="CompileQtUI" BeforeTargets="ClCompile" Inputs="@(UIFiles)" Outputs="@(UIFiles->'%(RootDir)%(Directory)ui_%(Filename).h')">
     <Message Text="Qt: UIC'ing .ui file %(UIFiles.FullPath)" Importance="High" />
-    <Exec Command="$(QTDIR)\bin\uic.exe %(UIFiles.FullPath) -o %(UIFiles.RootDir)%(UIFiles.Directory)ui_%(UIFiles.Filename).h"/>
+    <Exec Command="$(QTDIR_MSVC)\bin\uic.exe %(UIFiles.FullPath) -o %(UIFiles.RootDir)%(UIFiles.Directory)ui_%(UIFiles.Filename).h"/>
   </Target>
 
   <Target Name="CompileQtMOC" BeforeTargets="ClCompile" Inputs="@(MocFiles)" Outputs="@(MocFiles->'%(RootDir)%(Directory)/moc_%(Filename).cpp')">
     <Message Text="Qt: MOC'ing .h file %(MocFiles.FullPath)" Importance="High" />
-    <Exec Command="$(QTDIR)\bin\moc.exe %(MocFiles.FullPath) -o %(MocFiles.RootDir)%(MocFiles.Directory)/moc_%(MocFiles.Filename).cpp"/>
+    <Exec Command="$(QTDIR_MSVC)\bin\moc.exe %(MocFiles.FullPath) -o %(MocFiles.RootDir)%(MocFiles.Directory)/moc_%(MocFiles.Filename).cpp"/>
   </Target>  
 </Project>
 
