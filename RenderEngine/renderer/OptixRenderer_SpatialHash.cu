@@ -7,6 +7,7 @@
 #include "config.h"
 #include <cuda.h>
 #include <optix_world.h>
+#include "renderer/helpers/random.h" // Cuda 6 issue: "cuda_kernel.h" needs must included before thrust stuff http://stackoverflow.com/questions/23352122/including-thrust-sort-h-before-curand-kernel-h-gives-compilation-error
 #include <thrust/reduce.h>
 #include <thrust/pair.h>
 #include <thrust/device_vector.h>
@@ -24,7 +25,6 @@
 #include "util/sutil.h"
 #include "renderer/OptixEntryPoint.h"
 #include "renderer/helpers/optix.h"
-#include "renderer/helpers/random.h"
 #include "renderer/helpers/nsight.h"
 #include "math/Vector3.h"
 
