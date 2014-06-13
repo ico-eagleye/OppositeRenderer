@@ -39,7 +39,7 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // vmarz TODO set
 rtBuffer<unsigned int, 2> debugPhotonPathLengthBuffer;
 #endif
 
-rtBuffer<ushort, 2> lightVertexCountBuffer;
+rtBuffer<uint, 2> lightVertexCountBuffer;
 
 RT_PROGRAM void generator()
 {
@@ -50,7 +50,7 @@ RT_PROGRAM void generator()
 	lightPrd.dVC = 0;
 	lightPrd.dVM = 0;
 	lightPrd.dVCM = 0;
-    lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+    lightVertexCountBuffer[launchIndex] = 0u;
 
 	// vmarz TODO: pick based on light power
 	int lightIndex = 0;
@@ -129,15 +129,25 @@ RT_PROGRAM void generatorDbg()
     float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
 	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
-	
+    int a = launchIndex.x;
     for (int i=0;;i++)
 	{
         //OPTIX_DEBUG_PRINT(lightPrd.depth, " dir %.2f %.2f %.2f\n",
-           // lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
+        //    lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
+        if (launchIndex.x == 0 && launchIndex.y == 0)
+        {
+            rtPrintf("i %d\n", launchIndex.x);
+            //for(int i = 0; i < lightPrd.depth; i++) { rtPrintf(" "); }
+            //rtPrintf( " dir %.2f %.2f %.2f\n", lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
+            //rtPrintf(" %d dir %f %f %f \n", launchIndex.x, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
+            //rtPrintf("dir %.2f %.2f %.2f\n", lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
+            rtPrintf("Outputs, but hangs\n");
+        }
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
 		if (lightPrd.done) 
         {
+            //lightPrd.done += a;
             //OPTIX_DEBUG_PRINT(lightPrd.depth, " done\n");
             break;
         }
@@ -152,6 +162,7 @@ RT_PROGRAM void generatorDbg()
 }
 
 
+
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
@@ -164,7 +175,7 @@ RT_PROGRAM void miss()
 rtDeclareVariable(float3, exceptionErrorColor, , );
 RT_PROGRAM void exception()
 {
-    rtPrintf("Exception Light ray!\n");
-    rtPrintExceptionDetails();
+    //rtPrintf("Exception Light ray!\n");
+    //rtPrintExceptionDetails();
     lightPrd.throughput = make_float3(0,0,0);
 }

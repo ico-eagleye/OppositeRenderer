@@ -288,17 +288,16 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 	m_lightVertexBuffer->setSize( 1, 1 );
 	m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
 
-	m_lightVertexCountBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
-	m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_SHORT, 
+	m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 
 		SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT );
 	m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
 
 	// VCM programs
 	{
 		// vmarz TODO FIX
-		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "generatorDbg" );
-		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "exception" );
-		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "miss");
+		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generatorDbg" );
+		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
+		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
 		m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, generatorProgram);
 		m_context->setMissProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, missProgram);
 		m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, exceptionProgram);
@@ -618,7 +617,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
                 // get count
                 optix::Buffer buffer = m_context["lightVertexCountBuffer"]->getBuffer();
-                unsigned short* buffer_Host = (unsigned short*)buffer->map();
+                unsigned int* buffer_Host = (unsigned int*)buffer->map();
                 unsigned int subpathCount = SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH * SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
                 unsigned long long sumCount = 0;
                 for(int i = 0; i < subpathCount; i++)

@@ -44,6 +44,8 @@ RT_PROGRAM void closestHitPhoton()
    photonPrd.depth++;
 }
 
+
+// Radiance shadow program
 RT_PROGRAM void gatherAnyHitOnEmitter()
 {
     shadowPrd.attenuation = 1.0f;

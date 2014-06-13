@@ -7,7 +7,7 @@
 #pragma once
 #include "config.h"
 //#define PRINTF printf
-#define PRINTF rtPrintf
+#define PRINTF rtPrintf // doesn't show up when output forwarded to a file
 
 #if ENABLE_RENDER_DEBUG_OUTPUT
 
@@ -17,7 +17,7 @@
     {  \
     PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
     for(int i = 0; i < depth; i++) { PRINTF(" "); } \
-        PRINTF(str, __VA_ARGS__); \
+    PRINTF(str, __VA_ARGS__); \
     }
 
 #else
@@ -28,9 +28,17 @@
 #define OPTIX_DEBUG_PRINT(depth, str, ...) \
     if (launchIndex.x == 0 && launchIndex.y == 0) \
     {  \
-        PRINTF(str, __VA_ARGS__); \
+    PRINTF(str, __VA_ARGS__); \
     }
 #endif
+//#define OPTIX_DEBUG_PRINT(depth, str, ...) \
+//    if (launchIndex.x == 0 && launchIndex.y == 0) \
+//    {  \
+//        PRINTF("i %d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
+//        for(int i = 0; i < depth; i++) { PRINTF(" "); } \
+//        PRINTF(str, __VA_ARGS__); \
+//    }
+//#endif
 
 #else
 #define OPTIX_DEBUG_PRINT(depth, str, ...) // nothing
