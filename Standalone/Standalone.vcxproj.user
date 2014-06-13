@@ -12,7 +12,8 @@
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>&gt; out.log</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>
+    </LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommandArguments>&gt; out.log</LocalDebuggerCommandArguments>
