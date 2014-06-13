@@ -122,16 +122,27 @@ rtBuffer<uint, 2> lightVertexCountBuffer;
 
 
 
-float3 __device__ __inline__ sampleHemisphereCos(float3 normal, float2 sample)
+// Create ONB from normalaized vector
+static __device__ __inline__ void createONB( 
+    const optix::float3& n, optix::float3& U, optix::float3& V)
 {
-    float sintheta2=sample.x;
-    float sintheta=sqrtf(sintheta2);
-    float costheta=sqrtf(1.f-sintheta2);
-    float phi=(2.f*M_PIf)*sample.y;
-    float cosphi=cosf(phi)*sintheta;
-    float sinphi=sinf(phi)*sintheta;
+  using namespace optix;
 
-    float3 direction = normal * costheta + sample.x * cosphi + sample.y * sinphi;
+  U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
+  if ( dot(U, U) < 1.e-3f )
+      U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
+  U = normalize( U );
+  V = cross( n, U );
+}
+
+
+float3 __device__ __inline__ sampleHemisphereCosOptix(float3 normal, float2 rnd)
+{
+    float3 p;
+    cosine_sample_hemisphere(rnd.x, rnd.y, p);
+    float3 v1, v2;
+    createONB(normal, v1, v2);
+    return v1 * p.x + v2 * p.y + normal * p.z;  
 }
 
 
@@ -195,8 +206,8 @@ RT_PROGRAM void closestHitLight()
 	float bsdfDirPdfW;
 	float cosThetaOut;
 	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
-	//lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
-    lightPrd.direction = sampleHemisphereCos(worldShadingNormal, bsdfSample);
+	lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
+    //lightPrd.direction = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
     OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 
 	float bsdfRevPdfW; // vmarz TODO
@@ -229,7 +240,7 @@ RT_PROGRAM void closestHitLightDbg()
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
 
 	// store path vertex
-	lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+	//lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 	
 	// Russian Roulette
 	float contProb = luminanceCIE(Kd);
@@ -243,10 +254,10 @@ RT_PROGRAM void closestHitLightDbg()
 
 	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
     float3 dir = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample);
-    dir = sampleHemisphereCos(worldShadingNormal, bsdfSample);
+    dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - samp dir %f %f %f len %f\n", dir.x, dir.y, dir.z, sqrtf(dot(dir, dir)));	
-	lightPrd.direction = normalize(dir);
-    lightPrd.direction = normalize(4*worldShadingNormal + ray.direction);
+	//lightPrd.direction = normalize(dir);
+ //   lightPrd.direction = normalize(4*worldShadingNormal + ray.direction);
 
     //lightPrd.direction = -ray.direction;
     //OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);	

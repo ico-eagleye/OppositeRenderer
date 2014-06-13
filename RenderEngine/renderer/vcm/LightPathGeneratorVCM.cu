@@ -129,20 +129,11 @@ RT_PROGRAM void generatorDbg()
     float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
 	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
-    int a = launchIndex.x;
+
     for (int i=0;;i++)
 	{
         //OPTIX_DEBUG_PRINT(lightPrd.depth, " dir %.2f %.2f %.2f\n",
         //    lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
-        if (launchIndex.x == 0 && launchIndex.y == 0)
-        {
-            rtPrintf("i %d\n", launchIndex.x);
-            //for(int i = 0; i < lightPrd.depth; i++) { rtPrintf(" "); }
-            //rtPrintf( " dir %.2f %.2f %.2f\n", lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
-            //rtPrintf(" %d dir %f %f %f \n", launchIndex.x, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
-            //rtPrintf("dir %.2f %.2f %.2f\n", lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
-            rtPrintf("Outputs, but hangs\n");
-        }
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
 		if (lightPrd.done) 
