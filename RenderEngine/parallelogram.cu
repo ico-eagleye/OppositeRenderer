@@ -26,9 +26,11 @@
 
 using namespace optix;
 
+#if ENABLE_MESH_HITS_COUNTING
 // for mesh intesection count
 rtDeclareVariable(uint, meshId, , );
 rtBuffer<uint, 1> hitsPerMeshBuffer;
+#endif
 
 // parallelogram 
 rtDeclareVariable(float4, plane, , ); // vmarz: xyz=normal, w=dot(normal, anchor)=D dist to plane form origin

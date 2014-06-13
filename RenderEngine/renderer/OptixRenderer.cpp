@@ -381,9 +381,9 @@ void OptixRenderer::initScene( IScene & scene )
         throw std::exception("No lights exists in this scene.");
     }
 
+#if ENABLE_MESH_HITS_COUNTING
     int sceneNMeshes = scene.getNumMeshes();
     m_context["sceneNMeshes"]->setInt(sceneNMeshes);
-#if ENABLE_MESH_HITS_COUNTING
 	optix::Buffer hitsPerMeshBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, sceneNMeshes);
 	unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
 	memset(bufferHost, 0, sizeof(unsigned int) * sceneNMeshes);
