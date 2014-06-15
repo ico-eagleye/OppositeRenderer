@@ -36,3 +36,5 @@
 #define USE_CHEAP_RANDOM 0 // vmarz: cheap random seems broken (generates weird results)
 
 #define ENABLE_MESH_HITS_COUNTING 0
+
+#define TEST_USING_CONTEX_INITIALIZER 0

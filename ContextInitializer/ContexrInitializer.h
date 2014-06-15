@@ -9,15 +9,12 @@ namespace ContextTest
   public:
     ContextInitializer() {}
     void initialize(optix::Context context, int deviceOrdinal);
-    void launch();
+    void launch(unsigned int outputBufWidth, unsigned int outputBufheight);
 
 
   private:
     optix::Context m_context;
-
-    const static unsigned int OUTPUT_WIDTH;
-    const static unsigned int OUTPUT_HEIGHT;
-
+    optix::Buffer m_outputBuffer;
     const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH;
     const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
   };

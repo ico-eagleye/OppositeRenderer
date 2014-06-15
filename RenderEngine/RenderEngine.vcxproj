@@ -115,6 +115,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir);C:\Program Files (x86)\Visual Leak Detector\lib\Win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -158,6 +159,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir);C:\Program Files (x86)\Visual Leak Detector\lib\Win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -198,6 +200,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir);C:\Program Files (x86)\Visual Leak Detector\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -239,6 +242,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir);C:\Program Files (x86)\Visual Leak Detector\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>

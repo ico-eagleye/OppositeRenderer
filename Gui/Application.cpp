@@ -14,7 +14,7 @@
 Application::Application(QApplication & qApplication) :
     m_sequenceNumber(0),
     m_runningStatus(RunningStatus::STOPPED),
-	//m_renderMethod(RenderMethod::PATH_TRACING),
+	  //m_renderMethod(RenderMethod::PATH_TRACING),
     m_renderMethod(RenderMethod::BIDIRECTIONAL_PATH_TRACING),
     m_rendererStatus(RendererStatus::NOT_INITIALIZED)
 {

@@ -10,9 +10,6 @@ class Cornell;
 
 namespace ContextTest
 {
-  const unsigned int ContextInitializer::OUTPUT_WIDTH = 512;
-  const unsigned int ContextInitializer::OUTPUT_HEIGHT = 512;
-
   const unsigned int ContextInitializer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 2;
   const unsigned int ContextInitializer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 2;
 
@@ -25,10 +22,11 @@ namespace ContextTest
     // lights etc)
 
     // init
+    m_context->setDevices(&deviceOrdinal, &deviceOrdinal+1);
     m_context["localIterationNumber"]->setUint(0);
     m_context["sceneRootObject"]->set(m_context->createGroup());
-    optix::Buffer outputBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, OUTPUT_WIDTH, OUTPUT_HEIGHT );
-    m_context["outputBuffer"]->set(outputBuffer);
+    m_outputBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, 1, 1 );
+    m_context["outputBuffer"]->set(m_outputBuffer);
 
     // Light sources buffer
     optix::Buffer lightBuffer = context->createBuffer(RT_BUFFER_INPUT);
@@ -58,9 +56,12 @@ namespace ContextTest
     m_context->compile();
   }
 
-
-  void ContextInitializer::launch()
+  // Passing in size since it can change between between launches in the OppositeRenderer where
+  // ContextInitializer was used to test the hangs
+  void ContextInitializer::launch(unsigned int outputBufWidth, unsigned int outputBufheight)
   {
+    m_outputBuffer->setSize(outputBufWidth, outputBufWidth);
+
     printf("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS launch dim %d x %d\n",
       SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT);
 

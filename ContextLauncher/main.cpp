@@ -14,7 +14,7 @@ int main( int argc, char** argv )
     printf("Initializing...\n");
     ci.initialize(context, 0);
     printf("Launching...\n");
-    ci.launch();
+    ci.launch(100u, 100u);
     printf("Launched successfully\n");
   }
   catch (optix::Exception e)

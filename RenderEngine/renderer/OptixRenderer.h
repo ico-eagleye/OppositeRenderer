@@ -10,6 +10,12 @@
 #include <optixu/optixu_aabb_namespace.h>
 #include "render_engine_export_api.h"
 #include "math/AAB.h"
+#include "config.h"
+
+#if TEST_USING_CONTEX_INITIALIZER
+#include "../ContextInitializer/ContexrInitializer.h"
+#pragma comment(lib,"ContextInitializer.lib")
+#endif
 
 class ComputeDevice;
 class RenderServerRenderRequestDetails;
@@ -86,11 +92,15 @@ private:
     // Volumetric
     optix::GeometryGroup m_volumetricPhotonsRoot;
 
-	// VCM
-	const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH;
-	const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
-	optix::Buffer m_lightVertexBuffer;
-	optix::Buffer m_lightVertexCountBuffer;
-	bool m_lightVertexCountEstimated;
-	unsigned int m_lightVertexCount;
+	  // VCM
+	  const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH;
+	  const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
+	  optix::Buffer m_lightVertexBuffer;
+	  optix::Buffer m_lightVertexCountBuffer;
+	  bool m_lightVertexCountEstimated;
+	  unsigned int m_lightVertexCount;
+
+#if TEST_USING_CONTEX_INITIALIZER
+    ContextTest:: ContextInitializer m_contextInitializer;
+#endif
 };
