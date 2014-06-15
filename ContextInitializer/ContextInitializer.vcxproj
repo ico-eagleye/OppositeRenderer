@@ -43,6 +43,9 @@
     </CudaCompile>
     <CudaCompile Include="test_parallelogram.cu" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="readme.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7C1E2013-DA35-4FB6-B2E7-0EF518CBBC80}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

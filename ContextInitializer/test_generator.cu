@@ -33,11 +33,11 @@ static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsig
 RT_PROGRAM void generator()
 {
   SubpathPRD lightPrd;
-	lightPrd.depth = 0;
+  lightPrd.depth = 0;
   lightPrd.done = 0;
   lightPrd.seed = tea<16>(720u*launchIndex.y+launchIndex.x, 1u);
 
-  // Approx light position in scene (eliminated use of light while tracking cause for hangs)
+  // Approx light position in scene (eliminated use of light buffer while debuggin cause for hangs)
   float3 rayOrigin = make_float3( 343.0f, 548.7f, 227.0f);
 
   // use of cosine sampling in closet hit program works if init dir here is something like ( .0f, -1.0f, 1.0f)
@@ -48,18 +48,13 @@ RT_PROGRAM void generator()
 
   for (int i=0;;i++)
   {
-    // NOTE:
-    // Examples/comments correspond to behavior in OppositeRenderer, here in ContextInitializer
-    // some of the "works" comments are not valid (e.g. example 1 and 2 seems to fails with string format exception)
-
     // Example 1
-    // Without #2 - output in first iteration, then hang (Cuda 6 "Error ir rtPrintf format string")
-    // With    #2 - works
-    //rtPrintf("Output\n");
+    // Without #2 - output in first iteration, then hangs (Cuda 5.5) or "Error ir rtPrintf format string" (Cuda 6)
+    // With    #2 - worked in OptiX 3.5.1/Cuda 5.5, fails in OptiX 3.6 as above
 
     // Example 2
     // Without #2 - output in first iteration, then "Error ir rtPrintf format string"
-    // With    #2 - works
+    // With    #2 - worked in OptiX 3.5.1/Cuda 5.5, fails in OptiX 3.6 as above
     //if (launchIndex.x == 0 && launchIndex.y == 0)
     //{
     //    rtPrintf("Outputs\n");
@@ -68,6 +63,7 @@ RT_PROGRAM void generator()
     // Example 3
     // Without #2 - works
     // With    #2 - works
+    // * All examples work together with this one
     //if (launchIndex.x == 0 && launchIndex.y == 0)
     //{
     //    rtPrintf("idx %d i %d\n", launchIndex.x, i);
@@ -75,7 +71,7 @@ RT_PROGRAM void generator()
 
     rtTrace( sceneRootObject, lightRay, lightPrd );
 
-		if (lightPrd.done) 
+    if (lightPrd.done) 
     {
         //lightPrd.done += a; // #2
         break;
@@ -86,7 +82,7 @@ RT_PROGRAM void generator()
 
     // Example 4
     // Without #2 - output in first iteration, then "Error ir rtPrintf format string"
-    // With    #2 - works
+    // With    #2 - worked in OptiX 3.5.1/Cuda 5.5, fails in OptiX 3.6 as above
     //rtPrintf("Output\n");
 }
 }

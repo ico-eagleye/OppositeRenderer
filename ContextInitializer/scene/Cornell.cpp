@@ -145,7 +145,7 @@ namespace ContextTest
     for (int i = 0; i < gis.size(); ++i )
       geometry_group->setChild( i, gis[i] );
 
-    geometry_group->setAcceleration(context->createAcceleration("Trbvh", "Bvh"));
+    geometry_group->setAcceleration(context->createAcceleration("Bvh", "Bvh")); // Trbvh // Sbvh
 
 #ifdef USE_GEOMETRY_GROUP_AS_ROOT
     return geometry_group;
@@ -153,7 +153,7 @@ namespace ContextTest
     optix::Group gro = context->createGroup();
     gro->setChildCount(1);
     gro->setChild(0, geometry_group);
-    optix::Acceleration acceleration = context->createAcceleration("Trbvh", "Bvh");
+    optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh");
     gro->setAcceleration(acceleration);
     return gro;
 #endif

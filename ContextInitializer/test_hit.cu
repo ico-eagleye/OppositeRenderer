@@ -64,16 +64,16 @@ RT_PROGRAM void closestHit()
   }
 
   float2 bsdfSample = make_float2(rnd(lightPrd.seed),rnd(lightPrd.seed));
-  float3 dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);            // doesn't work
+  float3 dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample); // #1 doesn't work
 
-  //dir = normalize(2*worldShadingNormal + ray.direction); // works
-  //dir = -ray.direction;                                  // works
+  //dir = normalize(2*worldShadingNormal + ray.direction); // #2 works (computation in #1 can be left uncommented)
+  //dir = -ray.direction;                                  // #3 works (computation in #1 can be left uncommented)
   lightPrd.direction = normalize(dir);
      
   lightPrd.origin = hitPoint;
 
-  // Doesn't crash if code below uncommented
-  //if (lightPrd.depth == 2)
+  // #1 doesn't crash if code below uncommented (stop on second hit)
+  //if (lightPrd.depth == 2) // #1 crashes if condition is depth == 3
   //{
   //    lightPrd.done = 1;
   //    return;
