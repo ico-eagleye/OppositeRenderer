@@ -1,6 +1,9 @@
 This project is made reproduce OptiX hangs/crashes dicussed in this Optix forum thread
 https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
 
+To compile it requires CUDA_PATH and OPTIX_PATH environment variables defined pointing to 
+respective installation directories.
+
 There are two issues:
 1) Assigning sampeled cosine weighted hemisphere direction to ray payload cause a hang if tracing depth is higher than 2.
 If payload directions is set to something simple as -ray.direction there is no hang crash (even if hemisphere direction 
