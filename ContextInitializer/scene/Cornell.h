@@ -3,13 +3,21 @@
 #include <optixu/optixpp_namespace.h>
 #include "renderer/Light.h"
 
+#define USE_GEOMETRY_GROUP_AS_ROOT
+
+#ifdef USE_GEOMETRY_GROUP_AS_ROOT
+typedef optix::GeometryGroup RootGroup;
+#else
+typedef optix::Group RootGroup;
+#endif
+
 namespace ContextTest
 {
   class Cornell
   {
   public:
     Cornell();
-    optix::Group getSceneRootGroup(optix::Context & context);
+    RootGroup getSceneRootGroup(optix::Context & context);
 
   private:
     optix::GeometryInstance createParallelogram( optix::Context& context,

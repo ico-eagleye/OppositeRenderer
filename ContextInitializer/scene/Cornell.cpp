@@ -9,12 +9,12 @@ namespace ContextTest
 
   Cornell::Cornell()
   {
-    optix::float3 anchor = optix::make_float3( 343.0f, 548.7999f, 227.0f);
-    optix::float3 v1 = optix::make_float3( 0.0f, 0.0f, 105.0f);
-    optix::float3 v2 = optix::make_float3( -130.0f, 0.0f, 0.0f);
-    optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
-    Light light(power, anchor, v1, v2);
-    m_sceneLights.push_back(light);
+    //optix::float3 anchor = optix::make_float3( 343.0f, 548.7999f, 227.0f);
+    //optix::float3 v1 = optix::make_float3( 0.0f, 0.0f, 105.0f);
+    //optix::float3 v2 = optix::make_float3( -130.0f, 0.0f, 0.0f);
+    //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
+    //Light light(power, anchor, v1, v2);
+    //m_sceneLights.push_back(light);
   }
 
   optix::GeometryInstance Cornell::createParallelogram( 
@@ -48,7 +48,7 @@ namespace ContextTest
   }
 
 
-  optix::Group Cornell::getSceneRootGroup(optix::Context & context)
+  RootGroup Cornell::getSceneRootGroup(optix::Context & context)
   {
     m_pgram_bounding_box = context->createProgramFromPTXFile( "test_parallelogram.cu.ptx", "bounds" );
     m_pgram_intersection = context->createProgramFromPTXFile( "test_parallelogram.cu.ptx", "intersect" );
@@ -147,11 +147,15 @@ namespace ContextTest
 
     geometry_group->setAcceleration(context->createAcceleration("Trbvh", "Bvh"));
 
+#ifdef USE_GEOMETRY_GROUP_AS_ROOT
+    return geometry_group;
+#else
     optix::Group gro = context->createGroup();
     gro->setChildCount(1);
     gro->setChild(0, geometry_group);
     optix::Acceleration acceleration = context->createAcceleration("Trbvh", "Bvh");
     gro->setAcceleration(acceleration);
     return gro;
+#endif
   }
 }

@@ -38,6 +38,8 @@
     <CudaCompile Include="test_generator.cu" />
     <CudaCompile Include="test_hit.cu">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <CudaCompile Include="test_parallelogram.cu" />
   </ItemGroup>

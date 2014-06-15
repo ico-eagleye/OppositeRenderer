@@ -13,8 +13,6 @@ namespace ContextTest
       enum
       {
           LIGHT_ESTIMATE_PASS,
-          //VCM_LIGHT_PASS,
-          //VCM_CAMERA_PASS,
           NUM_PASSES
       };
   }

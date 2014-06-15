@@ -20,6 +20,10 @@ namespace ContextTest
   {
     m_context = context;
 
+    // Initialization flow/variables resemble those used in OppositeRenderer to 
+    // similar use of context. Some of them are not used in kernels (localIterationNumber,
+    // lights etc)
+
     // init
     m_context["localIterationNumber"]->setUint(0);
     m_context["sceneRootObject"]->set(m_context->createGroup());
@@ -34,7 +38,6 @@ namespace ContextTest
     m_context["lights"]->set( lightBuffer );
 
     m_context->setRayTypeCount(RayType::NUM_RAY_TYPES);
-    m_context->setStackSize(1596);
     m_context->setPrintEnabled(true);
     m_context->setPrintBufferSize(10000000u); 
     m_context->setExceptionEnabled(RTexception::RT_EXCEPTION_ALL , true);
@@ -48,8 +51,9 @@ namespace ContextTest
     m_context->setMissProgram(OptixEntryPointVCM::LIGHT_ESTIMATE_PASS, missProgram);
     m_context->setExceptionProgram(OptixEntryPointVCM::LIGHT_ESTIMATE_PASS, exceptionProgram);
 
-    Cornell scene;
-    m_context["sceneRootObject"]->set(scene.getSceneRootGroup(m_context));
+    Cornell cornell;
+    RootGroup gg = cornell.getSceneRootGroup(m_context); // RootGroup typedef is Group or GeometryGroup, was testing that makes a difference
+    m_context["sceneRootObject"]->set(gg);
     m_context->validate();
     m_context->compile();
   }

@@ -4,16 +4,14 @@
 #include <cuda_runtime.h>
 #include "renderer/RayType.h"
 #include "renderer/SubpathPRD.h"
-//#include "renderer/helpers/helpers.h"
-//#include "renderer/helpers/samplers.h"
 
 using namespace optix;
 using namespace ContextTest;
 
 rtDeclareVariable(rtObject, sceneRootObject, , );
-//rtBuffer<RandomState, 2> randomStates;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 
+// From OptiX path_trace sample
 template<unsigned int N>
 static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
 {
@@ -37,11 +35,13 @@ RT_PROGRAM void generator()
   	SubpathPRD lightPrd;
 	  lightPrd.depth = 0;
     lightPrd.done = 0;
-	  //lightPrd.randomState = randomStates[launchIndex]; // curand states
-    lightPrd.seed = tea<16>(720*launchIndex.y+launchIndex.x, 1);
+    lightPrd.seed = tea<16>(720u*launchIndex.y+launchIndex.x, 1u);
 
-    float3 rayOrigin = make_float3( 343.0f, 448.0f, 227.0f);
-    float3 rayDirection = normalize(make_float3( .1f, -1.0f, .1f));
+    // Approx light position in scene (eliminated use of light while tracking cause for hangs)
+    float3 rayOrigin = make_float3( 343.0f, 548.7f, 227.0f);
+
+    // use of cosine sampling in closet hit program works if init dir here is something like ( .0f, -1.0f, 1.0f)
+    float3 rayDirection = normalize(make_float3( .0f, -1.0f, .0));
     Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
 	
     int a = launchIndex.x; // #1 using launchIndex.x doesn't produce same effect
@@ -64,10 +64,10 @@ RT_PROGRAM void generator()
         // Example 3
         // Without #2 - works
         // With    #2 - works
-        if (launchIndex.x == 0 && launchIndex.y == 0)
-        {
-            rtPrintf("idx %d i %d\n", launchIndex.x, i);
-        }
+        //if (launchIndex.x == 0 && launchIndex.y == 0)
+        //{
+        //    rtPrintf("idx %d i %d\n", launchIndex.x, i);
+        //}
 
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
@@ -84,12 +84,7 @@ RT_PROGRAM void generator()
         // Without #2 - output in first iteration, then "Error ir rtPrintf format string"
         // With    #2 - works
         //rtPrintf("Output\n");
-
-        //OPTIX_DEBUG_PRINT(lightPrd.depth, "Gen - new org %f %f %f\n", lightRay.origin.x, lightRay.origin.y, lightRay.origin.z);
-        //OPTIX_DEBUG_PRINT(lightPrd.depth, "Gen - new org %f %f %f\n", lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
 	}
-
-	//randomStates[launchIndex] = lightPrd.randomState;
 }
 
 
