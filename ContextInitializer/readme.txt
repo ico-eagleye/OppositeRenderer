@@ -26,27 +26,39 @@ test_generator.cu.
 3) Output form rtPrinf() doesn't show up if program output redirected to file (e.g. using "program.exe > out.log 2>&1")
 
 
-WORKED ON:
+DIDN'T WORK ON:
 #1
 HW: GeFroce GTX 770, Intel i7 4770K
-SW: Win 8.1 x64 Pro, Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6, video driver 337.88, VS2012 (64bit builds), VS2010 (32bit builds)
+SW: Win 8.1 x64 Pro, video driver 337.88,
+Build: Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6 based VS2012-64bit, VS2010-32bit builds for compute_20,sm_20
 
 #2
 HW: GeFroce GT525M, Intel i7 2630QM
-SW: Win 8.1 x64 Pro, Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6, video driver 337.88, VS2012 (64bit builds), VS2010 (32bit builds)
+SW: Win 8.1 x64 Pro, video driver 337.88
+Build: Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6 based VS2012-64bit, VS2010-32bit builds for compute_20,sm_20
 
 #3
 HW: GeFroce GTX 760
-SW: Win 8.1 x64 Pro, Optix 3.6 / Cuda 6, video driver 335.23, VS2012 (64bit builds), VS2010 (32bit builds)
-
-
-DIDN'T WORK ON:
-#4
-HW: GeFroce 8600M GT
 SW: Win 8.1 x64 Pro, video driver 335.23
-Optix 3.6 (compute_11,sm_11) based build
+Build: Optix 3.6 / Cuda 6 based VS2012-64bit, VS2010-32bit builds for compute_20,sm_20
+
+#4
+HW: Quadro FX 5800
+SW: Win 8.1 x64, video driver ????
+Build: Optix 3.0.1 / Cuda 4 based VS2010-32bit build for compute_11,sm_11
 
 #5
+HW: GeFroce 310
+SW: Win 8.1 x64 Pro, video driver ????
+Build: Optix 3.6 / Cuda 6 based VS2010-32bit builds for for compute_11,sm_11
+
+WORKED ON:
+#1
+HW: GeFroce 8600M GT
+SW: Win 8.1 x64 Pro, video driver 335.23
+Build: Optix 3.6 based VS2012-64bit build for compute_11,sm_11
+
+#2
 HW: Quadro FX 1600M
 SW: Win 7 x64 Enterprise SP1, video driver 334.95
-Optix 3.6 (compute_11,sm_11) based build
+Build: Optix 3.6 based VS2012-64bit build for compute_11,sm_11
