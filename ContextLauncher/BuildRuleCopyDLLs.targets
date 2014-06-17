@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- Libs x64 --> 
-  <ItemGroup Condition="'$(Platform)'=='x64'">
-    <DllFiles Include="$(OPTIX_PATH)\bin64\optix.1.dll"/>
-    <DllFiles Include="$(OPTIX_PATH)\bin64\optixu.1.dll"/>
-  </ItemGroup>
-  
-  <!-- Libs Win32 --> 
-  <ItemGroup Condition="'$(Platform)'=='Win32'">
-    <DllFiles Include="$(OPTIX_PATH)\bin\optix.1.dll"/>
-    <DllFiles Include="$(OPTIX_PATH)\bin\optixu.1.dll"/>
+  <ItemGroup>
+    <DllFiles Include="$(OptixBinDir)\optix.1.dll"/>
+    <DllFiles Include="$(OptixBinDir)\optixu.1.dll"/>
+	<DllFiles Include="$(OptixBinDir)\cudart*.dll"/>
   </ItemGroup>
  
   <!-- Using VS2010 $(OutputPath) copies files to $(SolutionDir)$(Platform)$(Configuration) -->
