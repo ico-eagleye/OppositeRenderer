@@ -27,19 +27,18 @@
   <!-- Libs x64 --> 
   <ItemGroup Condition="'$(Platform)'=='x64'">
     <DllFiles Include="$(ASSIMP_PATH)\bin\x64\*.dll"/>
-    <DllFiles Include="$(OPTIX_PATH)\bin64\optix.1.dll"/>
-    <DllFiles Include="$(OPTIX_PATH)\bin64\optixu.1.dll"/>
   </ItemGroup>
   
   <!-- Libs Win32 --> 
   <ItemGroup Condition="'$(Platform)'=='Win32'">
     <DllFiles Include="$(ASSIMP_PATH)\bin\x86\*.dll"/>
-    <DllFiles Include="$(OPTIX_PATH)\bin\optix.1.dll"/>
-    <DllFiles Include="$(OPTIX_PATH)\bin\optixu.1.dll"/>
   </ItemGroup>
 
   <!-- Libs with auto derived paths -->  
   <ItemGroup>
+    <DllFiles Include="$(OptixBinDir)\optix.1.dll"/>
+    <DllFiles Include="$(OptixBinDir)\optixu.1.dll"/>
+	<DllFiles Include="$(OptixBinDir)\cudart*.dll"/>
     <DllFiles Include="$(QTDIR_MSVC)\bin\icudt51.dll"/>
     <DllFiles Include="$(QTDIR_MSVC)\bin\icuin51.dll"/>
     <DllFiles Include="$(QTDIR_MSVC)\bin\icuuc51.dll"/>
