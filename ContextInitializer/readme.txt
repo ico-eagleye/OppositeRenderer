@@ -15,7 +15,7 @@ Switching to Trbvh wixed this, but failed when using proper hemisphere sampling 
 to reproduce this behavior in OptiX 3.6.
 
 While trying to find a solution by simplifying kernels, changing acceleration structures, updating SDKs and drivers the
-following error Cuda error codes were observed - 700, 702 (most often), 716, 719.
+following error Cuda error codes were observed - 700, 702 (most often), 716, 719, 999.
 
 
 2) Using rtPrintf() within a loop causes exceptions with message "Error ir rtPrintf format string" if rtLaunchIndex variable
@@ -26,7 +26,7 @@ test_generator.cu.
 3) Output form rtPrinf() doesn't show up if program output redirected to file (e.g. using "program.exe > out.log 2>&1")
 
 
-All issues were reproduced on two Window 8.1 x64 machines:
+WORKED ON:
 #1
 HW: GeFroce GTX 770, Intel i7 4770K
 SW: Win 8.1 x64 Pro, Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6, video driver 337.88, VS2012 (64bit builds), VS2010 (32bit builds)
@@ -35,8 +35,18 @@ SW: Win 8.1 x64 Pro, Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6, video driver 33
 HW: GeFroce GT525M, Intel i7 2630QM
 SW: Win 8.1 x64 Pro, Optix 3.5.1 / Cuda 5.5, Optix 3.6 / Cuda 6, video driver 337.88, VS2012 (64bit builds), VS2010 (32bit builds)
 
-
-Optix 3.6 (compute_11,sm_11) based build WORKED FOR
 #3
+HW: GeFroce GTX 760
+SW: Win 8.1 x64 Pro, Optix 3.6 / Cuda 6, video driver 335.23, VS2012 (64bit builds), VS2010 (32bit builds)
+
+
+DIDN'T WORK ON:
+#4
 HW: GeFroce 8600M GT
 SW: Win 8.1 x64 Pro, video driver 335.23
+Optix 3.6 (compute_11,sm_11) based build
+
+#5
+HW: Quadro FX 1600M
+SW: Win 7 x64 Enterprise SP1, video driver 334.95
+Optix 3.6 (compute_11,sm_11) based build
