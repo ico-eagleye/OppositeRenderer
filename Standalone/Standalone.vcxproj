@@ -85,29 +85,29 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\x64;$(CUDA_PATH)\lib\x64;$(QTDIR)\lib</LibraryPath>
+    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\x64;$(CudaToolkitLibDir)\x64;$(QTDIR)\lib</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH)\include;$(OptixIncludeDir)optixu;$(SolutionDir)/include;$(SolutionDir)/Gui;$(SolutionDir)/RenderEngine/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH)\include;$(OptixIncludeDir)optixu;$(SolutionDir)/include;$(SolutionDir)/Gui;$(SolutionDir)/RenderEngine/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(CUDA_PATH)\include$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\x64;$(CUDA_PATH)\lib\x64;$(QTDIR)\lib</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH)\include;$(OptixIncludeDir)optixu;$(SolutionDir)/include;$(SolutionDir)/Gui;$(SolutionDir)/RenderEngine/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(IncludePath)</IncludePath>
+    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\x64;$(CudaToolkitLibDir)\x64;$(QTDIR)\lib</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH)\include;$(OptixIncludeDir)optixu;$(SolutionDir)/include;$(SolutionDir)/Gui;$(SolutionDir)/RenderEngine/;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtWidgets;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR32)\lib</LibraryPath>
+    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR32)\lib</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH)\include;$(OptixIncludeDir)optixu;$(SolutionDir)/include;$(SolutionDir)/Gui;$(SolutionDir)/RenderEngine/;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtWidgets;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR32)\lib</LibraryPath>
+    <LibraryPath>$(OutDir);$(LibraryPath);$(SolutionDir)\lib\;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR32)\lib</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

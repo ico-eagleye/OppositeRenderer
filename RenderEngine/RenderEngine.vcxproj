@@ -75,27 +75,27 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>

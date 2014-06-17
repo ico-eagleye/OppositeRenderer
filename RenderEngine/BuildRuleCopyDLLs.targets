@@ -37,7 +37,8 @@
   <!-- Libs with auto derived paths -->  
   <ItemGroup>
     <DllFiles Include="$(OptixBinDir)\optix.1.dll"/>
-    <DllFiles Include="$(OptixBinDir)\optixu.1.dll"/>  
+    <DllFiles Include="$(OptixBinDir)\optixu.1.dll"/>
+	<DllFiles Include="$(OptixBinDir)\cudart*.dll"/>
     <DllFiles Include="$(QTDIR_MSVC)\bin\icudt51.dll"/>
     <DllFiles Include="$(QTDIR_MSVC)\bin\icuin51.dll"/>
     <DllFiles Include="$(QTDIR_MSVC)\bin\icuuc51.dll"/>
