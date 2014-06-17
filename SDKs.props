@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_v3_0_1)</OptixDir>
-		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_v3_5_1)</OptixDir>
-		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.6.0'">$(OPTIX_PATH_v3_6_0)</OptixDir>
+		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_V3_0_1)</OptixDir>
+		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_V3_5_1)</OptixDir>
+		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.6.0'">$(OPTIX_PATH_V3_6_0)</OptixDir>
 		<OptixDir Condition="'$(OptixDir)'==''">$(OPTIX_PATH)</OptixDir>
 		
 		<!-- Ensure $(OptixDir) has a trailing backslash. -->
