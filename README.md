@@ -42,10 +42,9 @@ The project needs some [environment variables](http://environmentvariables.org/M
 	- `ASSIMP_PATH` should point to Asset Import installation dir 
 	- `FREEGLUT_PATH` should point to where you extracted FreeGlut.
 	- `OPTIX_PATH` points to OptiX installation directory
-	- `CUDA_USE_VER` needs to be set (e.g. "6.0", "5.5", controls wich Cuda toolkit will be used)
-	Optional:
-	- `OPTIX_USE_VER` similarly allows to switch Optix SDK used (see SDKs.props file), if not set will use the one at OPTIX_PATH
-	- `OPTIX_PATH_Vx_x_x` path to different Optix SDK version, needs to be set if want to use OPTIX_USE_VER
+	- `CUDA_USE_VER` (optional) needs to be set (e.g. "6.0", "5.5", controls wich Cuda toolkit will be used)
+	- `OPTIX_USE_VER` (optional) similarly allows to switch Optix SDK used (see SDKs.props file), if not set will use the one at `OPTIX_PATH`
+	- `OPTIX_PATH_Vx_x_x` (optional) path to different Optix SDK version, needs to be set if want to use `OPTIX_USE_VER`
 	
 	For example
 	
