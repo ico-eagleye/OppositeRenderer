@@ -63,5 +63,5 @@ The project needs some [environment variables](http://environmentvariables.org/M
 ### Running
 
 1. Go to the folder `%USER_ROOT%\VisualStudioBuilds\OppositeRenderer\Debug`
-2. Open `Server.exe` and `Client.exe` or just 'Standalone.exe'
+2. Open `Server.exe` and `Client.exe` or just `Standalone.exe`
 3. Enjoy!
