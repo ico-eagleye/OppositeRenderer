@@ -49,10 +49,10 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-	<Import Project="$(SolutionDir)\SDKs.props" />
+    <Import Project="$(SolutionDir)\SDKs.props" />
     <Import Condition="'$(CUDA_USE_VER)'=='5.0'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.props" />
-	<Import Condition="'$(CUDA_USE_VER)'=='5.5'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
-	<Import Condition="'$(CUDA_USE_VER)'=='6.0'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.0.props" />
+    <Import Condition="'$(CUDA_USE_VER)'=='5.5'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props" />
+    <Import Condition="'$(CUDA_USE_VER)'=='6.0'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.0.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -63,28 +63,28 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;%(AdditionalIncludeDirectories)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(FREEGLUT_PATH)\lib\x64;$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR)\lib;$(GLEW_PATH)\lib\Release\$(Platform)</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;%(AdditionalIncludeDirectories)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(FREEGLUT_PATH)\lib\x64;$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR)\lib;$(GLEW_PATH)\lib\Release\$(Platform)</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtWidgets;$(QTDIR32)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;%(AdditionalIncludeDirectories)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtWidgets;$(QTDIR32)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(FREEGLUT_PATH)\lib\;$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(GLEW_PATH)\lib\Release\$(Platform)</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtWidgets;$(QTDIR32)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;%(AdditionalIncludeDirectories)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(NVTOOLSEXT_PATH);$(OptixIncludeDir)/optixu;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtWidgets;$(QTDIR32)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(CUDA_PATH)\include;$(FREEGLUT_PATH)\include;$(GLEW_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(FREEGLUT_PATH)\lib\;$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(GLEW_PATH)\lib\Release\$(Platform)</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -102,7 +102,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>glew32.lib;Qt5OpenGLd.lib;Qt5Cored.lib;Qt5Guid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;$(OptixLibDir)\optix.1.lib;$(CUDA_PATH)\lib\x64\cuda.lib;$(OptixLibDir)\optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies);Qt5Widgetsd.lib</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;Qt5OpenGLd.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;$(OptixLibDir)\optix.1.lib;$(OptixLibDir)\optixu.1.lib;$(CudaToolkitLibDir)\cuda.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -141,7 +141,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>glew32.lib;Qt5OpenGL.lib;Qt5Core.lib;Qt5Gui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;$(OptixLibDir)\optix.1.lib;$(CUDA_PATH)\lib\$(Platform)\cuda.lib;$(OptixLibDir)\optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies);Qt5Widgets.lib</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;Qt5OpenGL.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;$(OptixLibDir)\optix.1.lib;$(OptixLibDir)\optixu.1.lib;$(CudaToolkitLibDir)\cuda.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -180,7 +180,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>glew32.lib;Qt5OpenGLd.lib;Qt5Cored.lib;Qt5Guid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;$(OptixLibDir)\optix.1.lib;$(CUDA_PATH)\lib\$(Platform)\cuda.lib;$(OptixLibDir)\optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies);Qt5Widgetsd.lib</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;Qt5OpenGLd.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;$(OptixLibDir)\optix.1.lib;$(OptixLibDir)\optixu.1.lib;$(CudaToolkitLibDir)\cuda.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -220,7 +220,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>glew32.lib;Qt5OpenGL.lib;Qt5Core.lib;Qt5Gui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;$(OptixLibDir)\optix.1.lib;$(CUDA_PATH)\lib\$(Platform)\cuda.lib;$(OptixLibDir)\optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies);Qt5Widgets.lib</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;Qt5OpenGL.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;$(OptixLibDir)\optix.1.lib;$(OptixLibDir)\optixu.1.lib;$(CudaToolkitLibDir)\cuda.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -340,8 +340,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\RenderEngine\BuildRuleQt.targets" />
-	<Import Condition="'$(CUDA_USE_VER)'=='5.0'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.targets" />
-	<Import Condition="'$(CUDA_USE_VER)'=='5.5'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
+    <Import Condition="'$(CUDA_USE_VER)'=='5.0'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.0.targets" />
+    <Import Condition="'$(CUDA_USE_VER)'=='5.5'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
     <Import Condition="'$(CUDA_USE_VER)'=='6.0'" Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.0.targets" />
   </ImportGroup>
 </Project>

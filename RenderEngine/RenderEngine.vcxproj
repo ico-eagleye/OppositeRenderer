@@ -75,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
@@ -87,14 +87,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CUDA_PATH)\include;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CUDA_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -103,7 +103,6 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DLL;RENDER_ENGINE_DLL;WIN32;_WINDOWS;_DEBUG;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(OptixIncludeDir);$(OptixIncludeDir)optixu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -111,13 +110,13 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>cudart.lib;Qt5Cored.lib;Qt5Guid.lib;assimp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>cudart.lib;Qt5Cored.lib;Qt5Guid.lib;assimp.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -145,8 +144,6 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DLL;RENDER_ENGINE_DLL;WIN32;_WINDOWS;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -154,7 +151,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>cudart.lib;Qt5Core.lib;Qt5Gui.lib;assimp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;Qt5Core.lib;Qt5Gui.lib;assimp.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
       <EntryPointSymbol>
       </EntryPointSymbol>
@@ -186,8 +183,6 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DLL;RENDER_ENGINE_DLL;WIN32;_WINDOWS;_DEBUG;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -195,7 +190,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>cudart.lib;Qt5Cored.lib;Qt5Guid.lib;assimp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;Qt5Cored.lib;Qt5Guid.lib;assimp.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <NoEntryPoint>false</NoEntryPoint>
@@ -226,8 +221,6 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DLL;RENDER_ENGINE_DLL;WIN32;_WINDOWS;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -236,7 +229,7 @@
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
-      <AdditionalDependencies>cudart.lib;Qt5Core.lib;Qt5Gui.lib;assimp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;Qt5Core.lib;Qt5Gui.lib;assimp.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <NoEntryPoint>false</NoEntryPoint>
