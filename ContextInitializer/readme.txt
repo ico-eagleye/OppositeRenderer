@@ -1,10 +1,18 @@
-This project is made reproduce OptiX hangs/crashes dicussed in this Optix forum thread
+This project is made reproduce OptiX hangs/crashes discussed in this Optix forum thread
 https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
 
-To compile it requires CUDA_PATH and OPTIX_PATH environment variables defined pointing to 
-respective installation directories.
+BUILDING:
+1. Define OPTIX_PATH environment variable pointing to OptiX SDK. 
+2. Define CUDA_USE_VER environment variable as "5.5" or "6.0". It controls which Cuda build customization .props
+and .targets files will be imported into projects.
+3. Build ContextTest.sln
 
-There are two issues:
+Possible to use also OPTIX_USE_VER quickly switch between different OptiX SDKs, but then need to define
+their path variables (e.g. OPTIX_PATH_V3_5_1 similarly to Cuda vars) and modify SDKs.props file. If not defined
+SDK at OPTIX_PATH is used.
+
+
+ISSUES:
 1) Assigning sampeled cosine weighted hemisphere direction to ray payload cause a hang if tracing depth is higher than 2.
 If payload directions is set to something simple as -ray.direction there is no hang crash (even if hemisphere direction 
 is still sampled, but unused). Even using only 2x2 launch dimension and having TdrDelay set to 5 seconds.
@@ -19,8 +27,7 @@ following error Cuda error codes were observed - 700, 702 (most often), 716, 719
 
 
 2) Using rtPrintf() within a loop causes exceptions with message "Error ir rtPrintf format string" if rtLaunchIndex variable
-is not used within the loop. Optix 3.5.1 and 3.6 behave slightly differently wich is noted in the comments in the 
-test_generator.cu.
+is not used within the loop. Optix 3.5.1 and 3.6 behave slightly differently which is noted in the comments of test_generator.cu.
 
 
 3) Output form rtPrinf() doesn't show up if program output redirected to file (e.g. using "program.exe > out.log 2>&1")
