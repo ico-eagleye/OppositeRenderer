@@ -4,10 +4,6 @@ Forked from [apartridge/OppositeRenderer](https://github.com/apartridge/Opposite
 
 In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented in [CUDA](https://wikipedia.org/wiki/CUDA) using [OptiX](https://en.wikipedia.org/wiki/OptiX) library. It allows importing [Collada](https://en.wikipedia.org/wiki/Collada) scenes files and then render them to an image using [Progressive Photon Mapping](http://www.cgg.unibe.ch/publications/2011/progressive-photon-mapping-a-probabilistic-approach).
 
-#####Why this fork?
-
-This fork is intended to extend the original project to help implementing ILP problems. See this [paper](http://ima.udg.es/~dagush/papers/surveyInvLighting.pdf) for more info on the topic.
-
 ## Where To Start?
 If this is your first time hearing about *Opposite Renderer*, we recommend you start with the original website: [http://apartridge.github.io/OppositeRenderer/](http://apartridge.github.io/OppositeRenderer/).
 
@@ -46,6 +42,9 @@ The project needs some [environment variables](http://environmentvariables.org/M
 	- `ASSIMP_PATH` should point to Asset Import installation dir 
 	- `FREEGLUT_PATH` should point to where you extracted FreeGlut.
 	- `OPTIX_PATH` points to OptiX installation directory
+	- `CUDA_USE_VER` (optional) needs to be set (e.g. "6.0", "5.5", controls wich Cuda toolkit will be used)
+	- `OPTIX_USE_VER` (optional) similarly allows to switch Optix SDK used (see SDKs.props file), if not set will use the one at `OPTIX_PATH`
+	- `OPTIX_PATH_Vx_x_x` (optional) path to different Optix SDK version, needs to be set if want to use `OPTIX_USE_VER`
 	
 	For example
 	
@@ -54,11 +53,15 @@ The project needs some [environment variables](http://environmentvariables.org/M
 	    ASSIMP_PATH=C:\Program Files\Assimp
 	    FREEGLUT_PATH=C:\Program Files\Common Files\freeglut
 	    OPTIX_PATH=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.5.1
+		CUDA_USE_VER=5.5
+		OPTIX_USE_VER=3.5.1
+		OPTIX_PATH_V3_5_1=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.5.1
+		OPTIX_PATH_V3_6_0=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0
 
 * Open the Visual Studio Solution `OppositeRenderer.sln` and build.
 
 ### Running
 
 1. Go to the folder `%USER_ROOT%\VisualStudioBuilds\OppositeRenderer\Debug`
-2. Open `Server.exe` and `Client.exe`
+2. Open `Server.exe` and `Client.exe` or just `Standalone.exe`
 3. Enjoy!
