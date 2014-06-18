@@ -23,22 +23,22 @@ RT_PROGRAM void generatorDbg()
 {
 	SubpathPRD lightPrd;
 	lightPrd.depth = 0;
-    lightPrd.done = 0;
+	lightPrd.done = 0;
 	lightPrd.randomState = randomStates[launchIndex]; // curand states
 
-    float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
+	float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
 	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
 	
-    for (int i=0;;i++)
+	for (int i=0;;i++)
 	{
-        rtTrace( sceneRootObject, lightRay, lightPrd );
+		rtTrace( sceneRootObject, lightRay, lightPrd );
 
 		if (lightPrd.done) 
-            break;
+			break;
 
-        lightRay.origin = lightPrd.origin;
-        lightRay.direction = lightPrd.direction;
+		lightRay.origin = lightPrd.origin;
+		lightRay.direction = lightPrd.direction;
 	}
 
 	randomStates[launchIndex] = lightPrd.randomState;
@@ -50,11 +50,11 @@ RT_PROGRAM void generatorDbgRC()
 {
 	SubpathPRD lightPrd;
 	lightPrd.depth = 0;
-    lightPrd.done = 0;
+	lightPrd.done = 0;
 	lightPrd.randomState = randomStates[launchIndex]; // curand states
 	lightPrd.throughput = make_float3(1.0f);
 
-    float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
+	float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
 	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
 	
@@ -67,12 +67,12 @@ RT_PROGRAM void generatorDbgRC()
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
-    lightPrd.done = 1;
+	lightPrd.done = 1;
 }
 
 
 // Exception handler program
 RT_PROGRAM void exception()
 {
-    rtPrintf("Exception Light ray!\n");
+	rtPrintf("Exception Light ray!\n");
 }
