@@ -18,6 +18,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "Gui\Gui.vcxp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderEngine", "RenderEngine\RenderEngine.vcxproj", "{26470E25-7DBB-4133-A0AE-0009C41FEA2B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7C1E2013-DA35-4FB6-B2E7-0EF518CBBC80} = {7C1E2013-DA35-4FB6-B2E7-0EF518CBBC80}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Standalone", "Standalone\Standalone.vcxproj", "{442214DB-20C0-4DCB-AA5F-5B5359FF71CB}"
 EndProject
