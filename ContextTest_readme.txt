@@ -23,7 +23,12 @@ Switching to Trbvh fixed this, but failed when using proper hemisphere sampling 
 to reproduce this behaviour in OptiX 3.6.
 
 While trying to find a solution by simplifying kernels, changing acceleration structures, updating SDKs and drivers the
-following error Cuda error codes were observed - 700, 702 (most often), 716, 719, 999.
+following error Cuda error codes were observed:
+700 - CUDA_ERROR_ILLEGAL_ADDRESS
+702 - CUDA_ERROR_LAUNCH_TIMEOUT (most often using Optix 3.5.1)
+716 - CUDA_ERROR_MISALIGNED_ADDRESS
+719 - CUDA_ERROR_LAUNCH_FAILED (most often using Optix 3.6)
+999 - CUDA_ERROR_UNKNOWN
 
 
 2) Using rtPrintf() within a loop causes exceptions with message "Error ir rtPrintf format string" if rtLaunchIndex variable
