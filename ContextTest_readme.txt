@@ -13,7 +13,7 @@ SDK at OPTIX_PATH is used.
 
 
 ISSUES:
-1) Assigning sampele cosine weighted hemisphere direction to ray payload cause a hang if tracing depth is higher than 2.
+1) Assigning sampled cosine weighted hemisphere direction to ray payload cause a hang if tracing depth is higher than 2.
 If payload directions is set to something simple as -ray.direction there is no hang crash (even if hemisphere direction 
 is still sampled, but unused). Even using only 2x2 launch dimension and having TdrDelay set to 5 seconds.
 
@@ -51,12 +51,12 @@ Build: Optix 3.6 / Cuda 6 based VS2012-64bit, VS2010-32bit builds for compute_20
 
 #4
 HW: Quadro FX 5800
-SW: Win 8.1 x64, video driver ????
+SW: Win 8.1 x64, video driver 320.57 (cuda 5.5.1)
 Build: Optix 3.0.1 / Cuda 4 based VS2010-32bit build for compute_11,sm_11
 
 #5
 HW: GeFroce 310
-SW: Win 8.1 x64 Pro, video driver ????
+SW: Win 8.1 x64 Pro, video driver 191.33
 Build: Optix 3.6 / Cuda 6 based VS2010-32bit builds for for compute_11,sm_11
 
 WORKED ON:
