@@ -13,14 +13,14 @@ SDK at OPTIX_PATH is used.
 
 
 ISSUES:
-1) Assigning sampeled cosine weighted hemisphere direction to ray payload cause a hang if tracing depth is higher than 2.
+1) Assigning sampele cosine weighted hemisphere direction to ray payload cause a hang if tracing depth is higher than 2.
 If payload directions is set to something simple as -ray.direction there is no hang crash (even if hemisphere direction 
 is still sampled, but unused). Even using only 2x2 launch dimension and having TdrDelay set to 5 seconds.
 
 In Optix 3.5.1 using Sbvh acceleration structure builder and Bvh traverser caused hangs whenever trace depth was higher 
 than 1, even when simply setting new prd.direction for new ray as negation of incident direction -ray.direction. 
-Switching to Trbvh wixed this, but failed when using proper hemisphere sampling as described before. I am no longer able
-to reproduce this behavior in OptiX 3.6.
+Switching to Trbvh fixed this, but failed when using proper hemisphere sampling as described before. I am no longer able
+to reproduce this behaviour in OptiX 3.6.
 
 While trying to find a solution by simplifying kernels, changing acceleration structures, updating SDKs and drivers the
 following error Cuda error codes were observed - 700, 702 (most often), 716, 719, 999.
