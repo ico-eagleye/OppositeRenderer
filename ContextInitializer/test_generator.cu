@@ -62,7 +62,7 @@ RT_PROGRAM void generator()
 
 		// Example 3 - WORKS ( ALL EXAMPLES WORK TOGETHER WITH THIS !!! )
 		// note that launchIndex.x is passed to rtPrintf()
-		if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d iteration i %d\n", launchIndex.x, i);
+		//if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d iteration i %d\n", launchIndex.x, i);
 
 		rtTrace( sceneRootObject, lightRay, lightPrd );
 
@@ -82,7 +82,7 @@ RT_PROGRAM void generator()
 
 		// Example 4 - FAILS
 		// output in first iteration, then "Error ir rtPrintf format string"
-		if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d iteration i %d prepared new ray\n", launchIndex.x, i);
+		//if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d iteration i %d prepared new ray\n", launchIndex.x, i);
 
 		// Example 5 - FAILS
 		// output in first iteration, then "Error ir rtPrintf format string"
