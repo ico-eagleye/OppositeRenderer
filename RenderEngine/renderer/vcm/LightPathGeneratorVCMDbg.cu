@@ -45,6 +45,25 @@ RT_PROGRAM void generatorDbg()
 }
 
 
+// recursive approach
+RT_PROGRAM void generatorDbgRC()
+{
+	SubpathPRD lightPrd;
+	lightPrd.depth = 0;
+    lightPrd.done = 0;
+	lightPrd.randomState = randomStates[launchIndex]; // curand states
+	lightPrd.throughput = make_float3(1.0f);
+
+    float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
+	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
+	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
+	
+	rtTrace( sceneRootObject, lightRay, lightPrd );
+
+	randomStates[launchIndex] = lightPrd.randomState;
+}
+
+
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {

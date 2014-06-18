@@ -33,6 +33,8 @@
 #define PHOTON_TRACING_RR_START_DEPTH 3
 #define PATH_TRACING_RR_START_DEPTH 3
 
+#define RAY_LEN_MIN 0.0001f
+
 #define USE_CHEAP_RANDOM 0 // vmarz: cheap random seems broken (generates weird results)
 
 #define ENABLE_MESH_HITS_COUNTING 0

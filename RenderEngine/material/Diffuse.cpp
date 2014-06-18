@@ -28,7 +28,7 @@ optix::Material Diffuse::getOptixMaterial(optix::Context & context)
         m_optixMaterial->setClosestHitProgram(RayType::PHOTON_IN_PARTICIPATING_MEDIUM, photonProgram);
 
         // VCM
-        optix::Program vcmLightProgram = context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitLightDbg");
+        optix::Program vcmLightProgram = context->createProgramFromPTXFile( "DiffuseDbg.cu.ptx", "closestHitLightDbgRC");
         m_optixMaterial->setClosestHitProgram(RayType::LIGHT_VCM, vcmLightProgram);
 
         m_optixMaterial->validate();

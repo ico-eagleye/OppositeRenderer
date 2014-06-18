@@ -138,7 +138,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_raytracePassOutputBuffer->setSize( m_width, m_height );
     m_context["raytracePassOutputBuffer"]->set( m_raytracePassOutputBuffer );
 
-	// Path Tracing ray generation OptixEntryPoint
+    // Path Tracing ray generation OptixEntryPoint
     {
         Program generatorProgram = m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "generateRay" );
         Program exceptionProgram =  m_context->createProgramFromPTXFile( "RayGeneratorPT.cu.ptx", "exception" );
@@ -281,28 +281,28 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         Program program = m_context->createProgramFromPTXFile( "Output.cu.ptx", "kernel" );
         m_context->setRayGenerationProgram(OptixEntryPoint::PPM_OUTPUT_PASS, program );
     }
-	
-	// VCM light vertex buffer
-	m_lightVertexBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
+    
+    // VCM light vertex buffer
+    m_lightVertexBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT);
     m_lightVertexBuffer->setFormat( RT_FORMAT_USER );
-	m_lightVertexBuffer->setElementSize( sizeof( PathVertex ) );
-	m_lightVertexBuffer->setSize( 1, 1 );
-	m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
+    m_lightVertexBuffer->setElementSize( sizeof( PathVertex ) );
+    m_lightVertexBuffer->setSize( 1, 1 );
+    m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
 
-	m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 
-		SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT );
-	m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
+    m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 
+        SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT );
+    m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
 
-	// VCM programs
-	{
-		// vmarz TODO FIX
-		Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generatorDbg" );
-		Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
-		Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
-		m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, generatorProgram);
-		m_context->setMissProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, missProgram);
-		m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, exceptionProgram);
-	}
+    // VCM programs
+    {
+        // vmarz TODO FIX
+        Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "generatorDbgRC" );
+        Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "exception" );
+        Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "miss");
+        m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, generatorProgram);
+        m_context->setMissProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, missProgram);
+        m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, exceptionProgram);
+    }
 
     // Random state buffer (must be large enough to give states to both photons and image pixels)
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
@@ -322,7 +322,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     createGpuDebugBuffers();
 
 #if ENABLE_RENDER_DEBUG_EXCEPTIONS
-	m_context->setPrintEnabled(true); // vmarz: needed for rtPrint calls in cuda kernels (note: printf doesn't need this)
+    m_context->setPrintEnabled(true); // vmarz: needed for rtPrint calls in cuda kernels (note: printf doesn't need this)
     m_context->setPrintBufferSize(10000000u); 
     m_context->setExceptionEnabled(RTexception::RT_EXCEPTION_ALL , true); // vmarz: only stack overflow exception enabled by default
 #endif
@@ -384,11 +384,11 @@ void OptixRenderer::initScene( IScene & scene )
 #if ENABLE_MESH_HITS_COUNTING
     int sceneNMeshes = scene.getNumMeshes();
     m_context["sceneNMeshes"]->setInt(sceneNMeshes);
-	optix::Buffer hitsPerMeshBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, sceneNMeshes);
-	unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
-	memset(bufferHost, 0, sizeof(unsigned int) * sceneNMeshes);
-	hitsPerMeshBuffer->unmap();
-	m_context["hitsPerMeshBuffer"]->setBuffer(hitsPerMeshBuffer);
+    optix::Buffer hitsPerMeshBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, sceneNMeshes);
+    unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
+    memset(bufferHost, 0, sizeof(unsigned int) * sceneNMeshes);
+    hitsPerMeshBuffer->unmap();
+    m_context["hitsPerMeshBuffer"]->setBuffer(hitsPerMeshBuffer);
 #endif
 
     try
@@ -411,6 +411,7 @@ void OptixRenderer::initScene( IScene & scene )
     }
     catch(const optix::Exception & e)
     {
+        m_initialized = false;
         QString error = QString("An OptiX error occurred when initializing scene: %1").arg(e.getErrorString().c_str());
         throw std::exception(error.toLatin1().constData());
     }
@@ -448,12 +449,12 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
     nvtx::ScopedRange r(buffer);
 
 #if ENABLE_MESH_HITS_COUNTING
-	// print scene meshes count
-	int sceneNMeshes = m_context["sceneNMeshes"]->getInt();
-	optix::Buffer hitsPerMeshBuffer = m_context["hitsPerMeshBuffer"]->getBuffer();
-	unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
-	memset(bufferHost, 0, sizeof(unsigned int) * sceneNMeshes);
-	hitsPerMeshBuffer->unmap();
+    // print scene meshes count
+    int sceneNMeshes = m_context["sceneNMeshes"]->getInt();
+    optix::Buffer hitsPerMeshBuffer = m_context["hitsPerMeshBuffer"]->getBuffer();
+    unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
+    memset(bufferHost, 0, sizeof(unsigned int) * sceneNMeshes);
+    hitsPerMeshBuffer->unmap();
 #endif
 
     try
@@ -489,7 +490,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         else if (renderMethod == RenderMethod::PROGRESSIVE_PHOTON_MAPPING)
         {          
 #pragma region PROGRESSIVE PHOTON MAPPING
-			// Trace viewing rays
+            // Trace viewing rays
             {
                 nvtx::ScopedRange r("OptixEntryPoint::RAYTRACE_PASS");
                 sutilCurrentTime( &t0 );
@@ -591,10 +592,10 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_width, m_height);
 #pragma endregion PROGRESSIVE PHOTON MAPPING
         }
-		else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
-		{
-			if (!m_lightVertexCountEstimated)
-			{
+        else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
+        {
+            if (!m_lightVertexCountEstimated)
+            {
                 // Transfer any data to the GPU (trigger an empty launch)
                 m_context->launch( OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS,
                     static_cast<unsigned int>(0),
@@ -606,12 +607,12 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     printf("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS launch dim %d x %d\n",
                         SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT);
 #endif
-			        nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS");
-			        sutilCurrentTime( &t0 );
-			        m_context->launch( OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS,
-				        static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH),
-				        static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT) );
-			        sutilCurrentTime( &t1 );
+                    nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS");
+                    sutilCurrentTime( &t0 );
+                    m_context->launch( OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS,
+                        static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH),
+                        static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT) );
+                    sutilCurrentTime( &t1 );
                     printf("Light subpath count estimated in %.4f.\n", t1-t0);
                 }
                 m_lightVertexCountEstimated = true;
@@ -636,25 +637,25 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);*/
 
                 // init vertex cache
-			}
+            }
 
-		}
+        }
 
         double end;
         sutilCurrentTime( &end );
         double traceTime = end-traceStartTime;
 
 #if ENABLE_MESH_HITS_COUNTING
-		// print scene meshes count
-		int sceneNMeshes = m_context["sceneNMeshes"]->getInt();
-		optix::Buffer hitsPerMeshBuffer = m_context["hitsPerMeshBuffer"]->getBuffer();
-		unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
-		for(int i = 0; i < sceneNMeshes; i++)
-		{
-			if(bufferHost[i] > 0)
-				printf("hitsPerMesh [%i] = %u\n", i, bufferHost[i]);
-		}
-		hitsPerMeshBuffer->unmap();
+        // print scene meshes count
+        int sceneNMeshes = m_context["sceneNMeshes"]->getInt();
+        optix::Buffer hitsPerMeshBuffer = m_context["hitsPerMeshBuffer"]->getBuffer();
+        unsigned int* bufferHost = (unsigned int*)hitsPerMeshBuffer->map();
+        for(int i = 0; i < sceneNMeshes; i++)
+        {
+            if(bufferHost[i] > 0)
+                printf("hitsPerMesh [%i] = %u\n", i, bufferHost[i]);
+        }
+        hitsPerMeshBuffer->unmap();
 #endif
     }
     catch(const optix::Exception & e)
