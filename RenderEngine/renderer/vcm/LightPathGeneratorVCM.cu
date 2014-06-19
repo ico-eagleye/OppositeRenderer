@@ -119,41 +119,6 @@ RT_PROGRAM void generator()
 }
 
 
-RT_PROGRAM void generatorDbg()
-{
-	SubpathPRD lightPrd;
-	lightPrd.depth = 0;
-	lightPrd.done = 0;
-	lightPrd.randomState = randomStates[launchIndex]; // curand states
-
-	float3 rayOrigin = make_float3( 343.0f, 548.0f, 227.0f);
-	float3 rayDirection = make_float3( .0f, -1.0f, .0f);
-	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
-
-	for (int i=0;;i++)
-	{
-		//OPTIX_DEBUG_PRINT(lightPrd.depth, " dir %.2f %.2f %.2f\n",
-		//    lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
-		rtTrace( sceneRootObject, lightRay, lightPrd );
-
-		if (lightPrd.done) 
-		{
-			//lightPrd.done += a;
-			//OPTIX_DEBUG_PRINT(lightPrd.depth, " done\n");
-			break;
-		}
-
-		lightRay.origin = lightPrd.origin;
-		lightRay.direction = lightPrd.direction;
-		//OPTIX_DEBUG_PRINT(lightPrd.depth, "Gen - new org %f %f %f\n", lightRay.origin.x, lightRay.origin.y, lightRay.origin.z);
-		//OPTIX_DEBUG_PRINT(lightPrd.depth, "Gen - new org %f %f %f\n", lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
-	}
-
-	randomStates[launchIndex] = lightPrd.randomState;
-}
-
-
-
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
@@ -166,7 +131,7 @@ RT_PROGRAM void miss()
 rtDeclareVariable(float3, exceptionErrorColor, , );
 RT_PROGRAM void exception()
 {
-	//rtPrintf("Exception Light ray!\n");
-	//rtPrintExceptionDetails();
+	rtPrintf("Exception Light ray! d: %d\n", lightPrd.depth);
+	rtPrintExceptionDetails();
 	lightPrd.throughput = make_float3(0,0,0);
 }

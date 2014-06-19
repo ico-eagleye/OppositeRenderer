@@ -117,33 +117,9 @@ RT_PROGRAM void closestHitPhoton()
 }
 
 
+
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 rtBuffer<uint, 2> lightVertexCountBuffer;
-
-
-
-// Create ONB from normalaized vector
-static __device__ __inline__ void createONB( 
-	const optix::float3& n, optix::float3& U, optix::float3& V)
-{
-  using namespace optix;
-
-  U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
-  if ( dot(U, U) < 1.e-3f )
-	  U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
-  U = normalize( U );
-  V = cross( n, U );
-}
-
-
-float3 __device__ __inline__ sampleHemisphereCosOptix(float3 normal, float2 rnd)
-{
-	float3 p;
-	cosine_sample_hemisphere(rnd.x, rnd.y, p);
-	float3 v1, v2;
-	createONB(normal, v1, v2);
-	return v1 * p.x + v2 * p.y + normal * p.z;  
-}
 
 
  // Light subpath program
@@ -155,9 +131,9 @@ RT_PROGRAM void closestHitLight()
 	float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
 	float3 hitPoint = ray.origin + tHit*ray.direction;
 
-	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - rayDir %f %f %f\n", ray.direction.x, ray.direction.y, ray.direction.z);
-	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
-	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
+	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - rayDir %f %f %f\n", ray.direction.x, ray.direction.y, ray.direction.z);
+	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
 
 	// Update MIS quantities before storing at the vertex
 
@@ -221,55 +197,3 @@ RT_PROGRAM void closestHitLight()
 	lightPrd.origin = hitPoint;
 	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
 }
-
-
-
-RT_PROGRAM void closestHitLightDbg()
-{
-	lightPrd.depth++;
-
-	float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
-	float3 hitPoint = ray.origin + tHit*ray.direction;
-
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - rayDir %f %f %f\n", ray.direction.x, ray.direction.y, ray.direction.z);
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
-
-	float hitCosTheta = dot(worldShadingNormal, -ray.direction);
-	if (hitCosTheta < 0) return;
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
-
-	// store path vertex
-	//lightVertexCountBuffer[launchIndex] = lightPrd.depth;
-	
-	// Russian Roulette
-	float contProb = luminanceCIE(Kd);
-	float rrSample = getRandomUniformFloat(&lightPrd.randomState);    
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cont %f RR %f \n", contProb, rrSample);
-	if (contProb < rrSample)
-	{
-		lightPrd.done = 1;
-		return;
-	}
-
-	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
-	float3 dir = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample);
-	dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - samp dir %f %f %f len %f\n", dir.x, dir.y, dir.z, sqrtf(dot(dir, dir)));	
-	//lightPrd.direction = normalize(dir);
- //   lightPrd.direction = normalize(4*worldShadingNormal + ray.direction);
-
-	//lightPrd.direction = -ray.direction;
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);	
-	
-	lightPrd.origin = hitPoint;
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
-
-	// Doesn't crash if code below uncommented
-	//if (lightPrd.depth == 2)
-	//{
-	//    lightPrd.done = 1;
-	//    return;
-	//}
-}
-

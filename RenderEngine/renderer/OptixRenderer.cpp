@@ -45,8 +45,8 @@ const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_P
 // VCM
 //const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 128;
 //const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 128;
-const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 2;
-const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 2;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
 
 using namespace optix;
 
@@ -109,7 +109,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
     m_context->setRayTypeCount(RayType::NUM_RAY_TYPES);
     m_context->setEntryPointCount(OptixEntryPoint::NUM_PASSES);
-    m_context->setStackSize(ENABLE_PARTICIPATING_MEDIA ? 3000 : 1596);
+    //m_context->setStackSize(ENABLE_PARTICIPATING_MEDIA ? 3000 : 1596);
+    m_context->setStackSize(3000);
 
     m_context["maxPhotonDepositsPerEmitted"]->setUint(MAX_PHOTON_COUNT);
     m_context["ppmAlpha"]->setFloat(0);
@@ -296,12 +297,12 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     // VCM programs
     {
         // vmarz TODO FIX
-        Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "generatorDbgRC" );
-        Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "exception" );
-        Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCMDbg.cu.ptx", "miss");
+        Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generator" );
+        Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
+        Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
         m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, generatorProgram);
-        m_context->setMissProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, missProgram);
         m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, exceptionProgram);
+        m_context->setMissProgram(RayType::LIGHT_VCM, missProgram);
     }
 
     // Random state buffer (must be large enough to give states to both photons and image pixels)
@@ -604,6 +605,9 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
                 {
 #if ENABLE_RENDER_DEBUG_OUTPUT
+                    RTsize mem = m_context->getAvailableDeviceMemory(0);
+                    float memMB = float(mem) / 1000000.0f;
+                    printf("Available device memory %f\n", memMB);
                     printf("OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS launch dim %d x %d\n",
                         SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT);
 #endif
@@ -614,6 +618,9 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                         static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT) );
                     sutilCurrentTime( &t1 );
                     printf("Light subpath count estimated in %.4f.\n", t1-t0);
+                    mem = m_context->getAvailableDeviceMemory(0);
+                    memMB = float(mem) / 1000000.0f;
+                    printf("Available device memory %f\n", memMB);
                 }
                 m_lightVertexCountEstimated = true;
 
