@@ -70,9 +70,7 @@ RT_PROGRAM void closestHit()
 
 	float2 bsdfSample = make_float2(rnd(lightPrd.seed),rnd(lightPrd.seed));
 	float3 dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample); // --> #1 doesn't work
-
-	//dir = normalize(2*worldShadingNormal + ray.direction);  // --> #2 works (computation in #1 can be left uncommented)
-	//dir = -ray.direction;                                   // --> #3 works (computation in #1 can be left uncommented)
+	//dir = -ray.direction;                                   // --> #2 works (computation in #1 can be left uncommented)
   
 	//if (1 < lightPrd.depth)                                 // #1 still causes crash - this shows that crash occurs because of setting
 	//    dir = -ray.direction;                               // lightsPrd.direction to cosine sampled direction on first hit
