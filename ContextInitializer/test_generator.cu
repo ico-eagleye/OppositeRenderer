@@ -30,8 +30,8 @@ static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsig
 }
 
 // NOTE:
-// All rtPrinf fail case examples below were tested when direction ray payload was simply set to
-// negation of incident direction lightPrd.direction = -ray.direction in the closest hit program
+// All rtPrinf fail case examples below were tested individually when direction in the ray payload was simply set to
+// negation of the incident direction in the closest hit program: lightPrd.direction = -ray.direction
 RT_PROGRAM void generator()
 {
 	SubpathPRD lightPrd;

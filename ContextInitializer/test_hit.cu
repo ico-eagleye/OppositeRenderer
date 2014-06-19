@@ -60,13 +60,8 @@ RT_PROGRAM void closestHit()
 	float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
 	float3 hitPoint = ray.origin + tHit*ray.direction;
 
-	float hitCosTheta = dot(worldShadingNormal, -ray.direction);
-	if (hitCosTheta < 0) return;
-
-	// Russian Roulette
-	float contProb = luminanceCIE(Kd);
-	float rrSample = rnd(lightPrd.seed);
-	if (contProb < rrSample)
+	// Kind of Russian Roulette
+	if (0.7f < rnd(lightPrd.seed))
 	{
 		lightPrd.done = 1;
 		return;
