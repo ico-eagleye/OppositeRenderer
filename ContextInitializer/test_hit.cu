@@ -79,9 +79,9 @@ RT_PROGRAM void closestHit()
 	lightPrd.origin = hitPoint;
 
 	// #1 doesn't crash if code below uncommented (stop on first hit)
-	//if (lightPrd.depth == 1)	// #1 crashes if condition is depth == 2
-	//{							// even though the new direction is never used
-	//	lightPrd.done = 1;		// to trace a ray
+	//if (lightPrd.depth == 1)  // #1 crashes if condition is depth == 2
+	//{                         // even though the new direction is never used
+	//	lightPrd.done = 1;      // to trace a ray
 	//	return;
 	//}
 }
