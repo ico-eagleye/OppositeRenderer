@@ -6,6 +6,7 @@
 #include "renderer/SubpathPRD.h"
 
 using namespace optix;
+using namespace ContextTest;
 
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
@@ -85,4 +86,29 @@ RT_PROGRAM void closestHit()
 	//	lightPrd.done = 1;		// to trace a ray
 	//	return;
 	//}
+}
+
+
+// THIS WORKS with generatorRecursive
+RT_PROGRAM void closestHitRecursive()
+{
+	lightPrd.depth++;
+	float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+	float3 hitPoint = ray.origin + tHit*ray.direction;
+
+	// Kind of Russian Roulette
+	if (0.7f < rnd(lightPrd.seed))
+	{
+		lightPrd.done = 1;
+		return;
+	}
+
+	float2 bsdfSample = make_float2(rnd(lightPrd.seed),rnd(lightPrd.seed));
+	float3 dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
+
+	lightPrd.direction = normalize(dir);     
+	lightPrd.origin = hitPoint;
+
+	Ray newRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
+	rtTrace( sceneRootObject, newRay, lightPrd );
 }

@@ -112,6 +112,24 @@ RT_PROGRAM void generator()
 }
 
 
+// THIS WORKS with closestHitRecursive
+RT_PROGRAM void generatorRecursive()
+{
+	SubpathPRD lightPrd;
+	lightPrd.depth = 0;
+	lightPrd.done = 0;
+	lightPrd.seed = tea<16>(720u*launchIndex.y+launchIndex.x, 1u);
+
+	// Approx light position in scene (eliminated use of light buffer while debuggin cause for hangs)
+	float3 rayOrigin = make_float3( 343.0f, 548.7f, 227.0f);
+	float3 rayDirection = normalize(make_float3( .0f, -1.0f, .0f));
+	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );	
+	int a = launchIndex.x; // left it here to keep same memory layout for local variables as above
+	rtTrace( sceneRootObject, lightRay, lightPrd );
+}
+
+
+
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
