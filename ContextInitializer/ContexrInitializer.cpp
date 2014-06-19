@@ -47,8 +47,8 @@ namespace ContextTest
 	optix::Program exceptionProgram = m_context->createProgramFromPTXFile( "test_generator.cu.ptx", "exception" );
 	optix::Program missProgram = m_context->createProgramFromPTXFile( "test_generator.cu.ptx", "miss");
 	m_context->setRayGenerationProgram(OptixEntryPointVCM::LIGHT_ESTIMATE_PASS, generatorProgram);
-	m_context->setMissProgram(OptixEntryPointVCM::LIGHT_ESTIMATE_PASS, missProgram);
 	m_context->setExceptionProgram(OptixEntryPointVCM::LIGHT_ESTIMATE_PASS, exceptionProgram);
+	m_context->setMissProgram(RayType::LIGHT_VCM, missProgram);
 
 	Cornell cornell;
 	RootGroup gg = cornell.getSceneRootGroup(m_context); // RootGroup typedef is Group or GeometryGroup, was testing that makes a difference
