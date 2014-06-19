@@ -30,8 +30,10 @@ static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsig
 }
 
 // NOTE:
-// All rtPrinf fail case examples below were tested individually when direction in the ray payload was simply set to
+// All rtPrinf fail cases below were tested individually when direction in the ray payload was simply set to
 // negation of the incident direction in the closest hit program: lightPrd.direction = -ray.direction
+//
+// When hemisphere sampling is used, tracing in a LOOP FAILS, but tracing few rays WITHOUT LOOP WORKS (at the bottom)
 RT_PROGRAM void generator()
 {
 	SubpathPRD lightPrd;
@@ -42,7 +44,9 @@ RT_PROGRAM void generator()
 	// Approx light position in scene (eliminated use of light buffer while debuggin cause for hangs)
 	float3 rayOrigin = make_float3( 343.0f, 548.7f, 227.0f);
 
-	// !!! Use of cosine sampling in closet hit program works if init unnormalized dir here is something like ( .0f, -1.0f, 1.0f)
+	// !!! Use of cosine sampling in closet hit program
+	// - WORKS if init unnormalized dir here is something like ( .0f, -1.0f, 1.0f)
+	// - FAILS if init unnormalized dir here is something like ( 1.0f, -1.0f, .0f)
 	float3 rayDirection = normalize(make_float3( .0f, -1.0f, .0f));
 	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
 	
@@ -50,6 +54,7 @@ RT_PROGRAM void generator()
 	// Optix 3.5.1 specific - when line #1 was uncommented examples 1, 2, 5 (example 4 not tested)
 	// Using launchIndex.x withing the loop instead of 'a' didn't produce same effect
 
+	// FAILS in second interation if lightPrd.direction computed by sampling hemisphere
 	for (int i=0;;i++)
 	{
 		// Example 1 - FAILS
@@ -72,7 +77,7 @@ RT_PROGRAM void generator()
 			break;
 		}
 
-		// If ray updates below are commented out then example 3 also fails in second iteration.
+		// !!! If ray updates below are commented out then example 3 also fails in second iteration.
 		// As mentioned, all examples work together with 3, so example 4 outputs in first iteration and then example 3 fails in second.
 		lightRay.origin = lightPrd.origin;
 		lightRay.direction = lightPrd.direction;
@@ -88,6 +93,22 @@ RT_PROGRAM void generator()
 		// output in first iteration, then "Error ir rtPrintf format string"
 		//rtPrintf("Output\n");
 	}
+
+	// TRACING WITHOUT LOOP - WORKS
+	//
+	// Works with hemisphere sampled direction BUT "new line" characters is ignored, everything printed in one line
+	//rtTrace( sceneRootObject, lightRay, lightPrd );
+	//if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d Traced 1 END %d \n", launchIndex.x);
+
+	//lightRay.origin = lightPrd.origin;
+	//lightRay.direction = lightPrd.direction;
+	//rtTrace( sceneRootObject, lightRay, lightPrd );
+	//if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d Traced 2 %d \n", launchIndex.x);
+
+	//lightRay.origin = lightPrd.origin;
+	//lightRay.direction = lightPrd.direction;
+	//rtTrace( sceneRootObject, lightRay, lightPrd );
+	//if (launchIndex.x == 0 && launchIndex.y == 0) rtPrintf("idx %d Traced 3 %d \n", launchIndex.x);
 }
 
 
