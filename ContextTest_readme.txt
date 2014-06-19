@@ -1,6 +1,12 @@
 This project is made reproduce OptiX hangs/crashes discussed in this Optix forum thread
 https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
 
+FIXED:
+The cause of the issue was use of wrong ray type for miss program and that resulted
+in infinite loops due loop stop condition never being set. Weird context crashed and
+and behaviour of rtPrintf misled the debugging process. The rest of the text is left
+in case anyone cares.
+
 BUILDING:
 1. Define OPTIX_PATH environment variable pointing to OptiX SDK. 
 2. Define CUDA_USE_VER environment variable as "5.5" or "6.0". It controls which Cuda 
