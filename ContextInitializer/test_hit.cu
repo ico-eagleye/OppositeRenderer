@@ -107,6 +107,6 @@ RT_PROGRAM void closestHitRecursive()
 	lightPrd.direction = normalize(dir);     
 	lightPrd.origin = hitPoint;
 
-	Ray newRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
+	Ray newRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, 0.0001f, RT_DEFAULT_MAX );
 	rtTrace( sceneRootObject, newRay, lightPrd );
 }

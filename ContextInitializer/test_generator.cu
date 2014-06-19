@@ -48,7 +48,7 @@ RT_PROGRAM void generator()
 	// - WORKS if init unnormalized dir here is something like ( .0f, -1.0f, 1.0f)
 	// - FAILS if init unnormalized dir here is something like ( 1.0f, -1.0f, .0f)
 	float3 rayDirection = normalize(make_float3( .0f, -1.0f, .0f));
-	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001, RT_DEFAULT_MAX );
+	Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, 0.0001f, RT_DEFAULT_MAX );
 	
 	int a = launchIndex.x;
 	// Optix 3.5.1 specific - when line #1 was uncommented examples 1, 2, 5 (example 4 not tested)
