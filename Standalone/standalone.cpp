@@ -24,9 +24,9 @@ int main( int argc, char** argv )
 
     QTextStream out(stdout);
     QTextStream in(stdin);
-	
-	setvbuf(stdout, NULL, _IONBF, NULL);	// vmarz: disable output stream buffering, otherwise printf output doesn't show up consistently
-	setvbuf(stderr, NULL, _IONBF, NULL);
+    
+    setvbuf(stdout, NULL, _IONBF, NULL);	// vmarz: disable output stream buffering, otherwise printf output doesn't show up consistently
+    setvbuf(stderr, NULL, _IONBF, NULL);
 
     try
     {
@@ -34,15 +34,15 @@ int main( int argc, char** argv )
 
         const std::vector<ComputeDevice> & repo = repository.getComputeDevices();
 
-		if(repo.empty())
-		{
-			out << "You must have a CUDA enabled GPU to run this application." 
-				<< endl << "Press ENTER to quit." << endl;
-			in.read(1);
-			return 1;
-		}
+        if(repo.empty())
+        {
+            out << "You must have a CUDA enabled GPU to run this application." 
+                << endl << "Press ENTER to quit." << endl;
+            in.read(1);
+            return 1;
+        }
 
-		out << "Available compute devices:" << endl;
+        out << "Available compute devices:" << endl;
 
         for(int i = 0; i < repo.size(); i++)
         {
@@ -70,11 +70,11 @@ int main( int argc, char** argv )
 
         MainWindowBase mainWindow(application);
         //mainWindow.showMaximized();
-		mainWindow.show();
-		mainWindow.resize(1150,700);
+        mainWindow.show();
+        mainWindow.resize(1150,700);
 
-		// vmarz: start render manager after MainWindow initialization when all signals/slots hooked up
-		application.startRenderManager();
+        // vmarz: start render manager after MainWindow initialization when all signals/slots hooked up
+        application.startRenderManager();
         int returnCode = qApplication.exec();
         application.wait();
 
