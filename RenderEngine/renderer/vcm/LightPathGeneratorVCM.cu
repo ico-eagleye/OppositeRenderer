@@ -45,7 +45,7 @@ RT_PROGRAM void generator()
 {
     SubpathPRD lightPrd;
     lightPrd.depth = 0;
-    lightPrd.done = 0;
+    lightPrd.keepTracing = 0;
     lightPrd.randomState = randomStates[launchIndex];
     lightPrd.dVC = 0;
     lightPrd.dVM = 0;
@@ -98,14 +98,16 @@ RT_PROGRAM void generator()
     Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
     
     for (int i=0;;i++)
-    {        
+    {
+        lightPrd.keepTracing = 0; // any hit sets this to one if continuing, done this way since rtTrace sometimes
+                            // doesn't result in miss or anythit being called - https://devtalk.nvidia.com/default/topic/754670/optix/rttrace-occasionally-results-in-nothing-no-call-to-any-hit-miss-or-exception-program-/
         OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - tra dir %f %f %f\n",
             i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
-        if (lightPrd.done) 
+        if (!lightPrd.keepTracing)
         {
-            OPTIX_DEBUG_PRINT(lightPrd.depth, " done\n");
+            OPTIX_DEBUG_PRINT(lightPrd.depth, "Stop trace \n");
             break;
         }
 
@@ -115,22 +117,22 @@ RT_PROGRAM void generator()
         OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - new org %f %f %f\n", i, lightRay.origin.x, lightRay.origin.y, lightRay.origin.z);
         OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - new dir %f %f %f\n", i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
 
-        if (lightPrd.depth == 2)
-        {
-            //rtPrintf("%d %d: depth %d prd max - ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
-            //    lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
-            break;
-        }
+        //if (lightPrd.depth == 2)
+        //{
+        //    //rtPrintf("%d %d: depth %d prd max - ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
+        //    //    lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+        //    break;
+        //}
 
-        if (i == 3)
-        {
-            OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - itr max - ndir %f %f %f\n",
-                i, lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+        //if (i == 3)
+        //{
+        //    OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - itr max - ndir %f %f %f\n",
+        //        i, lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 
-            //rtPrintf("%d %d: depth %d iter max - ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
-            //    lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
-            break;
-        }
+        //    //rtPrintf("%d %d: depth %d iter max - ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
+        //    //    lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+        //    break;
+        //}
     }
 
     randomStates[launchIndex] = lightPrd.randomState;
@@ -143,7 +145,6 @@ RT_PROGRAM void miss()
     OPTIX_DEBUG_PRINT(lightPrd.depth, "Miss\n");
     //rtPrintf("%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
     //            lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
-    lightPrd.done = 1;
 }
 
 

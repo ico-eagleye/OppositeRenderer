@@ -43,12 +43,12 @@ const unsigned int OptixRenderer::EMITTED_PHOTONS_PER_ITERATION = OptixRenderer:
 const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_PER_ITERATION*OptixRenderer::MAX_PHOTON_COUNT;
 
 // VCM
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
 //const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 128;
 //const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 128;
-const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 16;
-const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 16;
+//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 16;
+//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 16;
 
 using namespace optix;
 
