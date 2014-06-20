@@ -182,12 +182,12 @@ optix::Group Cornell::getSceneRootGroup(optix::Context & context)
 
 	// vmarz: Changed to Trbvh. Sbvh can cause weird hangs 
 	// https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
-	geometry_group->setAcceleration(context->createAcceleration("Bvh", "Bvh")); // Bvh Sbvh Trbvh
+	geometry_group->setAcceleration(context->createAcceleration("Trbvh", "Bvh")); // Bvh Sbvh Trbvh
 
 	optix::Group gro = context->createGroup();
 	gro->setChildCount(1);
 	gro->setChild(0, geometry_group);
-	optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh"); // BvhCompact
+	optix::Acceleration acceleration = context->createAcceleration("Trbvh", "Bvh"); // BvhCompact
 	gro->setAcceleration(acceleration);
 
 	return gro;
