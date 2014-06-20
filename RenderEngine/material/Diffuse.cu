@@ -131,9 +131,9 @@ RT_PROGRAM void closestHitLight()
 	float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
 	float3 hitPoint = ray.origin + tHit*ray.direction;
 
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - rayDir %f %f %f\n", ray.direction.x, ray.direction.y, ray.direction.z);
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - point %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - normal %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
+	OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - inc dir %f %f %f\n", ray.direction.x, ray.direction.y, ray.direction.z);
+	OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - point   %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+	OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - normal  %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
 
 	// Update MIS quantities before storing at the vertex
 
@@ -141,7 +141,7 @@ RT_PROGRAM void closestHitLight()
 	float hitCosTheta = dot(worldShadingNormal, -ray.direction);
 	if (hitCosTheta < 0) return;	// vmarz TODO check validity
 
-	//OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - cos theta %f \n", hitCosTheta);
+	//OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
 
 	float misFactor = 1.0f / Mis(fabs(hitCosTheta));
 	lightPrd.dVCM *= misFactor;  // vmarz?: need abs here?
@@ -167,7 +167,7 @@ RT_PROGRAM void closestHitLight()
 	float contProb = luminanceCIE(Kd); // vmarz TODO precompute
 	float rrSample = getRandomUniformFloat(&lightPrd.randomState);
 	
-	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - cont %f RR %f \n", contProb, rrSample);
+	OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cnt rr  %f %f \n", contProb, rrSample);
 
 	if (contProb < rrSample)
 	{
@@ -184,7 +184,7 @@ RT_PROGRAM void closestHitLight()
 	float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);
 	lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
 	//lightPrd.direction = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
-	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+	OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 
 	float bsdfRevPdfW; // vmarz TODO
 	// check component cont prob	
@@ -195,5 +195,5 @@ RT_PROGRAM void closestHitLight()
 
 	lightPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
 	lightPrd.origin = hitPoint;
-	OPTIX_DEBUG_PRINT(lightPrd.depth, " Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
+	OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
 }

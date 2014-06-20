@@ -319,6 +319,10 @@ static void __global__ initRandomStateBuffer(RandomState* states, unsigned int s
 static void initializeRandomStateBuffer(optix::Buffer & buffer, int numStates)
 {
     unsigned int seed = 574133*(unsigned int)clock() + 47844152748*(unsigned int)time(NULL);
+#ifdef DEBUG_RANDOM_SEED
+    seed = DEBUG_RANDOM_SEED;
+#endif
+
     printf("Seeding on %u clock: %d time: %d \n", seed, (unsigned int)clock(), (unsigned int)time(NULL));
 
     RandomState* states = getDevicePtr<RandomState>(buffer, 0);

@@ -38,3 +38,6 @@
 #define USE_CHEAP_RANDOM 0 // vmarz: cheap random seems broken (generates weird results)
 
 #define ENABLE_MESH_HITS_COUNTING 0
+
+
+#define DEBUG_RANDOM_SEED 1554314344

@@ -43,10 +43,12 @@ const unsigned int OptixRenderer::EMITTED_PHOTONS_PER_ITERATION = OptixRenderer:
 const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_PER_ITERATION*OptixRenderer::MAX_PHOTON_COUNT;
 
 // VCM
+//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
+//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
 //const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 128;
 //const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 128;
-const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
-const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 16;
+const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 16;
 
 using namespace optix;
 
@@ -109,8 +111,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
     m_context->setRayTypeCount(RayType::NUM_RAY_TYPES);
     m_context->setEntryPointCount(OptixEntryPoint::NUM_PASSES);
-    //m_context->setStackSize(ENABLE_PARTICIPATING_MEDIA ? 3000 : 1596);
-    m_context->setStackSize(3000);
+    m_context->setStackSize(ENABLE_PARTICIPATING_MEDIA ? 3000 : 1596);
 
     m_context["maxPhotonDepositsPerEmitted"]->setUint(MAX_PHOTON_COUNT);
     m_context["ppmAlpha"]->setFloat(0);
@@ -628,16 +629,22 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 optix::Buffer buffer = m_context["lightVertexCountBuffer"]->getBuffer();
                 unsigned int* buffer_Host = (unsigned int*)buffer->map();
                 unsigned int subpathCount = SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH * SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
-                unsigned long long sumCount = 0;
+                unsigned long long sumLen = 0;
+                unsigned long long maxLen = 0;
+
                 for(int i = 0; i < subpathCount; i++)
                 {
-                    if(buffer_Host[i] > 0)
-                        sumCount += buffer_Host[i];
+                    unsigned long long count = buffer_Host[i];
+                    if (maxLen < count)
+                        maxLen = count;
+                    if (buffer_Host[i] > 0)
+                        sumLen += buffer_Host[i];
                 }
                 buffer->unmap();
 
-                float avgSubpathLength = float(sumCount) / subpathCount;
-                printf("  LVC estimate. stored: %d  avgLen %.4f\n", sumCount, avgSubpathLength);
+                float avgSubpathLength = float(sumLen) / subpathCount;
+                printf("  LVC estimate. paths: %d  vertices: %d  avgLen: %.4f  maxLen: %d\n",
+                    subpathCount, sumLen, avgSubpathLength, maxLen);
 
                 /*m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_SHORT, 
                     SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH, SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT );
