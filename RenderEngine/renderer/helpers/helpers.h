@@ -19,39 +19,42 @@
 // corruption issues. It does complicate debugging process, hence the mulptiple switches for the macro below
 
 
-#define STD_PRINTF 1
-#define PRINTF_SPACES 1		// printing multiple consecutive spaces seems ramdom - doesn't always work
-#define PRINTF_IDX 1		// printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_DEBUG_STD_PRINTF 0
+#define OPTIX_DEBUG_PRINTF_SPACES 0		// printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_DEBUG_PRINTF_IDX 1		  // printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_DEBUG_ID_X 1
+#define OPTIX_DEBUG_ID_Y 15
 
-#ifdef STD_PRINTF
-#define PRINTF printf
+
+#if OPTIX_DEBUG_STD_PRINTF
+#define OPTIX_PRINTF printf
 #else
-#define PRINTF rtPrintf
+#define OPTIX_PRINTF rtPrintf
 #endif
 
 #if ENABLE_RENDER_DEBUG_OUTPUT
 #define OPTIX_DEBUG_PRINT(depth, str, ...) \
-	//if (launchIndex.x == 0 && launchIndex.y == 0) \
-	//{  \
-	//	if (PRINTF_IDX) \
-	//	{ \
-	//		if (STD_PRINTF) \
-	//			PRINTF("i %d, %d -", launchIndex.x, launchIndex.y); \
-	//		else \
-	//			PRINTF("i %d, %d - d %d -", launchIndex.x, launchIndex.y, depth); \
-	//	} \
-	//	if (PRINTF_SPACES) for(int i = 0; i < depth; i++) { PRINTF(" "); } \
-	//	PRINTF(str, __VA_ARGS__); \
-	//}
+	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
+	{  \
+		if (OPTIX_DEBUG_PRINTF_IDX) \
+		{ \
+			if (OPTIX_DEBUG_STD_PRINTF) \
+				OPTIX_PRINTF("%d, %d - ", launchIndex.x, launchIndex.y); \
+			else \
+				OPTIX_PRINTF("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
+		} \
+		if (OPTIX_DEBUG_PRINTF_SPACES) for(int i = 0; i < depth; i++) { OPTIX_PRINTF(" "); } \
+		OPTIX_PRINTF(str, __VA_ARGS__); \
+	}
 
 // original
-#define OPTIX_DEBUG_PRINT(depth, str, ...) \
-	if (launchIndex.x == 0 && launchIndex.y == 0) \
-	{  \
-	PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
-	for(int i = 0; i < depth; i++) { PRINTF(" "); } \
-	PRINTF(str, __VA_ARGS__); \
-	}
+//#define OPTIX_DEBUG_PRINT(depth, str, ...) \
+//	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
+//	{  \
+//	OPTIX_PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
+//	for(int i = 0; i < depth; i++) { OPTIX_PRINTF(" "); } \
+//	OPTIX_PRINTF(str, __VA_ARGS__); \
+//	}
 #else
 #define OPTIX_DEBUG_PRINT(depth, str, ...) // nothing
 #endif
