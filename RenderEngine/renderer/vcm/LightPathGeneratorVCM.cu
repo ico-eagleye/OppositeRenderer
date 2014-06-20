@@ -100,7 +100,8 @@ RT_PROGRAM void generator()
     for (int i=0;;i++)
     {
         lightPrd.keepTracing = 0; // any hit sets this to one if continuing, done this way since rtTrace sometimes
-                            // doesn't result in miss or anythit being called - https://devtalk.nvidia.com/default/topic/754670/optix/rttrace-occasionally-results-in-nothing-no-call-to-any-hit-miss-or-exception-program-/
+                                  // doesn't result in miss or anythit being called
+                                  // https://devtalk.nvidia.com/default/topic/754670/optix/rttrace-occasionally-results-in-nothing-no-call-to-any-hit-miss-or-exception-program-/
         OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - tra dir %f %f %f\n",
             i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
         rtTrace( sceneRootObject, lightRay, lightPrd );
