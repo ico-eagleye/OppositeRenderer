@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'Win32'">
-      <OptixBinDir Condition="'$(OptixIncludeDir)' == ''">$(OptixDir)bin</OptixBinDir>
+      <OptixBinDir Condition="'$(OptixBinDir)' == ''">$(OptixDir)bin</OptixBinDir>
       <OptixLibDir Condition="'$(OptixLibDir)' == ''">$(OptixDir)lib</OptixLibDir>
   </PropertyGroup>
 
