@@ -12,6 +12,7 @@ struct SubpathPRD
     optix::float3 direction;
     optix::float3 throughput;
     optix::uint depth;
+    uint seed;
     RandomState randomState;
     float dVCM;
     float dVC;
