@@ -11,8 +11,8 @@ namespace RayType
     {
         RADIANCE,
         PHOTON,
-		CAMERA_VCM,
-		LIGHT_VCM,
+        CAMERA_VCM,
+        LIGHT_VCM,
         RADIANCE_IN_PARTICIPATING_MEDIUM,
         PHOTON_IN_PARTICIPATING_MEDIUM,
         VOLUMETRIC_RADIANCE,

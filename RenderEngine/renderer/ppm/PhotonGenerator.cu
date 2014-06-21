@@ -6,7 +6,7 @@
 
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include <cuda_runtime.h>
 #include "config.h"
 #include "renderer/Light.h"

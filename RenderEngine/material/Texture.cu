@@ -5,7 +5,7 @@
  */
 
 #include <optix.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
 #include "config.h"
 #include "renderer/RayType.h"
@@ -46,9 +46,6 @@ rtBuffer<unsigned int, 1> photonsHashTableCount;
 #endif
 
 
-/*
-// Radiance Program
-*/
 
 __inline__ __device__ float3 getNormalMappedNormal(const float3 & normal, const float3 & tangent, const float3 & bitangent, const float4 & normalMap)
 {
@@ -60,6 +57,10 @@ __inline__ __device__ float3 getNormalMappedNormal(const float3 & normal, const 
     return normalize(N);
 }
 
+
+/*
+// Radiance Program
+*/
 RT_PROGRAM void closestHitRadiance()
 {
     float3 worldShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shadingNormal));
@@ -89,10 +90,10 @@ RT_PROGRAM void closestHitRadiance()
     radiancePrd.attenuation *= value3;
 }
 
-/*
-// Photon Program
-*/
 
+/*
+ Photon Program
+*/
 RT_PROGRAM void closestHitPhoton()
 {
     float3 worldShadingNormal = normalize(rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal));
@@ -110,7 +111,7 @@ RT_PROGRAM void closestHitPhoton()
     // Record hit if it has bounced at least once
     if(photonPrd.depth >= 1)
     {
-		// vmarz: worldShadingNormal actually is not being stored in photon
+        // vmarz: worldShadingNormal actually is not being stored in photon
         Photon photon (photonPrd.power, hitPoint, ray.direction, worldShadingNormal);
         STORE_PHOTON(photon);
     }

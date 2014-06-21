@@ -8,7 +8,7 @@
 
 
 #include <optix.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
 #include "renderer/Hitpoint.h"
 #include "renderer/helpers/random.h"

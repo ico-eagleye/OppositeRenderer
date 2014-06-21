@@ -6,7 +6,7 @@
 
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include "config.h"
 #include "renderer/RadiancePRD.h"
 #include "renderer/HitPoint.h"

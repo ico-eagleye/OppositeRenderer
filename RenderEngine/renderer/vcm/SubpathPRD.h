@@ -6,13 +6,16 @@
 
 #pragma once
 #include "renderer/RandomState.h"
+#include <optix.h>
+#include <optixu/optixu_math_namespace.h>
+
 struct SubpathPRD
 {
     optix::float3 origin;
     optix::float3 direction;
     optix::float3 throughput;
     optix::uint depth;
-    uint seed;
+    optix::uint seed;
     RandomState randomState;
     float dVCM;
     float dVC;

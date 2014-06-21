@@ -5,7 +5,7 @@
  */
 
 #include <optix.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
 #include "config.h"
 #include "renderer/Hitpoint.h"
@@ -245,7 +245,7 @@ RT_PROGRAM void closestHitLightDbg()
     //float2 bsdfSample = getRandomUniformFloat2(&lightPrd.randomState);                  // Opposite
     float2 bsdfSample = make_float2(rnd(lightPrd.seed),rnd(lightPrd.seed));             // SDK
     float3 dir = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample);
-    //dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
+    dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - samp dir %f %f %f len %f\n", dir.x, dir.y, dir.z, sqrtf(dot(dir, dir)));	
     lightPrd.direction = normalize(dir);
 
