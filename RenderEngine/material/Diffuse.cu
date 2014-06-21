@@ -120,7 +120,9 @@ RT_PROGRAM void closestHitPhoton()
 
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 rtBuffer<uint, 2> lightVertexCountBuffer;
-
+rtBuffer<PathVertex> lightVertexBuffer;
+rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
+rtBuffer<uint> lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
 
  // Light subpath program
 RT_PROGRAM void closestHitLight()
@@ -158,6 +160,12 @@ RT_PROGRAM void closestHitLight()
     // vmarz TODO store material bsdf
 
     // store path vertex
+    if (!lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
+    {
+        uint idx = atomicAdd(&lightVertexBufferIndexBuffer[0], 1u);
+        OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - store V %u\n", idx);
+        lightVertexBuffer[idx] = lightVertex;
+    }
     lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 
     // vmarz TODO connect to camera
@@ -171,6 +179,7 @@ RT_PROGRAM void closestHitLight()
 
     if (contProb < rrSample)
     {
+        lightPrd.done = 1;
         return;
     }
 

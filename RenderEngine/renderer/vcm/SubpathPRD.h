@@ -16,6 +16,7 @@ struct SubpathPRD
     float dVCM;
     float dVC;
     float dVM;
+    optix::uint done;
     optix::uint keepTracing; // vmarz: rtTrace() sometimes doesn't result in anyhit or miss program called
                              // hence can't use "done" condition as in path_trace sample 
                              // https://devtalk.nvidia.com/default/topic/754670/optix/rttrace-occasionally-results-in-nothing-no-call-to-any-hit-miss-or-exception-program-/

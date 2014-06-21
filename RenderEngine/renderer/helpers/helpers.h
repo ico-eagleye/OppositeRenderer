@@ -22,8 +22,8 @@
 #define OPTIX_DEBUG_STD_PRINTF 0
 #define OPTIX_DEBUG_PRINTF_SPACES 0		// printing multiple consecutive spaces seems ramdom - doesn't always work
 #define OPTIX_DEBUG_PRINTF_IDX 1		  // printing multiple consecutive spaces seems ramdom - doesn't always work
-#define OPTIX_DEBUG_ID_X 1
-#define OPTIX_DEBUG_ID_Y 15
+#define OPTIX_DEBUG_ID_X 0
+#define OPTIX_DEBUG_ID_Y 0
 
 
 #if OPTIX_DEBUG_STD_PRINTF
