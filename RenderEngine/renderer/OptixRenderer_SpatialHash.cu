@@ -318,6 +318,7 @@ static void __global__ initRandomStateBuffer(RandomState* states, unsigned int s
 
 static void initializeRandomStateBuffer(optix::Buffer & buffer, int numStates)
 {
+    // vmarz TODO fix cast long to int ?
     unsigned int seed = 574133*(unsigned int)clock() + 47844152748*(unsigned int)time(NULL);
 #ifdef DEBUG_RANDOM_SEED
     seed = DEBUG_RANDOM_SEED;

@@ -15,15 +15,11 @@ struct SubpathPRD
     optix::float3 direction;
     optix::float3 throughput;
     optix::uint depth;
-    optix::uint seed;
+    optix::uint done;
     RandomState randomState;
     float dVCM;
     float dVC;
     float dVM;
-    optix::uint done;
-    optix::uint keepTracing; // vmarz: rtTrace() sometimes doesn't result in anyhit or miss program called
-                             // hence can't use "done" condition as in path_trace sample 
-                             // https://devtalk.nvidia.com/default/topic/754670/optix/rttrace-occasionally-results-in-nothing-no-call-to-any-hit-miss-or-exception-program-/
     //uint  mIsFiniteLight :  1; // Just generate by finite light
     //uint  mSpecularPath  :  1; // All scattering events so far were specular
 };

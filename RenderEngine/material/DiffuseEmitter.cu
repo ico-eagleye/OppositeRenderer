@@ -10,6 +10,7 @@
 #include "renderer/RadiancePRD.h"
 #include "renderer/ShadowPRD.h"
 #include "renderer/ppm/PhotonPRD.h"
+#include "renderer/vcm/SubpathPRD.h"
 
 using namespace optix;
 
@@ -25,7 +26,6 @@ rtDeclareVariable(PhotonPRD, photonPrd, rtPayload, );
 /*
 // Radiance Program
 */
-
 RT_PROGRAM void closestHitRadiance()
 {
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -38,7 +38,6 @@ RT_PROGRAM void closestHitRadiance()
 /*
 // Photon Program
 */
-
 RT_PROGRAM void closestHitPhoton()
 {
    photonPrd.depth++;
@@ -50,4 +49,16 @@ RT_PROGRAM void gatherAnyHitOnEmitter()
 {
     shadowPrd.attenuation = 1.0f;
     rtTerminateRay();
+}
+
+
+
+rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
+
+/*
+// VCM Light Program
+*/
+RT_PROGRAM void closestHitLight()
+{
+    subpathPrd.done = 1;
 }

@@ -312,7 +312,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     // VCM programs
     {
         // vmarz TODO FIX
-        Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generatorEstimateDbg" );
+        Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "generatorEstimate" );
         Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
         Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
         m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_ESTIMATE_PASS, generatorProgram);
@@ -681,22 +681,22 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     subpathCount, sumLen, avgSubpathLength, maxLen, noMissHitCount);
 
                 // init vertex cache
-                //unsigned int vertBufSize = sumLen / 0.9f;
-                //m_lightVertexBuffer->setSize(vertBufSize);
+                unsigned int vertBufSize = sumLen / 0.9f;
+                m_lightVertexBuffer->setSize(vertBufSize);
 
-                //RTsize mem = m_context->getAvailableDeviceMemory(0);
-                //float memMB = float(mem) / 1000000.0f;
-                //printf("Available device memory %f\n", memMB);
+                RTsize mem = m_context->getAvailableDeviceMemory(0);
+                float memMB = float(mem) / 1000000.0f;
+                printf("Available device memory %f\n", memMB);
 
-                //m_context["lightVertexCountEstimatePass"]->setUint(0u); // vmarz use flag in PRD ?
-                //// light pass
-                //nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
-                //sutilCurrentTime( &t0 );
-                //m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS,
-                //    static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH),
-                //    static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT) );
-                //sutilCurrentTime( &t1 );
-                //printf("Light subpath traced in %.4f.\n", t1-t0);
+                m_context["lightVertexCountEstimatePass"]->setUint(0u); // vmarz use flag in PRD ?
+                // light pass
+                nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
+                sutilCurrentTime( &t0 );
+                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS,
+                    static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH),
+                    static_cast<unsigned int>(SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT) );
+                sutilCurrentTime( &t1 );
+                printf("Light subpath traced in %.4f.\n", t1-t0);
             }
 
         }
