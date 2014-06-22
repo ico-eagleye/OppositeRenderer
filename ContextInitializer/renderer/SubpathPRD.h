@@ -8,13 +8,15 @@
 
 struct SubpathPRD
 {
-  optix::float3 origin;
-  optix::float3 direction;
-  optix::float3 throughput;
-  optix::uint depth;
-  uint seed;
-  float dVCM;
-  float dVC;
-  float dVM;
-  optix::uint done;
+    optix::float3 origin;
+    optix::float3 direction;
+    optix::float3 throughput;
+    optix::uint depth;
+    optix::uint seed;
+    //RandomState randomState;
+    float dVCM;
+    float dVC;
+    float dVM;
+    optix::uint done;
+    optix::uint keepTracing;
 };
