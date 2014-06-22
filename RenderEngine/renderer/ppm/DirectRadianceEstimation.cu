@@ -4,7 +4,7 @@
  * file that was distributed with this source code.
 */
 #include <cuda.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include <curand_kernel.h>
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
@@ -33,7 +33,7 @@ RT_PROGRAM void kernel()
     // Use radiance value if we do not hit a non-specular surface
     if(!(rec.flags & PRD_HIT_NON_SPECULAR))
     {
-		// vmarz: rec.radiance set by DiffuseEmitter
+        // vmarz: rec.radiance set by DiffuseEmitter
         if((rec.flags & PRD_HIT_EMITTER) && !(rec.flags & PRD_HIT_SPECULAR))
         {
             directRadianceBuffer[launchIndex] = fminf(rec.radiance, make_float3(1));
@@ -65,8 +65,8 @@ RT_PROGRAM void kernel()
             float scale = numLights;
             float3 lightContrib = getLightContribution(light, rec.position, rec.normal, sceneRootObject, randomStates[launchIndex]);
             avgLightRadiance += scale * lightContrib;
-			// vmarz: scaled by number of lights because picking one light to sample in each iteration
-			// Should scale by MIS here
+            // vmarz: scaled by number of lights because picking one light to sample in each iteration
+            // Should scale by MIS here
         }
 
         directRadiance = rec.attenuation*avgLightRadiance/numShadowSamples;

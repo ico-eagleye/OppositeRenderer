@@ -21,7 +21,7 @@
 
 
 #include <optix_world.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include "config.h"
 
 using namespace optix;
@@ -34,7 +34,7 @@ rtBuffer<uint, 1> hitsPerMeshBuffer;
 
 // parallelogram 
 rtDeclareVariable(float4, plane, , ); // vmarz: xyz=normal, w=dot(normal, anchor)=D dist to plane form origin
-									  // in plane definition in Hesse normal form
+                                      // in plane definition in Hesse normal form
 rtDeclareVariable(float3, v1, , );
 rtDeclareVariable(float3, v2, , );
 rtDeclareVariable(float3, anchor, , );
@@ -48,52 +48,52 @@ rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
 RT_PROGRAM void intersect(int primIdx)
 {
-	float3 n = make_float3( plane );
-	float dt = dot(ray.direction, n );				// vmarz: cos between ray dir and n
-	float t = (plane.w - dot(n, ray.origin))/dt;	// (dist to plane - len origin proj on n) / scaled by cos [e.g. t grows angle grows]
-	if( t > ray.tmin && t < ray.tmax ) {
-		float3 p = ray.origin + ray.direction * t;
-		float3 vi = p - anchor;
-		float a1 = dot(v1, vi);
-		if(a1 >= 0 && a1 <= 1)					// vmarz: comparing with 1 because v1 was scaled by 1./length^2,
-		{										// so any dot products with it cannot be bigger than original v1 length
-			float a2 = dot(v2, vi);
-			if(a2 >= 0 && a2 <= 1)
-			{
-				if( rtPotentialIntersection( t ) ) 
-				{
-					shadingNormal = geometricNormal = n;
-					texcoord = make_float3(a1,a2,0);
-					lgt_idx = lgt_instance;
+    float3 n = make_float3( plane );
+    float dt = dot(ray.direction, n );				// vmarz: cos between ray dir and n
+    float t = (plane.w - dot(n, ray.origin))/dt;	// (dist to plane - len origin proj on n) / scaled by cos [e.g. t grows angle grows]
+    if( t > ray.tmin && t < ray.tmax ) {
+        float3 p = ray.origin + ray.direction * t;
+        float3 vi = p - anchor;
+        float a1 = dot(v1, vi);
+        if(a1 >= 0 && a1 <= 1)					// vmarz: comparing with 1 because v1 was scaled by 1./length^2,
+        {										// so any dot products with it cannot be bigger than original v1 length
+            float a2 = dot(v2, vi);
+            if(a2 >= 0 && a2 <= 1)
+            {
+                if( rtPotentialIntersection( t ) ) 
+                {
+                    shadingNormal = geometricNormal = n;
+                    texcoord = make_float3(a1,a2,0);
+                    lgt_idx = lgt_instance;
 #if ENABLE_MESH_HITS_COUNTING
-					atomicAdd(&hitsPerMeshBuffer[meshId], 1);
+                    atomicAdd(&hitsPerMeshBuffer[meshId], 1);
 #endif
-					rtReportIntersection( 0 );
-				}
-			}
-		}
-	}
+                    rtReportIntersection( 0 );
+                }
+            }
+        }
+    }
 }
 
 RT_PROGRAM void bounds (int, float result[6])
 {
     // v1 and v2 are scaled by 1./length^2.  Rescale back to normal for the bounds computation.
     // vmarz: NOTE not scaled by lenght, so v1, v2 are not unit vectors
-	const float3 tv1  = v1 / dot( v1, v1 );
-	const float3 tv2  = v2 / dot( v2, v2 );
-	const float3 p00  = anchor;
-	const float3 p01  = anchor + tv1;
-	const float3 p10  = anchor + tv2;
-	const float3 p11  = anchor + tv1 + tv2;
-	const float  area = length(cross(tv1, tv2));
+    const float3 tv1  = v1 / dot( v1, v1 );
+    const float3 tv2  = v2 / dot( v2, v2 );
+    const float3 p00  = anchor;
+    const float3 p01  = anchor + tv1;
+    const float3 p10  = anchor + tv2;
+    const float3 p11  = anchor + tv1 + tv2;
+    const float  area = length(cross(tv1, tv2));
 
-	optix::Aabb* aabb = (optix::Aabb*)result;
+    optix::Aabb* aabb = (optix::Aabb*)result;
 
-	if(area > 0.0f && !isinf(area)) {
-		aabb->m_min = fminf( fminf( p00, p01 ), fminf( p10, p11 ) );
-		aabb->m_max = fmaxf( fmaxf( p00, p01 ), fmaxf( p10, p11 ) );
-	} else {
-		aabb->invalidate();
-	}
+    if(area > 0.0f && !isinf(area)) {
+        aabb->m_min = fminf( fminf( p00, p01 ), fminf( p10, p11 ) );
+        aabb->m_max = fmaxf( fmaxf( p00, p01 ), fmaxf( p10, p11 ) );
+    } else {
+        aabb->invalidate();
+    }
 }
 

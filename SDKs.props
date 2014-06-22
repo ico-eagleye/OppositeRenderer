@@ -1,26 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<PropertyGroup>
-		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_V3_0_1)</OptixDir>
-		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_V3_5_1)</OptixDir>
-		<OptixDir Condition="'$(OPTIX_USE_VER)'=='3.6.0'">$(OPTIX_PATH_V3_6_0)</OptixDir>
-		<OptixDir Condition="'$(OptixDir)'==''">$(OPTIX_PATH)</OptixDir>
-		
-		<!-- Ensure $(OptixDir) has a trailing backslash. -->
-        <OptixDir Condition="'$(OptixDir)' != '' AND !HasTrailingSlash('$(OptixDir)')">$(OptixDir)\</OptixDir>
-		
-		<OptixIncludeDir Condition="'$(OptixDirIncludeDir)' == ''">$(OptixDir)include</OptixIncludeDir>
-		<!-- Ensure $(OptixIncludeDir) has a trailing backslash. -->
-		<OptixIncludeDir Condition="'$(OptixIncludeDir)' != '' AND !HasTrailingSlash('$(OptixIncludeDir)')">$(OptixIncludeDir)\</OptixIncludeDir>
-    </PropertyGroup>
+<Project InitialTargets ="OppositeLogSDKs" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_V3_0_1)</OptixDir>
+    <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_V3_5_1)</OptixDir>
+    <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.6.0'">$(OPTIX_PATH_V3_6_0)</OptixDir>
+    <OptixDir Condition="'$(OptixDir)'==''">$(OPTIX_PATH)</OptixDir>
+    
+    <!-- Ensure $(OptixDir) has a trailing backslash. -->
+    <OptixDir Condition="'$(OptixDir)' != '' AND !HasTrailingSlash('$(OptixDir)')">$(OptixDir)\</OptixDir>
+    
+    <OptixIncludeDir Condition="'$(OptixIncludeDir)' == ''">$(OptixDir)include</OptixIncludeDir>
+    <!-- Ensure $(OptixIncludeDir) has a trailing backslash. -->
+    <!-- 
+    <OptixIncludeDir Condition="'$(OptixIncludeDir)' != '' AND !HasTrailingSlash('$(OptixIncludeDir)')">$(OptixIncludeDir)\</OptixIncludeDir>
+    -->
+    <!-- 
+    OptixIncludeDir somehow gets another slash at the and if above uncommented, so removed that trying to solve errer where nvcc could find optixu/optixu_math_namespace.h header included in random.h (didn't help)
+    1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\BuildCustomizations\CUDA 6.0.targets(597,9): error MSB3721: The command ""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\nvcc.exe" .....  -I"C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0\include\\"
+    -->
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Platform)' == 'Win32'">
-        <OptixBinDir Condition="'$(OptixBinDir)' == ''">$(OptixDir)bin</OptixBinDir>
-        <OptixLibDir Condition="'$(OptixLibDir)' == ''">$(OptixDir)lib</OptixLibDir>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'Win32'">
+      <OptixBinDir Condition="'$(OptixBinDir)' == ''">$(OptixDir)bin</OptixBinDir>
+      <OptixLibDir Condition="'$(OptixLibDir)' == ''">$(OptixDir)lib</OptixLibDir>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Platform)' == 'x64'">
-        <OptixBinDir Condition="'$(OptixBinDir)' == ''">$(OptixDir)bin64</OptixBinDir>
-        <OptixLibDir Condition="'$(OptixLibDir)' == ''">$(OptixDir)lib64</OptixLibDir>
-    </PropertyGroup>	
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+      <OptixBinDir Condition="'$(OptixBinDir)' == ''">$(OptixDir)bin64</OptixBinDir>
+      <OptixLibDir Condition="'$(OptixLibDir)' == ''">$(OptixDir)lib64</OptixLibDir>
+  </PropertyGroup>
+  
+  <Target Name="OppositeLogSDKs">
+    <Message Importance="High" Text="OppositeLogSDKs" />    
+    <Message Importance="High" Text="SDKs.props CUDA_USE_VER    : '$(CUDA_USE_VER)'" />  
+    <Message Importance="High" Text="SDKs.props OPTIX_USE_VER   : '$(OPTIX_USE_VER)'" />
+    <Message Importance="High" Text="SDKs.props OptixDir        : '$(OptixDir)'" />
+    <Message Importance="High" Text="SDKs.props OptixIncludeDir : '$(OptixIncludeDir)'" />
+<!--
+    <Message Importance="High" Text="SDKs.props OptixIncludeDir : trailing slash" Condition="HasTrailingSlash('$(OptixIncludeDir)')"/>
+    <Message Importance="High" Text="SDKs.props OptixIncludeDir : no trailing slash" Condition="!HasTrailingSlash('$(OptixIncludeDir)')"/>   
+-->
+    <Message Importance="High" Text="SDKs.props OptixBinDir     : '$(OptixBinDir)'" />
+    <Message Importance="High" Text="SDKs.props OptixLibDir     : '$(OptixLibDir)'" />
+  </Target> 
 </Project>

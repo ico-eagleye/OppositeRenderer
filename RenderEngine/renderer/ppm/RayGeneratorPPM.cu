@@ -6,7 +6,7 @@
 
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include "config.h"
 #include "renderer/RadiancePRD.h"
 #include "renderer/HitPoint.h"
@@ -48,7 +48,7 @@ RT_PROGRAM void generateRay()
 
     modifyRayForDepthOfField(camera, rayOrigin, rayDirection, radiancePrd.randomState);
     
-	// vmarz: traces until hits diffuse surface
+    // vmarz: traces until hits diffuse surface
     Ray ray(rayOrigin, rayDirection, RayType::RADIANCE, 0.001f);
     rtTrace(sceneRootObject, ray, radiancePrd);
     

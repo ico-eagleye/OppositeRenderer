@@ -5,12 +5,12 @@
 
 struct PathVertex
 {
-	optix::float3 hitPoint;
+    optix::float3 hitPoint;
     optix::float3 throughput;
     float pathDepth;
-	float dVCM;
-	float dVC;
-	float dVM;
-	// bsdf data
-	optix::uint materialID;
+    float dVCM;
+    float dVC;
+    float dVM;
+    // bsdf data
+    optix::uint materialID;
 };

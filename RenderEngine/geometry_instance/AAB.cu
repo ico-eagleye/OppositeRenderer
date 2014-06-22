@@ -5,7 +5,7 @@
 */
 
 #include <optix_world.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include "renderer/RayType.h"
 
 using namespace optix;

@@ -6,12 +6,14 @@
 
 #pragma once
 #include "helpers.h"
+#include <optix.h>
+#include <optixu/optixu_math_namespace.h>
 
 // Get a random direction from the hemisphere of direction around normalized normal, 
 // sampled with the cosine distribution p(theta, phi) = cos(theta)/PI. In oPdfW returns PDF with 
 // respect to solid angle measure
 static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::float3 & normal, const optix::float2& sample,
-																   float * oPdfW = NULL, float * oCosTheta = NULL)
+                                                                   float * oPdfW = NULL, float * oCosTheta = NULL)
 {
     using namespace optix;
 
@@ -23,10 +25,10 @@ static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::
 
     float3 U, V;
     createCoordinateSystem(normal, U, V);
-	if (oPdfW)
-		*oPdfW = ys * M_1_PIf;
-	if (oCosTheta)
-		*oCosTheta = ys;
+    if (oPdfW)
+        *oPdfW = ys * M_1_PIf;
+    if (oCosTheta)
+        *oCosTheta = ys;
 
     return optix::normalize(xs*U + ys*normal + zs*V);
 }
@@ -53,8 +55,8 @@ static __device__ __inline__ optix::float3 sampleUnitSphere(const optix::float2&
     float r = sqrtf(1.f-v.z*v.z);
     v.x = r*cosf(t);
     v.y = r*sinf(t);
-	if (oPdfW)
-		*oPdfW = 0.25f * M_1_PIf;
+    if (oPdfW)
+        *oPdfW = 0.25f * M_1_PIf;
 
     return v;
 }
@@ -80,7 +82,32 @@ static __device__ float3 sampleDisc(const float2 & sample, const float3 & center
 // Applies MIS power
 static __device__ __inline__ float Mis(const float & aPdf)
 {
-	// balance heuristic for now
-	return aPdf;
+    // balance heuristic for now
+    return aPdf;
 }
 
+// <Sampling code from Optix SDK>
+//Create ONB from normalaized vector
+static __device__ __inline__ void createONB( 
+    const optix::float3& n, optix::float3& U, optix::float3& V)
+{
+  using namespace optix;
+
+  U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
+  if ( dot(U, U) < 1.e-3f )
+      U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
+  U = normalize( U );
+  V = cross( n, U );
+}
+
+
+optix::float3 __device__ __inline__ sampleHemisphereCosOptix(optix::float3 normal, optix::float2 rnd)
+{
+    using namespace optix;
+    float3 p;
+    cosine_sample_hemisphere(rnd.x, rnd.y, p);
+    float3 v1, v2;
+    createONB(normal, v1, v2);
+    return v1 * p.x + v2 * p.y + normal * p.z;  
+}
+// </Sampling code from Optix SDK>

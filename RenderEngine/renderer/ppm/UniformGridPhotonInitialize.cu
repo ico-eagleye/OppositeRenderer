@@ -7,7 +7,7 @@
 
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_STOCHASTIC_HASH
 #include <optix.h>
-#include <optix_cuda.h>
+#include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
 #include "Photon.h"
 
