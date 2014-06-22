@@ -50,11 +50,11 @@ StandaloneRenderManager::~StandaloneRenderManager()
 void StandaloneRenderManager::start()
 {
     m_application.setRendererStatus(RendererStatus::INITIALIZING_ENGINE);
-	try
-	{
-		m_renderer.initialize(m_device);
-	}
-	catch(const std::exception & E)
+    try
+    {
+        m_renderer.initialize(m_device);
+    }
+    catch(const std::exception & E)
     {
         QString error = QString("Error during initialization: %1").arg(E.what());
         emit renderManagerError(error);
