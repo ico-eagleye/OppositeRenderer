@@ -75,27 +75,19 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(MSBuildProjectDirectory);$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath);$(SolutionDir)\lib;$(NVTOOLSEXT_PATH)\lib\$(Platform);$(CudaToolkitLibDir)\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\</LibraryPath>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\intermediate\$(MSBuildProjectName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -107,6 +99,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalIncludeDirectories>$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(MSBuildProjectDirectory);$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
@@ -117,6 +110,7 @@
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>cudart.lib;Qt5Cored.lib;Qt5Guid.lib;assimp.lib;optix.1.lib;cuda.lib;optixu.1.lib;glu32.lib;opengl32.lib;winmm.lib;freeglut.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -148,6 +142,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalIncludeDirectories>$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(MSBuildProjectDirectory);$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
@@ -158,6 +153,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -187,6 +183,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalIncludeDirectories>$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(MSBuildProjectDirectory);$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
@@ -196,6 +193,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -226,6 +224,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(MSBuildProjectDirectory);$(NVTOOLSEXT_PATH)\include;$(MSBuildProjectDirectory)\..\include;$(QTDIR32)\include;$(QTDIR32)\include\QtCore;$(QTDIR32)\include\QtGui;$(QTDIR32)\include\QtOpenGL;$(ASSIMP_PATH)\include;$(FREEGLUT_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
@@ -235,6 +234,7 @@
       <NoEntryPoint>false</NoEntryPoint>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
