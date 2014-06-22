@@ -12,7 +12,7 @@
 #include "math/AAB.h"
 #include "config.h"
 
-#if TEST_USING_CONTEX_INITIALIZER
+#if TEST_USING_CONTEX_INITIALIZER_PROGRAMS || TEST_USING_CONTEX_INITIALIZER_SCENE
 #include "../ContextInitializer/ContexrInitializer.h"
 #pragma comment(lib,"ContextInitializer.lib")
 #endif
@@ -103,6 +103,6 @@ private:
     bool m_lightVertexCountEstimated;
     unsigned int m_lightVertexCount;
 #if TEST_USING_CONTEX_INITIALIZER
-    ContextTest:: ContextInitializer m_contextInitializer;
+    ContextTest::ContextInitializer m_contextInitializer;
 #endif
 };

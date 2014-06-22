@@ -111,7 +111,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
 #if TEST_USING_CONTEX_INITIALIZER
     printf("Testing using ContextInitializer: initialization... \n");
-    m_contextInitializer.initialize(m_context, device.getDeviceId());
+    m_contextInitializer.initializePrograms(m_context, device.getDeviceId());
     m_initialized = true;
     return;
 #endif
@@ -363,7 +363,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_context->setExceptionEnabled(RTexception::RT_EXCEPTION_ALL , true); // vmarz: only stack overflow exception enabled by default
 #endif
     //m_context->setTimeoutCallback()
-    
+
     m_initialized = true;
 
     //printf("Num CPU threads: %d\n", m_context->getCPUNumThreads());
@@ -418,6 +418,7 @@ void OptixRenderer::initScene( IScene & scene )
     }
 
 #if TEST_USING_CONTEX_INITIALIZER
+    m_contextInitializer.initializeScene();
     return; // No need to init scene in this case
 #endif
 
@@ -440,7 +441,6 @@ void OptixRenderer::initScene( IScene & scene )
         m_context["sceneBoundingSphere"]->setUserData(sizeof(Sphere), &sceneBoundingSphere);
 
         // Add the lights from the scene to the light buffer
-
         m_lightBuffer->setSize(lights.size());
         Light* lights_host = (Light*)m_lightBuffer->map();
         memcpy(lights_host, scene.getSceneLights().constData(), sizeof(Light)*lights.size());

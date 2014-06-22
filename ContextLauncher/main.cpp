@@ -11,8 +11,10 @@ int main( int argc, char** argv )
   {
     optix::Context context = optix::Context::create();
     ContextInitializer ci;
-    printf("Initializing...\n");
-    ci.initialize(context, 0);
+    printf("Initializing programs...\n");
+    ci.initializePrograms(context, 0);
+    printf("Initializing scene...\n");
+    ci.initializeScene();
     printf("Launching...\n");
     ci.launch(100u, 100u);
     printf("Launched successfully\n");

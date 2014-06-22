@@ -10,10 +10,10 @@ class Cornell;
 
 namespace ContextTest
 {
-  const unsigned int ContextInitializer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 1024;
-  const unsigned int ContextInitializer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 1024;
+  const unsigned int ContextInitializer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
+  const unsigned int ContextInitializer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
 
-  void ContextInitializer::initialize(optix::Context context, int deviceOrdinal)
+  void ContextInitializer::initializePrograms(optix::Context context, int deviceOrdinal)
   {
     m_context = context;
 
@@ -24,12 +24,11 @@ namespace ContextTest
     // init
     m_context->setDevices(&deviceOrdinal, &deviceOrdinal+1);
     m_context["localIterationNumber"]->setUint(0);
-    m_context["sceneRootObject"]->set(m_context->createGroup());
     m_outputBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, 1, 1 );
     m_context["outputBuffer"]->set(m_outputBuffer);
 
     // Light sources buffer
-    optix::Buffer lightBuffer = context->createBuffer(RT_BUFFER_INPUT);
+    optix::Buffer lightBuffer = m_context->createBuffer(RT_BUFFER_INPUT);
     lightBuffer->setFormat(RT_FORMAT_USER);
     lightBuffer->setElementSize(sizeof(Light));
     lightBuffer->setSize(1);
@@ -57,12 +56,25 @@ namespace ContextTest
     m_context->setExceptionProgram(OptixEntryPointVCM::LIGHT_ESTIMATE_PASS, exceptionProgram);
     m_context->setMissProgram(RayType::LIGHT_VCM, missProgram);
 
+    m_context->validate();
+  }
+
+
+  void ContextInitializer::initializeScene()
+  {
+    // Initialization flow/variables resemble those used in OppositeRenderer to 
+    // similar use of context. Some of them are not used in kernels (localIterationNumber,
+    // lights etc)
+
+    //m_context["sceneRootObject"]->set(m_context->createGroup());
+
     Cornell cornell;
     RootGroup gg = cornell.getSceneRootGroup(m_context); // RootGroup typedef is Group or GeometryGroup, was testing that makes a difference
     m_context["sceneRootObject"]->set(gg);
     m_context->validate();
     m_context->compile();
   }
+
 
   // Passing in size since it can change between between launches in the OppositeRenderer where
   // ContextInitializer was used to test the hangs

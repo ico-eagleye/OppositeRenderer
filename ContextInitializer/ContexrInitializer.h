@@ -8,7 +8,8 @@ namespace ContextTest
   {
   public:
     ContextInitializer() {}
-    void initialize(optix::Context context, int deviceOrdinal);
+    void initializePrograms(optix::Context context, int deviceOrdinal);
+    void initializeScene();
     void launch(unsigned int outputBufWidth, unsigned int outputBufheight);
 
 

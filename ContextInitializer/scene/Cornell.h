@@ -3,7 +3,7 @@
 #include <optixu/optixpp_namespace.h>
 #include "renderer/Light.h"
 
-#define USE_GEOMETRY_GROUP_AS_ROOT
+//#define USE_GEOMETRY_GROUP_AS_ROOT
 
 #ifdef USE_GEOMETRY_GROUP_AS_ROOT
 typedef optix::GeometryGroup RootGroup;
