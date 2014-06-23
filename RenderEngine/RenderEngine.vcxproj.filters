@@ -252,5 +252,6 @@
     <CudaCompile Include="material\Texture.cu">
       <Filter>material</Filter>
     </CudaCompile>
+    <CudaCompile Include="renderer\vcm\VCMCameraPass.cu" />
   </ItemGroup>
 </Project>

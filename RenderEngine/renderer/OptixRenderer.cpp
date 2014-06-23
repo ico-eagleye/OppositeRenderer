@@ -129,6 +129,10 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_context["photonLaunchWidth"]->setUint(PHOTON_LAUNCH_WIDTH);
     m_context["participatingMedium"]->setUint(0);
 
+    // for VCM
+    // used to scale camera_u and camera_v
+    m_context["pixelSizeFactor"]->setFloat(1.0f, 1.0f);
+
     // An empty scene root node
     optix::Group group = m_context->createGroup();
     m_context["sceneRootObject"]->set(group);
@@ -732,6 +736,9 @@ static inline unsigned int max(unsigned int a, unsigned int b)
 
 void OptixRenderer::resizeBuffers(unsigned int width, unsigned int height)
 {
+    // used to scale camera_u and camera_v for VCM
+    m_context["pixelSizeFactor"]->setFloat(1.0f / width, 1.0f / height);
+
     m_outputBuffer->setSize( width, height );
     m_raytracePassOutputBuffer->setSize( width, height );
     m_outputBuffer->setSize( width, height );

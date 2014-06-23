@@ -101,3 +101,6 @@ static __device__ __inline__ float favgf(const optix::float3 & v )
 {
 	return (v.x+v.y+v.z)*0.3333333333f;
 }
+
+template<typename T>
+__device__ __inline__ T sqr(const T& a) { return a*a; }

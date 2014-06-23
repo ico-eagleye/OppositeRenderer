@@ -71,9 +71,6 @@ RT_PROGRAM void generateRay()
 		radiancePrd.flags = PRD_PATH_TRACING;
 		rtTrace(sceneRootObject, ray, radiancePrd);
 
-		if (radiancePrd.flags & PRD_MISS)
-			rtPrintf("%d %d MISSED\n", launchIndex.x, launchIndex.y);
-
 		if(radiancePrd.flags & PRD_HIT_EMITTER)
 		{
 			if(radiancePrd.flags & PRD_HIT_SPECULAR || i == 0)

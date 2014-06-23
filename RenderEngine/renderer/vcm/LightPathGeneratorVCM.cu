@@ -79,13 +79,13 @@ RT_PROGRAM void generatorEstimate()
     lightPrd.throughput /= emissionPdfW;
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
 
-    lightPrd.dVCM = Mis(directPdfW / emissionPdfW);
+    lightPrd.dVCM = vcmMis(directPdfW / emissionPdfW);
 
     // e.g. if not delta ligth
     //if (!light.isDelta)
     //{
     //	const float usedCosLight = light.isFinite ? cosAtLight : 1.f;
-    //	lightPrd.dVC = Mis(usedCosLight / emissionPdfW);
+    //	lightPrd.dVC = vcmMis(usedCosLight / emissionPdfW);
     //}
 
     lightPrd.dVM = lightPrd.dVC * misVcWeightFactor;
@@ -159,13 +159,13 @@ RT_PROGRAM void generator()
     lightPrd.throughput /= emissionPdfW;
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
 
-    lightPrd.dVCM = Mis(directPdfW / emissionPdfW);
+    lightPrd.dVCM = vcmMis(directPdfW / emissionPdfW);
 
     // e.g. if not delta ligth
     //if (!light.isDelta)
     //{
     //	const float usedCosLight = light.isFinite ? cosAtLight : 1.f;
-    //	lightPrd.dVC = Mis(usedCosLight / emissionPdfW);
+    //	lightPrd.dVC = vcmMis(usedCosLight / emissionPdfW);
     //}
 
     lightPrd.dVM = lightPrd.dVC * misVcWeightFactor;

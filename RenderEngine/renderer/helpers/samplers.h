@@ -80,7 +80,7 @@ static __device__ float3 sampleDisc(const float2 & sample, const float3 & center
 }
 
 // Applies MIS power
-static __device__ __inline__ float Mis(const float & aPdf)
+static __device__ __inline__ float vcmMis(const float & aPdf)
 {
     // balance heuristic for now
     return aPdf;

@@ -312,7 +312,8 @@ void Camera::setAspectRatio(float ratio)
     setup();
 }
 
-void Camera::setParameters( Vector3 eye_in,  Vector3 lookat_in,  Vector3 up_in, float hfov_in, float vfov_in, Camera::AspectRatioMode aspectRatioMode_in)
+void Camera::setParameters( Vector3 eye_in,  Vector3 lookat_in,  Vector3 up_in, float hfov_in, float vfov_in,
+                           Camera::AspectRatioMode aspectRatioMode_in)
 {
     eye = eye_in;
     lookat = lookat_in;
@@ -335,6 +336,7 @@ void Camera::setup()
     camera_u = assignWithCheck( camera_u, camera_u * ulen );
     float vlen = lookdir_len * tanf(DtoR(vfov*0.5f));
     camera_v = assignWithCheck( camera_v, camera_v * vlen );
+    imagePlaneSize = 2.0f * make_float2(ulen, vlen);
 }
 
 void Camera::scaleFOV(float scale)
