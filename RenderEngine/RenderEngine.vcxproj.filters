@@ -176,6 +176,7 @@
     <ClInclude Include="scene\IScene.h">
       <Filter>scene</Filter>
     </ClInclude>
+    <ClInclude Include="util\logging.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sutil">

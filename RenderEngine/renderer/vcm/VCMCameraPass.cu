@@ -76,12 +76,20 @@ RT_PROGRAM void cameraPass()
         //OPTIX_DEBUG_PRINT(cameraPrd.depth, "G %d - tra dir %f %f %f\n",
         //    i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
         rtTrace( sceneRootObject, cameraRay, cameraPrd );
+        
+        // sample direct lightning
+
+        // vertext connection
+
+        // vertex merging
 
         if (cameraPrd.done)
         {
             //OPTIX_DEBUG_PRINT(cameraPrd.depth, "Stop trace \n");
             break;
         }
+
+        // sample new dir
 
         cameraRay.origin = cameraPrd.origin;
         cameraRay.direction = cameraPrd.direction;

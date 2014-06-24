@@ -62,3 +62,12 @@ RT_PROGRAM void closestHitLight()
 {
     subpathPrd.done = 1;
 }
+
+
+/*
+// VCM Camera Program
+*/
+RT_PROGRAM void vcmClosestHitCamera()
+{
+    subpathPrd.done = 1;
+}

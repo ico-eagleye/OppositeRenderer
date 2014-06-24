@@ -87,12 +87,16 @@ private:
     optix::GeometryGroup m_volumetricPhotonsRoot;
 
     // VCM
-    const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH;
-    const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
+    const static unsigned int VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH;
+    const static unsigned int VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
+    const static unsigned int VCM_LIGHT_PASS_LAUNCH_WIDTH;
+    const static unsigned int VCM_LIGHT_PASS_LAUNCH_HEIGHT;
     optix::Buffer m_lightVertexBuffer;
     optix::Buffer m_lightVertexBufferIndexBuffer;
     optix::Buffer m_lightVertexCountBuffer;
-    optix::Buffer m_dbgNoMissHitStops;
+
+    bool m_vcmUseVM;
+    bool m_vcmUseVC;
 
     bool m_lightVertexCountEstimated;
     unsigned int m_lightVertexCount;

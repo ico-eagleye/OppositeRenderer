@@ -318,6 +318,7 @@
     <ClInclude Include="sutil\ObjLoader.h" />
     <ClInclude Include="sutil\RayGenCameraData.h" />
     <ClInclude Include="sutil\SunSky.h" />
+    <ClInclude Include="util\logging.h" />
     <ClInclude Include="util\Mouse.h" />
     <ClInclude Include="util\sutil.h" />
   </ItemGroup>

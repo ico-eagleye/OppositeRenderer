@@ -29,6 +29,7 @@ optix::Material DiffuseEmitter::getOptixMaterial(optix::Context & context)
         m_optixMaterial->setClosestHitProgram(RayType::PHOTON, context->createProgramFromPTXFile( "DiffuseEmitter.cu.ptx", "closestHitPhoton") );
         m_optixMaterial->setAnyHitProgram(RayType::SHADOW, context->createProgramFromPTXFile( "DiffuseEmitter.cu.ptx", "gatherAnyHitOnEmitter"));
         m_optixMaterial->setClosestHitProgram(RayType::LIGHT_VCM, context->createProgramFromPTXFile( "DiffuseEmitter.cu.ptx", "closestHitLight") );
+        m_optixMaterial->setClosestHitProgram(RayType::CAMERA_VCM, context->createProgramFromPTXFile( "DiffuseEmitter.cu.ptx", "vcmClosestHitCamera") );
         this->registerMaterialWithShadowProgram(context, m_optixMaterial);
         m_optixMaterialIsCreated = true;
     }
