@@ -40,12 +40,12 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
     float3 towardsLight = pointOnLight - rec_position;
     lightDistance = optix::length(towardsLight);
     towardsLight = towardsLight / lightDistance;
-	float n_dot_l = maxf(0, optix::dot(rec_normal, towardsLight));
-	lightFactor *= n_dot_l / (M_PIf*lightDistance*lightDistance);
-	// vmarz: 
-	// area light: dividing by PI and not 1/area because light source specified in terms of power not radiance 
-	//		P=L*Pi*A for diffuse area light, [PBR 627], Rendering slides
-	// point light: intensity I = P/(4*Pi), radiance L=I/r^2
+    float n_dot_l = maxf(0, optix::dot(rec_normal, towardsLight));
+    lightFactor *= n_dot_l / (M_PIf*lightDistance*lightDistance);
+    // vmarz: 
+    // area light: dividing by PI and not 1/area because light source specified in terms of power not radiance 
+    //		P=L*Pi*A for diffuse area light, [PBR 627], Rendering slides
+    // point light: intensity I = P/(4*Pi), radiance L=I/r^2
 
     if(light.lightType == Light::AREA)
     {
@@ -79,33 +79,33 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
 
 
 optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & aRandomState,
-											float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
-											float & oDirectPdfA, float & oCosThetaLight)
+                                            float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
+                                            float & oDirectPdfA, float & oCosThetaLight)
 {
-	float3 radiance = optix::make_float3(0);
-	float2 dirRnd = getRandomUniformFloat2(&aRandomState);
+    float3 radiance = optix::make_float3(0);
+    float2 dirRnd = getRandomUniformFloat2(&aRandomState);
 
     if(aLight.lightType == Light::AREA)
     {
         float2 posRnd = getRandomUniformFloat2(&aRandomState);
         oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
-		oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
-		oEmissionPdfW *= aLight.inverseArea;
-		oDirectPdfA = aLight.inverseArea;
-		radiance = aLight.Lemit * oCosThetaLight;
+        oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
+        oEmissionPdfW *= aLight.inverseArea;
+        oDirectPdfA = aLight.inverseArea;
+        radiance = aLight.Lemit * oCosThetaLight;
     }
     else if(aLight.lightType == Light::POINT)
     {
         oPosition = aLight.position;
-		oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
-		oDirectPdfA = oEmissionPdfW;
-		radiance = aLight.intensity;
+        oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
+        oDirectPdfA = oEmissionPdfW;
+        radiance = aLight.intensity;
     }
     else if(aLight.lightType == Light::SPOT)
     {
         // Todo find correct direct light for spot light
     }
-	
-	oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
+    
+    oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
     return radiance;
 };
