@@ -25,7 +25,7 @@ public:
     optix::float3 position;
     optix::float3 v1;
     optix::float3 v2;
-	bool isDelta;		// Whether the light has delta function (point, directional) or not (area)
+    bool isDelta;		// Whether the light has delta function (point, directional) or not (area)
     bool isFinite;		// Whether the light has a finite extent (area, point) or not (directional, env. map)
 
     float inverseArea;
@@ -35,7 +35,7 @@ public:
         float angle; // spot
     };
 
-	union
+    union
     {
         optix::float3 Lemit; // area
         optix::float3 intensity; // spot
