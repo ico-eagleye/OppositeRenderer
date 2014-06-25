@@ -78,8 +78,8 @@ IScene* Scene::createFromFile( const char* filename )
         throw std::exception(error.toLatin1().constData());
     }
 
-	QTime timerTotal;
-	timerTotal.start();
+    QTime timerTotal;
+    timerTotal.start();
 
     QScopedPointer<Scene> scenePtr (new Scene);
     scenePtr->m_sceneFile = new QFileInfo(filename);
@@ -88,8 +88,8 @@ IScene* Scene::createFromFile( const char* filename )
     scenePtr->m_importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, 
         aiPrimitiveType_POINT | aiPrimitiveType_LINE );
 
-	QTime readFileTimer;
-	readFileTimer.start();
+    QTime readFileTimer;
+    readFileTimer.start();
 
     scenePtr->m_scene = scenePtr->m_importer->ReadFile( filename,
         aiProcess_Triangulate            |
@@ -105,7 +105,7 @@ IScene* Scene::createFromFile( const char* filename )
         aiProcess_GenSmoothNormals                              
         );
 
-	printf("Scene createFromFile ReadFile: ellapsed %5.2fs\n", readFileTimer.elapsed() / 1000.0f);
+    printf("Scene createFromFile ReadFile: ellapsed %5.2fs\n", readFileTimer.elapsed() / 1000.0f);
         
     if(!scenePtr->m_scene)
     {
@@ -126,7 +126,7 @@ IScene* Scene::createFromFile( const char* filename )
     Vector3 sceneAABBMin (1e33f);
     Vector3 sceneAABBMax (-1e33f);
 
-	walkNode(scenePtr->m_scene->mRootNode, 0);
+    walkNode(scenePtr->m_scene->mRootNode, 0);
 
     for(unsigned int i = 0; i < scenePtr->m_scene->mNumMeshes; i++)
     {
@@ -170,7 +170,7 @@ IScene* Scene::createFromFile( const char* filename )
 
     scenePtr->m_sceneName = QByteArray(scenePtr->m_sceneFile->absoluteFilePath().toLatin1().constData());
 
-	printf("Scene createFromFile Total: ellapsed %5.2fs\n", timerTotal.elapsed() / 1000.0f);
+    printf("Scene createFromFile Total: ellapsed %5.2fs\n", timerTotal.elapsed() / 1000.0f);
 
     return scenePtr.take();
 }
@@ -319,8 +319,8 @@ optix::Group Scene::getSceneRootGroup( optix::Context & context )
         m_boundingBoxProgram = context->createProgramFromPTXFile( ptxFilename, "mesh_bounds" );
     }
 
-	QTime timer;
-	timer.start();
+    QTime timer;
+    timer.start();
 
 
     // Convert meshes into Geometry objects
@@ -354,7 +354,7 @@ optix::Group Scene::getSceneRootGroup( optix::Context & context )
     rootNodeGroup->setAcceleration( acceleration );
     acceleration->markDirty();
 
-	printf("Scene getSceneRootGroup: ellapsed %5.2fs\n", timer.elapsed() / 1000.0f);
+    printf("Scene getSceneRootGroup: ellapsed %5.2fs\n", timer.elapsed() / 1000.0f);
     return rootNodeGroup;
 }
 
@@ -362,7 +362,7 @@ optix::Geometry Scene::createGeometryFromMesh(uint meshId, aiMesh* mesh, optix::
 {
     unsigned int numFaces = mesh->mNumFaces;
     unsigned int numVertices = mesh->mNumVertices;
-	
+    
 
     optix::Geometry geometry = context->createGeometry();
     geometry->setPrimitiveCount(numFaces);
@@ -460,7 +460,7 @@ optix::Geometry Scene::createGeometryFromMesh(uint meshId, aiMesh* mesh, optix::
 
     indexBuffer->unmap();
 
-	geometry["meshId"]->setUint(meshId);
+    geometry["meshId"]->setUint(meshId);
 
     return geometry;
 
@@ -592,7 +592,7 @@ unsigned int Scene::getNumTriangles() const
 }
 unsigned int Scene::getNumMeshes() const
 {
-	return m_scene->mNumMeshes;
+    return m_scene->mNumMeshes;
 }
 
 AAB Scene::getSceneAABB() const
@@ -602,15 +602,15 @@ AAB Scene::getSceneAABB() const
 
 void Scene::walkNode(aiNode *node, int depth)
 {
-	if(!node)
-		return;
-	for(unsigned int i = 0; i < depth; ++i)
-	{
-		putchar(' ');
-	}
-	printf("%s\n", node->mName.C_Str());
-	for(unsigned int i = 0; i < node->mNumChildren; ++i)
-	{
-		walkNode(node->mChildren[i], depth+1);
-	}
+    if(!node)
+        return;
+    for(unsigned int i = 0; i < depth; ++i)
+    {
+        putchar(' ');
+    }
+    printf("%s\n", node->mName.C_Str());
+    for(unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        walkNode(node->mChildren[i], depth+1);
+    }
 }
