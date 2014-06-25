@@ -91,6 +91,7 @@ private:
     const static unsigned int VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
     const static unsigned int VCM_LIGHT_PASS_LAUNCH_WIDTH;
     const static unsigned int VCM_LIGHT_PASS_LAUNCH_HEIGHT;
+    const static unsigned int VCM_NUM_LIGHT_VERTEX_CONNECTIONS;
     optix::Buffer m_lightVertexBuffer;
     optix::Buffer m_lightVertexBufferIndexBuffer;
     optix::Buffer m_lightVertexCountBuffer;

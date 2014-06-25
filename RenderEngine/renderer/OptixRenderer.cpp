@@ -61,6 +61,8 @@ const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 512u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 32u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 32u;
 
+const unsigned int OptixRenderer::VCM_NUM_LIGHT_VERTEX_CONNECTIONS = 3u;
+
 using namespace optix;
 
 inline unsigned int pow2roundup(unsigned int x)
@@ -324,7 +326,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT, VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT );
     m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
     m_context["lightVertexCountEstimatePass"]->setUint(1u);
-
+    m_context["vcmNumlightVertexConnections"]->setUint(VCM_NUM_LIGHT_VERTEX_CONNECTIONS);
+    
     // VCM programs
     {
         Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "lightPass" );
