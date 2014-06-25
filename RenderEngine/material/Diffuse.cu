@@ -138,23 +138,19 @@ RT_PROGRAM void closestHitLight()
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - point   %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - normal  %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
 
-    // Update MIS quantities before storing at the vertex
-
     // vmarz TODO infinite lights need attitional handling
     float hitCosTheta = dot(worldShadingNormal, -ray.direction);
-    if (hitCosTheta < 0) // vmarz TODO check validity
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
+    if (hitCosTheta < 0.f) // vmarz TODO check validity
     {
         lightPrd.done = 1;
         return;
-    }
-    
+    }   
 
-    //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
-
-    float misFactor = 1.0f / vcmMis(fabs(hitCosTheta));
-    lightPrd.dVCM *= misFactor;  // vmarz?: need abs here?
-    lightPrd.dVC *= misFactor;
-    lightPrd.dVM *= misFactor;
+    // Update MIS quantities before storing at the vertex
+    lightPrd.dVCM *= vcmMis(hitCosTheta);  // vmarz?: need abs here?
+    lightPrd.dVC *= vcmMis(hitCosTheta);
+    lightPrd.dVM *= vcmMis(hitCosTheta);
 
     PathVertex lightVertex;
     lightVertex.hitPoint = hitPoint;
@@ -166,13 +162,16 @@ RT_PROGRAM void closestHitLight()
     // vmarz TODO store material bsdf
 
     // store path vertex
-    if (!lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
+    if (lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
+    {
+        lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+    }
+    else
     {
         uint idx = atomicAdd(&lightVertexBufferIndexBuffer[0], 1u);
         //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - store V %u\n", idx);
         lightVertexBuffer[idx] = lightVertex;
     }
-    lightVertexCountBuffer[launchIndex] = lightPrd.depth;
 
     // vmarz TODO connect to camera
     // vmarz TODO check max path length

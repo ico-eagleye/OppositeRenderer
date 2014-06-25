@@ -45,16 +45,21 @@ const unsigned int OptixRenderer::EMITTED_PHOTONS_PER_ITERATION = OptixRenderer:
 const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_PER_ITERATION*OptixRenderer::MAX_PHOTON_COUNT;
 
 // VCM
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 512;
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 512;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 512;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 512;
 const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 128u;
 const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 128u;
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 16;
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 16;
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH = 2;
-//const unsigned int OptixRenderer::SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT = 2;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 16;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 16;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 2;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 2;
+
 const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 512u;
 const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 512u;
+//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 256u;
+//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 256u;
+//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 32u;
+//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 32u;
 
 using namespace optix;
 
@@ -116,7 +121,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     initDevice(device);
 
     m_context->setRayTypeCount(RayType::NUM_RAY_TYPES);
-    m_context->setEntryPointCount(OptixEntryPoint::NUM_PASSES);
+    m_context->setEntryPointCount(OptixEntryPoint::NUM_PASSES);    
     m_context->setStackSize(ENABLE_PARTICIPATING_MEDIA ? 3000 : 1596);
 
     m_context["maxPhotonDepositsPerEmitted"]->setUint(MAX_PHOTON_COUNT);
@@ -303,11 +308,11 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
     m_lightVertexBuffer->setFormat( RT_FORMAT_USER );
     m_lightVertexBuffer->setElementSize( sizeof( PathVertex ) );
-    m_lightVertexBuffer->setSize( 1 );
+    m_lightVertexBuffer->setSize( 1u );
     m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
 
     // VCM light vertex buffer index counter buffer
-    m_lightVertexBufferIndexBuffer = m_context->createBuffer(RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u);
+    m_lightVertexBufferIndexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u);
     m_context["lightVertexBufferIndexBuffer"]->set(m_lightVertexBufferIndexBuffer);
 
     optix::uint* bufferHost = static_cast<optix::uint*>(m_lightVertexBufferIndexBuffer->map());
@@ -337,7 +342,6 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         m_context->setMissProgram(RayType::CAMERA_VCM, missProgram);
     }
 
-    m_context["lightVertexBufferIdx"]->setUint(0u);
     m_context["lightVertexCountEstimatePass"]->setUint(1u); // vmarz use flag in PRD ?
 
     // Random state buffer (must be large enough to give states to both photons and image pixels)
@@ -639,7 +643,8 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         }
         else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
         {
-            const float lightSubPathCount = float(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT);
+            const float cameraSubPathCount = float(m_width * m_height);
+            const float lightSubPathCount = float(VCM_LIGHT_PASS_LAUNCH_WIDTH * VCM_LIGHT_PASS_LAUNCH_HEIGHT);
             const float ppmRadiusSquared = PPMRadius*PPMRadius; // vmarz TODO change radius reduction scheme
                 
             // 1/(PI*r*r) from VM path pdf [tech. rep. (10)], 1/lightSubPathCount from MIS estimator (not weight) [tech. rep. (11)]
@@ -647,7 +652,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             const float vmNormalizationFactor = 1.f / (ppmRadiusSquared * M_PIf * lightSubPathCount);
                 
             // MIS weight constant [tech. rep. (20)]
-            const float etaVCM = (M_PIf * ppmRadiusSquared) * lightSubPathCount; // vmarz TODO check initial radius, seems big
+            const float etaVCM = (lightSubPathCount / cameraSubPathCount) * M_PIf * ppmRadiusSquared; // vmarz TODO check initial radius, seems big
             const float misVmWeightFactor = m_vcmUseVM ? vcmMis(etaVCM)       : 0.f;
             const float misVcWeightFactor = m_vcmUseVC ? vcmMis(1.f / etaVCM) : 0.f;
                 
@@ -676,13 +681,13 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     dbgPrintf("LVC size estimate launch time: %.4f.\n", t1-t0);
                 }
 
-                // get vertex count
+                // get average path length / vertex count
                 optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightVertexCountBuffer->map());
                 const unsigned unsigned int subpathEstimateCount = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
                 unsigned long long sumLen = 0;
                 unsigned long long maxLen = 0;
 
-                for(int i = 0; i < subpathEstimateCount; i++)
+                for(int i = 0; i < subpathEstimateCount ; i++)
                 {
                     unsigned long long count = buffer_Host[i];
                     if (maxLen < count) maxLen = count;
@@ -695,18 +700,24 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     subpathEstimateCount, sumLen, avgSubpathLength, maxLen);
             
                 // init light vertex cache based on average length + ~10% extra
-                const unsigned int subpathCount = VCM_LIGHT_PASS_LAUNCH_WIDTH * VCM_LIGHT_PASS_LAUNCH_HEIGHT;
-                const unsigned int vertBufSize = (subpathCount * avgSubpathLength) / 0.9f;
+                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength) / 0.8f;
                 m_lightVertexBuffer->setSize(vertBufSize);
+                dbgPrintf("LVC size set to: %u \n", vertBufSize);
                 m_lightVertexCountEstimated = true;
             }
+
+            // Reset buffer index counter (not used it lenght estimate pass)
+            optix::uint* bufferHost = static_cast<optix::uint*>(m_lightVertexBufferIndexBuffer->map());
+            memset(bufferHost, 0, sizeof(optix::uint));
+            m_lightVertexBufferIndexBuffer->unmap();
 
             // Light pass
             { 
                 m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
                 sutilCurrentTime( &t0 );
-                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, VCM_LIGHT_PASS_LAUNCH_WIDTH, VCM_LIGHT_PASS_LAUNCH_HEIGHT );
+                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, 
+                    VCM_LIGHT_PASS_LAUNCH_WIDTH, VCM_LIGHT_PASS_LAUNCH_HEIGHT );
                 sutilCurrentTime( &t1 );
                 dbgPrintf("Light pass launch time: %.4f.\n", t1-t0);
             }

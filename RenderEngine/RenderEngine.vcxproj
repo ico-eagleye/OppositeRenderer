@@ -268,6 +268,7 @@
     <ClInclude Include="renderer\TransmissionPRD.h" />
     <ClInclude Include="renderer\vcm\PathVertex.h" />
     <ClInclude Include="renderer\vcm\SubpathPRD.h" />
+    <ClInclude Include="renderer\vcm\vcm.h" />
     <ClInclude Include="util\imageformats\libtga\tga.h" />
     <ClInclude Include="util\imageformats\libtga\tgaconfig.h" />
     <ClInclude Include="util\Image.h" />

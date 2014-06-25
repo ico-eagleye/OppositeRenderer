@@ -10,7 +10,6 @@
 #include <cuda_runtime.h>
 #include "config.h"
 #include "renderer/Light.h"
-#include "renderer/ShadowPRD.h"
 #include "renderer/RayType.h"
 #include "renderer/helpers/helpers.h"
 #include "renderer/helpers/samplers.h"
@@ -20,6 +19,7 @@
 
 #include "renderer/vcm/PathVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
+#include "renderer/vcm/vcm.h"
 
 
 using namespace optix;
@@ -36,8 +36,8 @@ rtBuffer<unsigned int, 2> debugPhotonPathLengthBuffer;
 #endif
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
-rtDeclareVariable(float, misVcWeightFactor, , );
-rtDeclareVariable(float, misVmWeightFactor, , );
+rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
+//rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
 rtBuffer<uint, 2> lightVertexCountBuffer;
 
@@ -51,7 +51,8 @@ RT_PROGRAM void lightPass()
     lightPrd.dVM = 0;
     lightPrd.dVCM = 0;
     lightPrd.randomState = randomStates[launchIndex];
-    lightVertexCountBuffer[launchIndex] = 0u;
+    if (lightVertexCountEstimatePass)
+        lightVertexCountBuffer[launchIndex] = 0u;
 
     // vmarz TODO: pick based on light power
     int lightIndex = 0;
@@ -63,42 +64,12 @@ RT_PROGRAM void lightPass()
 
     const Light light = lights[lightIndex];
     const float inverseLightPickPdf = lights.size();
+    const float lightPickPdf = 1.f / lights.size();
 
-    float3 rayOrigin;
-    float3 rayDirection;
-    float emissionPdfW;
-    float directPdfW;
-    float cosAtLight;
-    lightPrd.throughput = lightEmit(light, lightPrd.randomState, rayOrigin, rayDirection,
-        emissionPdfW, directPdfW, cosAtLight);
-    // vmarz?: do something similar as done for photon, emit towards scene when light far from scene?
-    // check if photons normally missing the scene accounted for?
+    // Initialize payload and ray
+    initLightSample(lightPrd, light, lightPickPdf, misVcWeightFactor);
+    Ray lightRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
-    // Set init data
-    emissionPdfW *= inverseLightPickPdf;
-    directPdfW *= inverseLightPickPdf;
-
-    lightPrd.throughput /= emissionPdfW;
-    //lightPrd.isFinite = isDelta.isFinite ... vmarz?
-
-    lightPrd.dVCM = vcmMis(directPdfW / emissionPdfW);
-
-    // e.g. if not delta ligth
-    //if (!light.isDelta)
-    //{
-    //	const float usedCosLight = light.isFinite ? cosAtLight : 1.f;
-    //	lightPrd.dVC = vcmMis(usedCosLight / emissionPdfW);
-    //}
-
-    lightPrd.dVM = lightPrd.dVC * misVcWeightFactor;
-
-    //dbg
-    //rayOrigin = make_float3( 343.0f, 548.7999f, 227.0f);
-    //rayDirection = make_float3( .0f, -1.0f, .0f);
-
-    // Trace
-    Ray lightRay = Ray(rayOrigin, rayDirection, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
-    
     for (int i=0;;i++)
     {
         //OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - tra dir %f %f %f\n",

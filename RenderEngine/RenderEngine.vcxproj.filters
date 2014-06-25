@@ -177,6 +177,7 @@
       <Filter>scene</Filter>
     </ClInclude>
     <ClInclude Include="util\logging.h" />
+    <ClInclude Include="renderer\vcm\vcm.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sutil">
