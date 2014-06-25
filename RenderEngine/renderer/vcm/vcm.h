@@ -10,7 +10,7 @@
 #include "renderer/vcm/SubpathPRD.h"
 
 
-
+// Initialized ligth payload - througput premultiplied with light radiance, partial MIS terms
 optix::float3 __inline __device__ initLightSample(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
                                                   const float & misVcWeightFactor)
 {
@@ -52,4 +52,36 @@ optix::float3 __inline __device__ initLightSample(SubpathPRD & aLightPrd, const 
 
     // dVM_1 = dVC_1 / etaVCM
     aLightPrd.dVM = aLightPrd.dVC * misVcWeightFactor;
+}
+
+
+// Update MIS quantities before storing at the vertex, follows initialization on light [tech. rep. (31)-(33)]
+// or scatter from surface [tech. rep. (34)-(36)]
+optix::float3 __inline __device__ updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
+{
+    // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
+    aLightPrd.dVCM /= sqr(aRayLen);
+    aLightPrd.dVCM *= vcmMis(aCosThetaIn);  // vmarz?: need abs here?
+    aLightPrd.dVC *= vcmMis(aCosThetaIn);
+    aLightPrd.dVM *= vcmMis(aCosThetaIn);
+
+}
+
+
+optix::float3 __inline __device__ updateMisTermsOnScatter(SubpathPRD & aLightPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
+                                                          const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor)
+{
+    aLightPrd.dVC = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( // vmarz: dVC = (g_i-1 / pi) * (etaVCM + dVCM_i-1 + _p_ro_i-2 * dVC_i-1)
+        aLightPrd.dVC * vcmMis(aBsdfRevPdfW) +              //        cosThetaOut part of g_i-1  [ _g reverse pdf conversion!, uses outgoing cosTheta]
+        aLightPrd.dVCM + aMisVmWeightFactor);               //          !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
+                                                            //        pi = bsdfDirPdfW * g1
+    aLightPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( //        bsdfDirPdfW = _p_ro_i    [part of pi]
+        aLightPrd.dVM * vcmMis(aBsdfRevPdfW) +              //        bsdfRevPdfW = _p_ro_i-2
+        aLightPrd.dVCM * aMisVcWeightFactor + 1.f);         // 
+                                                            //        dVM = (g_i-1 / pi) * (1 + dVCM_i-1/etaVCM + _p_ro_i-2 * dVM_i-1)
+    aLightPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);            //        cosThetaOut part of g_i-1 [_g reverse pdf conversion!, uses outgoing cosTheta]
+                                                            //          !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
+                                                            //
+                                                            //        dVCM = 1 / pi
+                                                            //        pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
 }
