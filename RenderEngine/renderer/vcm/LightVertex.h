@@ -3,7 +3,7 @@
 #pragma once
 //#include <optix_world.h>
 
-struct PathVertex
+struct LightVertex
 {
     optix::float3 hitPoint;
     optix::float3 throughput;

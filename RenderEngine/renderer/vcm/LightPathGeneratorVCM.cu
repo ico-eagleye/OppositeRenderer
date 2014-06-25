@@ -17,7 +17,7 @@
 #include "renderer/helpers/light.h"
 #include "math/Sphere.h"
 
-#include "renderer/vcm/PathVertex.h"
+#include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/vcm.h"
 

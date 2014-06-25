@@ -27,7 +27,7 @@
 #include "scene/IScene.h"
 #include "renderer/helpers/nsight.h"
 #include "renderer/helpers/samplers.h"
-#include "renderer/vcm/PathVertex.h"
+#include "renderer/vcm/LightVertex.h"
 #include "util/logging.h"
 
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_UNIFORM_GRID
@@ -307,7 +307,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     // light vertex buffer
     m_lightVertexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT);
     m_lightVertexBuffer->setFormat( RT_FORMAT_USER );
-    m_lightVertexBuffer->setElementSize( sizeof( PathVertex ) );
+    m_lightVertexBuffer->setElementSize( sizeof( LightVertex ) );
     m_lightVertexBuffer->setSize( 1u );
     m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
     m_context["vcmLightSubpathCount"]->setUint(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH);

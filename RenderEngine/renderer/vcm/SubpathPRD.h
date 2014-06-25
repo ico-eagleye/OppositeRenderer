@@ -14,6 +14,7 @@ struct SubpathPRD
     optix::float3 origin;
     optix::float3 direction;
     optix::float3 throughput;
+    optix::float3 color;    // accumulated full path contributions
     optix::uint depth;
     optix::uint done;
     RandomState randomState;

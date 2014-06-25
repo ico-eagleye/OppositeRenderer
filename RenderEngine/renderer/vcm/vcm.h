@@ -12,7 +12,7 @@
 
 
 // Initialize light payload - througput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
-optix::float3 __inline __device__ initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
+__inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
                                                   const float & misVcWeightFactor)
 {
     using namespace optix;
@@ -57,7 +57,7 @@ optix::float3 __inline __device__ initLightPayload(SubpathPRD & aLightPrd, const
 
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
-optix::float3 __inline __device__ initCameraPayload(SubpathPRD & aCameraPrd, const Camera & aCamera, 
+__inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera & aCamera, 
                                                     const optix::float2 & aPixelSizeFactor, const optix::uint & aVcmLightSubpathCount)
 {
     using namespace optix;
@@ -94,18 +94,17 @@ optix::float3 __inline __device__ initCameraPayload(SubpathPRD & aCameraPrd, con
 
 // Update MIS quantities before storing at the vertex, follows initialization on light [tech. rep. (31)-(33)]
 // or scatter from surface [tech. rep. (34)-(36)]
-optix::float3 __inline __device__ updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
+__inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
 {
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
     aLightPrd.dVCM /= sqr(aRayLen);
     aLightPrd.dVCM *= vcmMis(aCosThetaIn);  // vmarz?: need abs here?
     aLightPrd.dVC *= vcmMis(aCosThetaIn);
     aLightPrd.dVM *= vcmMis(aCosThetaIn);
-
 }
 
 
-optix::float3 __inline __device__ updateMisTermsOnScatter(SubpathPRD & aLightPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
+__inline __device__ void updateMisTermsOnScatter(SubpathPRD & aLightPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
                                                           const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor)
 {
     aLightPrd.dVC = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( // dVC = (g_i-1 / pi) * (etaVCM + dVCM_i-1 + _p_ro_i-2 * dVC_i-1)

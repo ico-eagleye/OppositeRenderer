@@ -132,7 +132,6 @@
     <ClInclude Include="renderer\helpers\nsight.h" />
     <ClInclude Include="renderer\TransmissionPRD.h" />
     <ClInclude Include="renderer\helpers\vector_types.h" />
-    <ClInclude Include="renderer\vcm\PathVertex.h" />
     <ClInclude Include="renderer\vcm\SubpathPRD.h" />
     <ClInclude Include="scene\Scene.h">
       <Filter>scene</Filter>
@@ -178,6 +177,7 @@
     </ClInclude>
     <ClInclude Include="util\logging.h" />
     <ClInclude Include="renderer\vcm\vcm.h" />
+    <ClInclude Include="renderer\vcm\LightVertex.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sutil">

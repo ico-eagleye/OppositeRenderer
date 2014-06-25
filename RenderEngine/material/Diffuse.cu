@@ -18,7 +18,7 @@
 #include "renderer/helpers/samplers.h"
 #include "renderer/helpers/store_photon.h"
 #include "renderer/vcm/SubpathPRD.h"
-#include "renderer/vcm/PathVertex.h"
+#include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/vcm.h"
 
 using namespace optix;
@@ -123,7 +123,7 @@ RT_PROGRAM void closestHitPhoton()
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
 rtBuffer<uint, 2> lightVertexCountBuffer;
-rtBuffer<PathVertex> lightVertexBuffer;
+rtBuffer<LightVertex> lightVertexBuffer;
 rtBuffer<uint> lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
 
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
@@ -153,7 +153,7 @@ RT_PROGRAM void closestHitLight()
 
     updateMisTermsOnHit(lightPrd, cosThetaIn, tHit);
 
-    PathVertex lightVertex;
+    LightVertex lightVertex;
     lightVertex.hitPoint = hitPoint;
     lightVertex.throughput = lightPrd.throughput;
     lightVertex.pathDepth = lightPrd.depth;
@@ -207,6 +207,7 @@ RT_PROGRAM void closestHitLight()
 }
 
 
+rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
 
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
@@ -232,9 +233,16 @@ RT_PROGRAM void vcmClosestHitCamera()
 
     updateMisTermsOnHit(lightPrd, cosThetaIn, tHit);
 
-    // vmarz TODO connect to camera
+    // Connect to ligth vertices
+    //for (int i = 1; i<vcmNumlightVertexConnections; i++)
+    //{
+    //    uint numLightVertices = lightVertexBufferIndexBuffer[0];
+    //    uint vertIdx = numLightVertices * getRandomUniformFloat(&lightPrd.randomState);
+    //    float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices;
+    //    LightVertex lightVertex = lightVertexBuffer[vertIdx];
+    //}
+
     // vmarz TODO check max path length
-    
     // Russian Roulette
     float contProb = luminanceCIE(Kd); // vmarz TODO precompute
     float rrSample = getRandomUniformFloat(&lightPrd.randomState);    
@@ -262,4 +270,10 @@ RT_PROGRAM void vcmClosestHitCamera()
     lightPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
     lightPrd.origin = hitPoint;
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
+}
+
+
+optix::float3 __inline __device__ connectVertices(LightVertex aVertex, SubpathPRD & aCameraPrd, optix::float3 aCameraHitpoint)
+{
+    // check occlusion
 }
