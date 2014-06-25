@@ -67,7 +67,7 @@ RT_PROGRAM void lightPass()
     const float lightPickPdf = 1.f / lights.size();
 
     // Initialize payload and ray
-    initLightSample(lightPrd, light, lightPickPdf, misVcWeightFactor);
+    initLightPayload(lightPrd, light, lightPickPdf, misVcWeightFactor);
     Ray lightRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
     for (int i=0;;i++)

@@ -17,25 +17,25 @@ Diffuse::Diffuse(const Vector3 & Kd)
 
 optix::Material Diffuse::getOptixMaterial(optix::Context & context)
 {
-    if(!m_optixMaterialIsCreated)
-    {
-        m_optixMaterial = context->createMaterial();
-        optix::Program radianceProgram = context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitRadiance");
-        optix::Program photonProgram = context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitPhoton");
-        m_optixMaterial->setClosestHitProgram(RayType::RADIANCE, radianceProgram);
-        m_optixMaterial->setClosestHitProgram(RayType::RADIANCE_IN_PARTICIPATING_MEDIUM, radianceProgram);
-        m_optixMaterial->setClosestHitProgram(RayType::PHOTON, photonProgram);
-        m_optixMaterial->setClosestHitProgram(RayType::PHOTON_IN_PARTICIPATING_MEDIUM, photonProgram);
+    if (m_optixMaterialIsCreated)
+        return m_optixMaterial;
 
-        // VCM
-        optix::Program vcmLightProgram = context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitLight");
-        m_optixMaterial->setClosestHitProgram(RayType::LIGHT_VCM, vcmLightProgram);
+    m_optixMaterial = context->createMaterial();
+    optix::Program radianceProgram = context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitRadiance");
+    optix::Program photonProgram = context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitPhoton");
+    m_optixMaterial->setClosestHitProgram(RayType::RADIANCE, radianceProgram);
+    m_optixMaterial->setClosestHitProgram(RayType::RADIANCE_IN_PARTICIPATING_MEDIUM, radianceProgram);
+    m_optixMaterial->setClosestHitProgram(RayType::PHOTON, photonProgram);
+    m_optixMaterial->setClosestHitProgram(RayType::PHOTON_IN_PARTICIPATING_MEDIUM, photonProgram);
 
-        m_optixMaterial->validate();
+    // VCM
+    m_optixMaterial->setClosestHitProgram(RayType::LIGHT_VCM, context->createProgramFromPTXFile( "Diffuse.cu.ptx", "closestHitLight"));
+    m_optixMaterial->setClosestHitProgram(RayType::CAMERA_VCM, context->createProgramFromPTXFile( "Diffuse.cu.ptx", "vcmClosestHitCamera"));
+    m_optixMaterial->validate();
         
-        this->registerMaterialWithShadowProgram(context, m_optixMaterial);
-        m_optixMaterialIsCreated = true;
-    }
+    this->registerMaterialWithShadowProgram(context, m_optixMaterial);
+    m_optixMaterialIsCreated = true;
+
     return m_optixMaterial;
 }
 

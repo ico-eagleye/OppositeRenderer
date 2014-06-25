@@ -310,6 +310,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBuffer->setElementSize( sizeof( PathVertex ) );
     m_lightVertexBuffer->setSize( 1u );
     m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
+    m_context["vcmLightSubpathCount"]->setUint(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH);
 
     // VCM light vertex buffer index counter buffer
     m_lightVertexBufferIndexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u);
@@ -322,6 +323,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 
         VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT, VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT );
     m_context["lightVertexCountBuffer"]->set(m_lightVertexCountBuffer);
+    m_context["lightVertexCountEstimatePass"]->setUint(1u);
 
     // VCM programs
     {
@@ -342,7 +344,6 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         m_context->setMissProgram(RayType::CAMERA_VCM, missProgram);
     }
 
-    m_context["lightVertexCountEstimatePass"]->setUint(1u); // vmarz use flag in PRD ?
 
     // Random state buffer (must be large enough to give states to both photons and image pixels)
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
@@ -643,7 +644,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         }
         else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
         {
-            const float cameraSubPathCount = float(m_width * m_height);
+            const unsigned int cameraSubPathCount = m_width * m_height;
             const float lightSubPathCount = float(VCM_LIGHT_PASS_LAUNCH_WIDTH * VCM_LIGHT_PASS_LAUNCH_HEIGHT);
             const float ppmRadiusSquared = PPMRadius*PPMRadius; // vmarz TODO change radius reduction scheme
                 
@@ -660,6 +661,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             m_context["misVmWeightFactor"]->setFloat(misVmWeightFactor);
             m_context["misVcWeightFactor"]->setFloat(misVcWeightFactor);
 
+            // Estimate average subpath lentgth and initialize vertex buffer with appropriate size
             if (!m_lightVertexCountEstimated)
             {
                 // Transfer any data to the GPU (trigger an empty launch)
@@ -723,7 +725,6 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             }
             
             // Camera pass
-            if (0)
             { 
                 m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_CAMERA_PASS");

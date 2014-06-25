@@ -222,26 +222,23 @@ RT_PROGRAM void vcmClosestHitCamera()
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - normal  %f %f %f\n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
 
     // vmarz TODO infinite lights need attitional handling
-    float hitCosThetaFix = dot(worldShadingNormal, -ray.direction);
-    //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosThetaFix);
-    if (hitCosThetaFix < EPS_COSINE)
+    float cosThetaIn = dot(worldShadingNormal, -ray.direction);
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
+    if (cosThetaIn < 0.f) // vmarz TODO check validity
     {
         lightPrd.done = 1;
         return;
-    }
+    }   
 
-    // Update MIS quantities [VCM tech. rep. (31)-(33)] or [tech. rep. (34)-(36)]
-    lightPrd.dVCM *= sqr(hitCosThetaFix);
-    lightPrd.dVCM /= vcmMis(hitCosThetaFix); // vmarz TODO check effect of numerical precision if div factor precomputed
-    lightPrd.dVC /= vcmMis(hitCosThetaFix);
-    lightPrd.dVM /= vcmMis(hitCosThetaFix);
+    updateMisTermsOnHit(lightPrd, cosThetaIn, tHit);
+
+    // vmarz TODO connect to camera
+    // vmarz TODO check max path length
     
     // Russian Roulette
     float contProb = luminanceCIE(Kd); // vmarz TODO precompute
-    float rrSample = getRandomUniformFloat(&lightPrd.randomState);
-    
+    float rrSample = getRandomUniformFloat(&lightPrd.randomState);    
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - cnt rr  %f %f \n", contProb, rrSample);
-
     if (contProb < rrSample)
     {
         lightPrd.done = 1;
@@ -249,8 +246,6 @@ RT_PROGRAM void vcmClosestHitCamera()
     }
 
     // next event
-    // vmarz TODO MIS initialized during light emission or new dir 
-    // bsdf sample, vmarz TODO handle multiple bsdf components
     float3 bsdfFactor = Kd * M_1_PIf;
     float bsdfDirPdfW;
     float cosThetaOut;
@@ -258,13 +253,12 @@ RT_PROGRAM void vcmClosestHitCamera()
     lightPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - new dir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 
-    float bsdfRevPdfW; // vmarz TODO
-    // check component cont prob	
-    // vmarz TODO MIS weights VCM 990
-
+    float bsdfRevPdfW = cosThetaIn * M_1_PIf;
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;
+    updateMisTermsOnScatter(lightPrd, cosThetaOut, bsdfDirPdfW, bsdfRevPdfW, misVcWeightFactor, misVmWeightFactor);
 
+    // f * cosTheta / f_pdf
     lightPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
     lightPrd.origin = hitPoint;
     //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - new org %f %f %f\n", lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
