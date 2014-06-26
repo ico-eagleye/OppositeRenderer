@@ -17,7 +17,8 @@ namespace ContextTest
     optix::Context m_context;
     optix::Buffer m_outputBuffer;
     optix::Buffer m_lightVertexCountBuffer;
-    optix::Buffer m_dbgNoMissHitStops;
+    optix::Buffer m_lightVertexBuffer;
+    optix::Buffer m_lightVertexBufferIndexBuffer;
     const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_WIDTH;
     const static unsigned int SUBPATH_LENGHT_ESTIMATE_LAUNCH_HEIGHT;
   };

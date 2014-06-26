@@ -8,17 +8,6 @@
 using namespace optix;
 using namespace ContextTest;
 
-rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
-rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
-rtDeclareVariable(float, tHit, rtIntersectionDistance, );
-rtDeclareVariable(float3, shadingNormal, attribute shadingNormal, ); 
-
-rtDeclareVariable(rtObject, sceneRootObject, , );
-rtDeclareVariable(float3, Kd, , );
-rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
-rtBuffer<uint, 2> lightVertexCountBuffer;
-
 // <From OptiX path_trace sample>
 // Create ONB from normalaized vector
 static __device__ __inline__ void createONB( 
@@ -44,6 +33,21 @@ float3 __device__ __inline__ sampleHemisphereCosOptix(float3 normal, float2 rnd)
 }
 // </From OptiX path_trace sample>
 
+
+rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
+rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
+rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+rtDeclareVariable(float, tHit, rtIntersectionDistance, );
+rtDeclareVariable(float3, shadingNormal, attribute shadingNormal, ); 
+
+rtDeclareVariable(rtObject, sceneRootObject, , );
+rtDeclareVariable(float3, Kd, , );
+rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
+
+rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
+rtBuffer<int> lightVertexBuffer;
+rtBuffer<uint, 2> lightVertexCountBuffer;
+rtBuffer<uint> lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
 
 // NOTE:
 // All fail case due setting cosine sampled direction were tested with all rtPrintf statements
@@ -72,7 +76,17 @@ RT_PROGRAM void closestHit()
         lightPrd.done = 1;
         return;
     }
-    lightPrd.keepTracing = 1;
+
+    if (lightVertexCountEstimatePass)
+    {
+        lightVertexCountBuffer[launchIndex] = lightPrd.depth;
+    }
+    else
+    {
+        uint idx = atomicAdd(&lightVertexBufferIndexBuffer[0], 1u);
+        //OPTIX_DEBUG_PRINT(lightPrd.depth, "Hit - store V %u\n", idx);
+        lightVertexBuffer[idx] = 1;
+    }
 
     float2 bsdfSample = make_float2(rnd(lightPrd.seed),rnd(lightPrd.seed));
     float3 dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample); // --> #1 doesn't work
@@ -90,29 +104,4 @@ RT_PROGRAM void closestHit()
     //	lightPrd.done = 1;      // to trace a ray
     //	return;
     //}
-}
-
-
-// THIS WORKS with generatorRecursive
-RT_PROGRAM void closestHitRecursive()
-{
-    lightPrd.depth++;
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
-    float3 hitPoint = ray.origin + tHit*ray.direction;
-
-    // Kind of Russian Roulette
-    if (0.7f < rnd(lightPrd.seed))
-    {
-        lightPrd.done = 1;
-        return;
-    }
-
-    float2 bsdfSample = make_float2(rnd(lightPrd.seed),rnd(lightPrd.seed));
-    float3 dir = sampleHemisphereCosOptix(worldShadingNormal, bsdfSample);
-
-    lightPrd.direction = normalize(dir);     
-    lightPrd.origin = hitPoint;
-
-    Ray newRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, 0.0001f, RT_DEFAULT_MAX );
-    rtTrace( sceneRootObject, newRay, lightPrd );
 }
