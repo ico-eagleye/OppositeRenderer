@@ -1,3 +1,8 @@
+This is a solution project for reproducing issues in experienced in OppositeRenderer with
+minimal initialization of context. Therefore it consists of two projects, a library and
+minimal launcher that uses the library. This allow testing minimal context initialization 
+from within main solution as well.
+
 BUILDING:
 1. Define OPTIX_PATH environment variable pointing to OptiX SDK. 
 2. Define CUDA_USE_VER environment variable as "5.5" or "6.0". It controls which Cuda 
