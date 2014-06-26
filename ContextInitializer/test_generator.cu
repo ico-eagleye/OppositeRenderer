@@ -32,11 +32,13 @@ using namespace ContextTest;
 //rtBuffer<uint, 2> lightVertexCountBuffer;
 //rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
 
-rtDeclareVariable(rtCallableProgramId<float(float)>, vcmBsdfEvalDiffuse, ,);
+//rtDeclareVariable(rtCallableProgramX<float(float)>, callable, ,); // validation fails
+//rtCallableProgram(float, callable, (float));                      // validation fails
+rtDeclareVariable(rtCallableProgramId<float(float)>, callable, ,);
 
 RT_PROGRAM void generator()
 {
-    vcmBsdfEvalDiffuse(1234.f);
+    callable(1234.f);
     return;
 }
 //    SubpathPRD lightPrd;
@@ -82,7 +84,7 @@ RT_PROGRAM void exception()
     rtPrintExceptionDetails();
 }
 
-RT_CALLABLE_PROGRAM float vcmBsdfEvaluate(float n)
+RT_CALLABLE_PROGRAM float callableTest(float n)
 {
     rtPrintf("Callable: %f\n", n);
     return 42.f;

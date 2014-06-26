@@ -63,8 +63,10 @@ namespace ContextTest
     m_context->setMissProgram(RayType::LIGHT_VCM, missProgram);
 
     // Callable program
-    optix::Program bsdfEvalProgram = context->createProgramFromPTXFile( "test_generator.cu.ptx", "vcmBsdfEvaluate" );
-    m_context["vcmBsdfEvalDiffuse"]->setProgramId(bsdfEvalProgram);
+    optix::Program callableProgram = context->createProgramFromPTXFile( "test_generator.cu.ptx", "callableTest" );
+    m_context["callable"]->setProgramId(callableProgram);
+    //m_context["callable"]->set(callableProgram);              // validation fails
+    //generatorProgram["callable"]->set(callableProgram);       // validation fails
 
     m_context->validate();
   }
