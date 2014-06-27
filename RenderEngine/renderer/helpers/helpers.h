@@ -80,7 +80,7 @@ static  __device__ __inline__ void createCoordinateSystem( const optix::float3& 
 	V = cross(N, U);
 }
 
-static __device__ __host__ __inline__ float maxf(float a, float b)
+static __device__ __host__ __forceinline__ float maxf(float a, float b)
 {
 	return a > b ? a : b;
 }
@@ -92,15 +92,20 @@ static __device__ __host__ __inline__ bool hitFromOutside(const optix::float3 & 
 	return (optix::dot(normal, rayDirection) < 0);
 }
 
-static __device__ __inline__ int intmin(int a, int b)
+static __device__ __forceinline__ int intmin(int a, int b)
 {
 	return a < b ? a : b;
 }
 
-static __device__ __inline__ float favgf(const optix::float3 & v )
+static __device__ __forceinline__ int intmin(unsigned int a, unsigned int b)
+{
+	return a < b ? a : b;
+}
+
+static __device__ __forceinline__ float favgf(const optix::float3 & v )
 {
 	return (v.x+v.y+v.z)*0.3333333333f;
 }
 
 template<typename T>
-__device__ __inline__ T sqr(const T& a) { return a*a; }
+__device__ __forceinline__ T sqr(const T& a) { return a*a; }

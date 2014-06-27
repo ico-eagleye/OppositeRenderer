@@ -8,6 +8,7 @@
 #include "renderer/RandomState.h"
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
+#include "material/VcmBsdfData.h"
 
 struct SubpathPRD
 {
@@ -15,6 +16,7 @@ struct SubpathPRD
     optix::float3 direction;
     optix::float3 throughput;
     optix::float3 color;    // accumulated full path contributions
+    uint2 launchIndex;
     optix::uint depth;
     optix::uint done;
     RandomState randomState;

@@ -39,6 +39,8 @@ rtDeclareVariable(uint, vcmLightSubpathCount, , ); // vmarz TODO set
 
 RT_PROGRAM void cameraPass()
 {
+    //if (launchIndex.x != 0 || launchIndex.y != 0) return;
+
     SubpathPRD cameraPrd;
     cameraPrd.randomState = randomStates[launchIndex];
     cameraPrd.throughput = make_float3(1.0f);
@@ -46,7 +48,8 @@ RT_PROGRAM void cameraPass()
     cameraPrd.done = 0;
     cameraPrd.dVC = 0;
     cameraPrd.dVM = 0;
-    cameraPrd.dVCM = 0;   
+    cameraPrd.dVCM = 0;
+    cameraPrd.launchIndex = launchIndex;
 
     float2 screen = make_float2( outputBuffer.size() );
     float2 sample = getRandomUniformFloat2(&cameraPrd.randomState);             // jitter pixel pos
@@ -95,9 +98,9 @@ rtDeclareVariable(SubpathPRD, cameraPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     cameraPrd.done = 1;
-    OPTIX_DEBUG_PRINT(cameraPrd.depth, "Miss\n");
-    //rtPrintf("%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, cameraPrd.depth,
-    //            cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z);
+    //OPTIX_DEBUG_PRINT(cameraPrd.depth, "Miss\n");
+    //OPTIX_DEBUG_PRINT(cameraPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, cameraPrd.depth,
+    //                  cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z);
 }
 
 

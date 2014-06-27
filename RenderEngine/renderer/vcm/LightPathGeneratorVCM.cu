@@ -41,7 +41,6 @@ rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 
 rtBuffer<uint, 2> lightVertexCountBuffer;
 
-
 RT_PROGRAM void lightPass()
 {
     SubpathPRD lightPrd;
@@ -98,8 +97,8 @@ rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     lightPrd.done = 1;
-    OPTIX_DEBUG_PRINT(lightPrd.depth, "Miss\n");
-    //rtPrintf("%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, "Miss\n");
+    //OPTIX_DEBUG_PRINT(lightPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
     //            lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 }
 

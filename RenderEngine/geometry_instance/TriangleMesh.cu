@@ -75,7 +75,6 @@ RT_PROGRAM void mesh_intersect(int primIdx)
             geometricNormal = normalize(n);
 
             // Texture UV coordinates
-
             if (texCoordBuffer.size() == 0)
             {
                 textureCoordinate = make_float2( 0.0f );

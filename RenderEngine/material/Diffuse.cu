@@ -20,6 +20,10 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/vcm.h"
+#include "material/VcmBsdfData.h"
+#include "material/VcmBsdfEvalProgram.h"
+#include "material/BxDF.h"
+#include "material/BSDF.h"
 
 using namespace optix;
 
@@ -129,6 +133,16 @@ rtBuffer<uint> lightVertexBufferIndexBuffer; // single element buffer with index
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
+
+__device__ __inline__ BSDF getBSDF(float3 & aNormal, float3 & aHitDir)
+{
+    BSDF bsdf = BSDF(aNormal, aHitDir);
+    Lambertian * lambertian = reinterpret_cast<Lambertian *>(bsdf.bxdfAt(0));
+    *lambertian = Lambertian(Kd);
+    return bsdf;
+}
+
+
  // Light subpath program
 RT_PROGRAM void closestHitLight()
 {
@@ -160,7 +174,9 @@ RT_PROGRAM void closestHitLight()
     lightVertex.dVCM = subpathPrd.dVCM;
     lightVertex.dVC = subpathPrd.dVC;
     lightVertex.dVM = subpathPrd.dVM;
-    // vmarz TODO store material bsdf
+    lightVertex.bsdf = getBSDF(shadingNormal, ray.direction);
+    //lightVertex.bsdfData.material = VcmMeterial::DIFFUSE;
+    //lightVertex.bsdfData.bsdfDiffuse.Kd = Kd;
 
     // store path vertex
     if (lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
@@ -208,7 +224,8 @@ RT_PROGRAM void closestHitLight()
 
 
 
-int __inline __device__ isOccluded(optix::float3 point, optix::float3 direction, float tMax)
+__inline
+__device__ int isOccluded(optix::float3 point, optix::float3 direction, float tMax)
 {
     ShadowPRD shadowPrd;
     shadowPrd.attenuation = 1.0f;
@@ -219,16 +236,28 @@ int __inline __device__ isOccluded(optix::float3 point, optix::float3 direction,
 
 
 
-// Return 1 if connected, 0 otherwise
-__inline __device__ void connectVertices(LightVertex aVertex, SubpathPRD & aCameraPrd, optix::float3 aCameraHitpoint)
+__device__ void connectVertices(LightVertex aVertex, SubpathPRD & aCameraPrd, optix::float3 aCameraHitpoint)
 {
+    //rtPrintf("%d %d - d %d - conn  %f %f %f and %f %f %f\n", aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y,
+    //    aCameraPrd.depth, aCameraHitpoint.x, aCameraHitpoint.y, aCameraHitpoint.z,
+    //    aVertex.hitPoint.x, aVertex.hitPoint.y, aVertex.hitPoint.z);
     // check occlusion
     float3 direction = aVertex.hitPoint - aCameraHitpoint;
     float distance = length(direction);
     if (isOccluded(aCameraHitpoint, direction, distance))
         return;
+    
+    //Lambertian * lambertian = reinterpret_cast<Lambertian *>(aVertex.bsdf.bxdfAt(0));
+    //float3 kd = lambertian->rho(1, NULL, NULL);
+    //rtPrintf("%d %d Unoccluded vetext at %f %f %f dirFix %f %f %f Kd %f %f %f\n",
+    //    aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y,
+    //    aVertex.hitPoint.x, aVertex.hitPoint.y, aVertex.hitPoint.z,
+    //    aVertex.bsdf.localDirFix().x, aVertex.bsdf.localDirFix().y, aVertex.bsdf.localDirFix().z,
+    //    kd.x, kd.y, kd.z);
 
-
+    float cosLight; // cos of incident vector at light vertex from camera vertex
+    float directPdfW;
+    float reversePdfW;
 }
 
 
@@ -239,6 +268,7 @@ rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
 {
+    //OPTIX_DEBUG_PRINT(subpathPrd.depth, "CamHit\n");
     subpathPrd.depth++;	
 
     // vmarz TODO make sure shading normals used correctly

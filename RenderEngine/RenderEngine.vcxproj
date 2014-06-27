@@ -257,10 +257,16 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="material\BSDF.h" />
+    <ClInclude Include="material\BxDF.h" />
+    <ClInclude Include="material\VcmBsdfData.h" />
+    <ClInclude Include="material\VcmBsdfEvalProgram.h" />
     <ClInclude Include="math\AAB.h" />
+    <ClInclude Include="math\DifferentialGeometry.h" />
     <ClInclude Include="math\Sphere.h" />
     <ClInclude Include="math\Vector3.h" />
     <ClInclude Include="renderer\helpers\camera.h" />
+    <ClInclude Include="renderer\helpers\reflection.h" />
     <ClInclude Include="renderer\helpers\samplers.h" />
     <ClInclude Include="renderer\helpers\optix.h" />
     <ClInclude Include="renderer\helpers\store_photon.h" />

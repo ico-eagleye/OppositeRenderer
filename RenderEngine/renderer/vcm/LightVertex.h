@@ -2,15 +2,18 @@
 
 #pragma once
 //#include <optix_world.h>
+#include "material/VcmBsdfData.h"
+#include "material/BSDF.h"
 
 struct LightVertex
 {
-    optix::float3 hitPoint;
-    optix::float3 throughput;
-    float pathDepth;
-    float dVCM;
-    float dVC;
-    float dVM;
+    float3 hitPoint;
+    float3 throughput;
+    BSDF   bsdf;
+    float  pathDepth;
+    float  dVCM;
+    float  dVC;
+    float  dVM;
     // bsdf data
-    optix::uint materialID;
+    //VcmBsdfData bsdfData;
 };
