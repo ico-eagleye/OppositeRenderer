@@ -29,8 +29,8 @@ Application::Application(QApplication & qApplication) :
 	connect(&m_sceneManager, SIGNAL(sceneLoadingNew()), this, SLOT(onSceneLoadingNew()));
 	connect(&m_sceneManager, SIGNAL(sceneLoadError(QString)), this, SLOT(onSceneLoadError(QString)));
 	
-	m_outputSettingsModel.setWidth(1280);
-	m_outputSettingsModel.setHeight(720);
+	m_outputSettingsModel.setWidth(640);
+	m_outputSettingsModel.setHeight(640);
 	m_outputSettingsModel.setGamma(2.2f);
 	m_PPMSettingsModel.setPPMInitialRadius(0.20);
 	m_sceneManager.setScene("Cornell");
