@@ -137,8 +137,8 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 __device__ __inline__ VcmBSDF getVcmBSDF(float3 & aNormal, float3 & aHitDir)
 {
     VcmBSDF bsdf = VcmBSDF(aNormal, aHitDir);
-    //Lambertian * lambertian = reinterpret_cast<Lambertian *>(bsdf.bxdfAt(0));
-    //*lambertian = Lambertian(Kd);
+    Lambertian * lambertian = reinterpret_cast<Lambertian *>(bsdf.bxdfAt(0));
+    *lambertian = Lambertian(Kd);
     return bsdf;
 }
 
@@ -174,7 +174,7 @@ RT_PROGRAM void closestHitLight()
     lightVertex.dVCM = subpathPrd.dVCM;
     lightVertex.dVC = subpathPrd.dVC;
     lightVertex.dVM = subpathPrd.dVM;
-    //lightVertex.bsdf = getVcmBSDF(shadingNormal, ray.direction);
+    lightVertex.bsdf = getVcmBSDF(shadingNormal, ray.direction);
     //lightVertex.bsdfData.material = VcmMeterial::DIFFUSE;
     //lightVertex.bsdfData.bsdfDiffuse.Kd = Kd;
 

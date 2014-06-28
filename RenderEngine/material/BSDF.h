@@ -229,7 +229,7 @@ public:
 
 
 
-class VcmBSDF : BSDF
+class VcmBSDF : public BSDF
 {
 private:
     optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to incident dir at hit point
