@@ -134,11 +134,11 @@ rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
 
-__device__ __inline__ BSDF getBSDF(float3 & aNormal, float3 & aHitDir)
+__device__ __inline__ VcmBSDF getVcmBSDF(float3 & aNormal, float3 & aHitDir)
 {
-    BSDF bsdf = BSDF(aNormal, aHitDir);
-    Lambertian * lambertian = reinterpret_cast<Lambertian *>(bsdf.bxdfAt(0));
-    *lambertian = Lambertian(Kd);
+    VcmBSDF bsdf = VcmBSDF(aNormal, aHitDir);
+    //Lambertian * lambertian = reinterpret_cast<Lambertian *>(bsdf.bxdfAt(0));
+    //*lambertian = Lambertian(Kd);
     return bsdf;
 }
 
@@ -174,7 +174,7 @@ RT_PROGRAM void closestHitLight()
     lightVertex.dVCM = subpathPrd.dVCM;
     lightVertex.dVC = subpathPrd.dVC;
     lightVertex.dVM = subpathPrd.dVM;
-    lightVertex.bsdf = getBSDF(shadingNormal, ray.direction);
+    //lightVertex.bsdf = getVcmBSDF(shadingNormal, ray.direction);
     //lightVertex.bsdfData.material = VcmMeterial::DIFFUSE;
     //lightVertex.bsdfData.bsdfDiffuse.Kd = Kd;
 
@@ -235,15 +235,26 @@ __device__ int isOccluded(optix::float3 point, optix::float3 direction, float tM
 }
 
 
-
-__device__ void connectVertices(LightVertex aVertex, SubpathPRD & aCameraPrd, optix::float3 aCameraHitpoint)
+// Connects vertices and accumulates path contribution in aCameraPrd.color
+__device__ void connectVertices(LightVertex & aVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd, optix::float3 & aCameraHitpoint)
 {
     //rtPrintf("%d %d - d %d - conn  %f %f %f and %f %f %f\n", aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y,
     //    aCameraPrd.depth, aCameraHitpoint.x, aCameraHitpoint.y, aCameraHitpoint.z,
     //    aVertex.hitPoint.x, aVertex.hitPoint.y, aVertex.hitPoint.z);
     // check occlusion
+
+    // Get connection
     float3 direction = aVertex.hitPoint - aCameraHitpoint;
-    float distance = length(direction);
+    float dist2      = dot(direction, direction);
+    float distance   = sqrt(dist2);
+    direction       /= distance;
+
+    // Evaluate BSDF at camera vertex
+    float directPdfW, reversePdfW;
+    const float3 cameraBsdfFactor = aCameraBsdf.vcmF(direction, &directPdfW, &reversePdfW);
+    if (isZero(cameraBsdfFactor))
+        return;
+
     if (isOccluded(aCameraHitpoint, direction, distance))
         return;
     
@@ -256,8 +267,6 @@ __device__ void connectVertices(LightVertex aVertex, SubpathPRD & aCameraPrd, op
     //    kd.x, kd.y, kd.z);
 
     float cosLight; // cos of incident vector at light vertex from camera vertex
-    float directPdfW;
-    float reversePdfW;
 }
 
 
@@ -289,6 +298,9 @@ RT_PROGRAM void vcmClosestHitCamera()
     }   
 
     updateMisTermsOnHit(subpathPrd, cosThetaIn, tHit);
+    VcmBSDF cameraBsdf = VcmBSDF(worldShadingNormal, ray.direction);
+
+    // TODO connect to light source
 
     // Connect to ligth vertices
     for (int i = 1; i < vcmNumlightVertexConnections; i++)
@@ -297,7 +309,7 @@ RT_PROGRAM void vcmClosestHitCamera()
         uint vertIdx = numLightVertices * getRandomUniformFloat(&subpathPrd.randomState);
         float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices;
         LightVertex lightVertex = lightVertexBuffer[vertIdx];
-        connectVertices(lightVertex, subpathPrd, hitPoint);
+        connectVertices(lightVertex, cameraBsdf, subpathPrd, hitPoint);
     }
     
     // vmarz TODO check max path length

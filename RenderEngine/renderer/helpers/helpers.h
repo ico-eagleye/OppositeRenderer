@@ -109,3 +109,10 @@ static __device__ __forceinline__ float favgf(const optix::float3 & v )
 
 template<typename T>
 __device__ __forceinline__ T sqr(const T& a) { return a*a; }
+
+
+static __device__ __forceinline__ bool isZero(const optix::float3 & v )
+{
+	return v.x == 0.f && v.y == 0.f && v.z == 0.f;
+}
+

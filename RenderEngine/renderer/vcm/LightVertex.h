@@ -7,13 +7,13 @@
 
 struct LightVertex
 {
-    float3 hitPoint;
-    float3 throughput;
-    BSDF   bsdf;
-    float  pathDepth;
-    float  dVCM;
-    float  dVC;
-    float  dVM;
+    float3  hitPoint;
+    float3  throughput;
+    VcmBSDF bsdf;
+    float   pathDepth;
+    float   dVCM;
+    float   dVC;
+    float   dVM;
     // bsdf data
     //VcmBsdfData bsdfData;
 };
