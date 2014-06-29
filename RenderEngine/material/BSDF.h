@@ -2,7 +2,8 @@
 
 // Partially borrowed from https://github.com/LittleCVR/MaoPPM
 
-#include  <optix_world.h>
+#include <optix_world.h>
+#include <optixu/optixu_math_namespace.h>
 #include "renderer/helpers/reflection.h"
 #include "BxDF.h"
 #include "math/DifferentialGeometry.h"
@@ -16,18 +17,19 @@ class BSDF
 {
 public:
     static const unsigned int  MAX_N_BXDFS  = 2;
+
 protected:
-    // should be private
     DifferentialGeometry  _diffGemetry;
     optix::float3         _geometricNormal;
     unsigned int          _nBxDFs;
     char                  _bxdfList [MAX_N_BXDFS * MAX_BXDF_SIZE];
+    float                 _bxdfPickProb [MAX_N_BXDFS]; // unscaled component continuation probabilities
+    float                 _continuationProb;           // Russian roulette probability
 
-//#ifdef __CUDACC__
 public:
     __device__ __forceinline__ BSDF() {  }
     __device__ __forceinline__ BSDF( const DifferentialGeometry aDiffGeomShading,
-                                        const optix::float3      & aWorldGeometricNormal)
+                                     const optix::float3      & aWorldGeometricNormal )
     {
         _geometricNormal = aWorldGeometricNormal;
         _diffGemetry = aDiffGeomShading;
@@ -45,32 +47,41 @@ public:
 
     __device__ __forceinline__ unsigned int nBxDFs() const { return _nBxDFs; }
 
-    __device__ __forceinline__ unsigned int nBxDFs(BxDF::Type type) const
+    __device__ __forceinline__ unsigned int nBxDFs(BxDF::Type aType) const
     {
         unsigned int count = 0;
-        for (unsigned int i = 0; i < nBxDFs(); ++i)
+        for (unsigned int i = 0; i < _nBxDFs; ++i)
         {
-            if (bxdfAt(i)->matchFlags(type))
+            if (bxdfAt(i)->matchFlags(aType))
                 ++count;
         }
         return count;
     }
 
-    __device__ __inline__ BxDF * bxdfAt(const optix::uint & aIndex)
+    __device__ __forceinline__ float continuationProb() const { return _continuationProb; }
+
+    // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
+    __device__ __inline__ int AddBxdf(const BxDF & bxdf)
     {
-        const BSDF * bsdf = this;
-        return const_cast<BxDF *>(bsdf->bxdfAt(aIndex));
+        if (_nBxDFs == MAX_N_BXDFS) return 0;
+
+        BxDF *pBxDF = reinterpret_cast<BxDF *>(&_bxdfList[_nBxDFs * MAX_BXDF_SIZE]);
+        *pBxDF = bxdf;
+
+        float pickProb = pBxDF->reflectProbability() + pBxDF->transmitProbability();
+        _bxdfPickProb[_nBxDFs] = pickProb;
+
+        // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
+        // to make sure the weight of sample never rise
+        _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
+
+        _nBxDFs++;
+        return 1;
     }
 
     __device__ __inline__ const BxDF * bxdfAt(const optix::uint & aIndex) const
     {
         return reinterpret_cast<const BxDF *>(&_bxdfList[aIndex * MAX_BXDF_SIZE]);
-    }
-
-    __device__ __inline__ BxDF * bxdfAt(const optix::uint & aIndex, BxDF::Type aType)
-    {
-        const BSDF * bsdf = this;
-        return const_cast<BxDF *>(bsdf->bxdfAt(aIndex, aType));
     }
 
     __device__ __inline__ const BxDF * bxdfAt(const optix::uint & aIndex, BxDF::Type aType) const
@@ -139,24 +150,29 @@ public:
     // Wi is sampled incident direction
     __device__ optix::float3 sampleF( const optix::float3 & aWorldWo,
                                       optix::float3       * oWorldWi, 
-                                      const optix::float3 & aSmple,
+                                      const optix::float3 & aSample,
                                       float               * oPdfW,
                                       BxDF::Type            aSampleType = BxDF::All,
                                       BxDF::Type          * oSampledType = NULL ) const
     {
         // Count matched componets.
-        unsigned int nMatched = nBxDFs(aSampleType);
-        if (nMatched == 0)
-        {
-            *oPdfW = 0.0f;
-            if (oSampledType) *oSampledType = BxDF::Null;
-            return optix::make_float3(0.0f);
-        }
+        //unsigned int nMatched = nBxDFs(aSampleType);
+        //if (nMatched == 0)
+        //{
+        //    *oPdfW = 0.0f;
+        //    if (oSampledType) *oSampledType = BxDF::Null;
+        //    return optix::make_float3(0.0f);
+        //}
+
+        //float matchedSumContProb = sumContProb(aSampleType);
 
         // vmarz TODO pick based on albedo of each component as in SmallVCM?
         // Sample BxDF.
-        unsigned int index = optix::min(nMatched-1,
-                static_cast<unsigned int>(floorf(aSmple.x * static_cast<float>(nMatched))));
+        //unsigned int index = optix::min(nMatched-1,
+        //        static_cast<unsigned int>(floorf(aSmple.x * static_cast<float>(nMatched))));
+        unsigned int index = 0;
+        unsigned int nMatched = sampleBxDF(aSample.x, aSampleType, &index);
+
         const BxDF * bxdf = bxdfAt(index, aSampleType);
         if (bxdf == NULL)
         {
@@ -171,7 +187,7 @@ public:
         // Sample f.
         optix::float3 f;
         optix::float3 wi;
-        optix::float2 s = optix::make_float2(aSmple.y, aSmple.z);
+        optix::float2 s = optix::make_float2(aSample.y, aSample.z);
         CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, =, bxdf, sampleF, wo, &wi, s, oPdfW);
         
         // Rejected.
@@ -223,7 +239,46 @@ public:
 
         return f;
     }
-//#endif  /* -----  #ifdef __CUDACC__  ----- */
+
+protected:
+    __device__ __forceinline__ unsigned int sampleBxDF(float sample, BxDF::Type aType, unsigned int * bxdfIndex) const
+    {
+        unsigned int nMatched = nBxDFs(aType);
+        if (nMatched == 0) return 0;
+
+        float matchedSumContProb = sumContProb(aType);
+        float contProbPrev = 0.f;
+        float contProb = 0.f;
+        for (unsigned int i = 0; i < _nBxDFs; ++i)
+        {
+            if (bxdfAt(i)->matchFlags(aType))
+            {
+                float contProb = _bxdfPickProb[i] / matchedSumContProb;
+                if (sample < contProbPrev + contProb)
+                {
+                    *bxdfIndex = i;
+                    break;
+                }
+                contProbPrev += contProb;
+            }
+        }
+
+        return nMatched;
+    }
+
+
+    __device__ __forceinline__ float sumContProb(BxDF::Type aType) const
+    {
+        float contProb = 0.f;
+        for (unsigned int i = 0; i < _nBxDFs; ++i)
+        {
+            if (bxdfAt(i)->matchFlags(aType))
+            {
+                contProb += _bxdfPickProb[i];
+            }
+        }
+        return contProb;
+    }
 
 };  /* -----  end of class BSDF  ----- */
 

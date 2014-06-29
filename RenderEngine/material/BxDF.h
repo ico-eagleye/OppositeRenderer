@@ -94,6 +94,16 @@ public:
         return optix::make_float3(0.0f);
     }
 
+    __device__ __forceinline__ float reflectProbability() const
+    {
+        return 0.f;
+    }
+
+    __device__ __forceinline__ float transmitProbability() const
+    {
+        return 0.f;
+    }
+
     // Evaluation for VCM returning also reverse pdfs
     __device__ __forceinline__ optix::float3 vcmF( const optix::float3 & aWo,
                                                    const optix::float3 & aWi,
@@ -152,6 +162,16 @@ public:
         return _reflectance;
     }
 
+    __device__ __forceinline__ float reflectProbability() const
+    {
+        return optix::luminanceCIE(_reflectance);
+    }
+
+    __device__ __forceinline__ float transmitProbability() const
+    {
+        return 0.f;
+    }
+
     // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
     __device__ __forceinline__ optix::float3 vcmF( const optix::float3 & aWo,
                                                    const optix::float3 & aWi,
@@ -166,6 +186,7 @@ public:
 
         if (*oReversePdfW != NULL) 
             *oReversePdfW =  optix::fmaxf(0.f, aWo.z * M_1_PIf);
+
         return _reflectance * M_1_PIf;
     }
 };  /* -----  end of class Lambertian  ----- */
