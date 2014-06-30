@@ -71,21 +71,21 @@ RT_PROGRAM void lightPass()
 
     for (int i=0;;i++)
     {
-        //OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - tra dir %f %f %f\n",
+        //OPTIX_PRINTFI(lightPrd.depth, "G %d - tra dir %f %f %f\n",
         //    i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
         if (lightPrd.done)
         {
-            //OPTIX_DEBUG_PRINT(lightPrd.depth, "Stop trace \n");
+            //OPTIX_PRINTFI(lightPrd.depth, "Stop trace \n");
             break;
         }
 
         lightRay.origin = lightPrd.origin;
         lightRay.direction = lightPrd.direction;
 
-        //OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - new org %f %f %f\n", i, lightRay.origin.x, lightRay.origin.y, lightRay.origin.z);
-        //OPTIX_DEBUG_PRINT(lightPrd.depth, "G %d - new dir %f %f %f\n", i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
+        //OPTIX_PRINTFI(lightPrd.depth, "G %d - new org %f %f %f\n", i, lightRay.origin.x, lightRay.origin.y, lightRay.origin.z);
+        //OPTIX_PRINTFI(lightPrd.depth, "G %d - new dir %f %f %f\n", i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
     }
 
     randomStates[launchIndex] = lightPrd.randomState;
@@ -97,8 +97,8 @@ rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     lightPrd.done = 1;
-    //OPTIX_DEBUG_PRINT(lightPrd.depth, "Miss\n");
-    //OPTIX_DEBUG_PRINT(lightPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
+    //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
+    //OPTIX_PRINTFI(lightPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
     //            lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 }
 

@@ -24,7 +24,7 @@ using namespace optix;
 rtDeclareVariable(rtObject, sceneRootObject, , );
 rtDeclareVariable(Camera, camera, , );
 rtBuffer<Light, 1> lights;
-rtBuffer<float3, 2> outputBuffer;
+rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 rtDeclareVariable(uint, localIterationNumber, , );
 rtBuffer<RandomState, 2> randomStates;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
@@ -37,7 +37,7 @@ rtDeclareVariable(float, vcmMisVcWeightFactor, , ); // vmarz TODO set
 rtDeclareVariable(float, vcmMisVmWeightFactor, , ); // vmarz TODO set
 rtDeclareVariable(uint, vcmLightSubpathCount, , ); // vmarz TODO set
 
-static __device__ __inline float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
+static __device__ __inline__ float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
 {
     if(localIterationNumber >= 1)
     {
@@ -77,7 +77,7 @@ RT_PROGRAM void cameraPass()
     // Trace    
     for (int i=0;;i++)
     {
-        //OPTIX_DEBUG_PRINT(cameraPrd.depth, "G %d - tra dir %f %f %f\n",
+        //OPTIX_PRINTFI(cameraPrd.depth, "G %d - tra dir %f %f %f\n",
         //    i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
         rtTrace( sceneRootObject, cameraRay, cameraPrd );
         
@@ -89,7 +89,7 @@ RT_PROGRAM void cameraPass()
 
         if (cameraPrd.done)
         {
-            //OPTIX_DEBUG_PRINT(cameraPrd.depth, "Stop trace \n");
+            //OPTIX_PRINTFI(cameraPrd.depth, "Stop trace \n");
             break;
         }
 
@@ -98,11 +98,15 @@ RT_PROGRAM void cameraPass()
         cameraRay.origin = cameraPrd.origin;
         cameraRay.direction = cameraPrd.direction;
 
-        //OPTIX_DEBUG_PRINT(cameraPrd.depth, "G %d - new org %f %f %f\n", i, cameraRay.origin.x, cameraRay.origin.y, cameraRay.origin.z);
-        //OPTIX_DEBUG_PRINT(cameraPrd.depth, "G %d - new dir %f %f %f\n", i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
+        //OPTIX_PRINTFI(cameraPrd.depth, "G %d - new org %f %f %f\n", i, cameraRay.origin.x, cameraRay.origin.y, cameraRay.origin.z);
+        //OPTIX_PRINTFI(cameraPrd.depth, "G %d - new dir %f %f %f\n", i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
     }
 
-    outputBuffer[launchIndex] = averageInNewRadiance(cameraPrd.color, outputBuffer[launchIndex], localIterationNumber);
+    float3 avgColor = averageInNewRadiance(cameraPrd.color, outputBuffer[launchIndex], localIterationNumber);
+    OPTIX_PRINTF("iter %d prd.color %f %f %f avColor %f %f %f\n", localIterationNumber,
+        cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
+
+    outputBuffer[launchIndex] = avgColor;
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 
@@ -111,8 +115,8 @@ rtDeclareVariable(SubpathPRD, cameraPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     cameraPrd.done = 1;
-    //OPTIX_DEBUG_PRINT(cameraPrd.depth, "Miss\n");
-    //OPTIX_DEBUG_PRINT(cameraPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, cameraPrd.depth,
+    //OPTIX_PRINTFI(cameraPrd.depth, "Miss\n");
+    //OPTIX_PRINTFI(cameraPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, cameraPrd.depth,
     //                  cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z);
 }
 

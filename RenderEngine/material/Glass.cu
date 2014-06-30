@@ -84,7 +84,7 @@ RT_PROGRAM void closestHitRadiance()
     float3 N = isHitFromOutside ? worldShadingNormal : -worldShadingNormal;
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
-    //OPTIX_DEBUG_PRINT("Radiance hit glass %s P(%.2f %.2f %.2f)\n", isHitFromOutside ? "outside" : "inside", hitPoint.x, hitPoint.y, hitPoint.z);
+    //OPTIX_PRINTFI("Radiance hit glass %s P(%.2f %.2f %.2f)\n", isHitFromOutside ? "outside" : "inside", hitPoint.x, hitPoint.y, hitPoint.z);
 
     IndexOfRefractions ior = getIndexOfRefractions(isHitFromOutside, indexOfRefraction);
     float3 refractionDirection;
@@ -180,7 +180,7 @@ RT_PROGRAM void closestHitPhoton()
         newRayDirection = refractionDirection;
     }
 
-    OPTIX_DEBUG_PRINT(photonPrd.depth, "Photon hit glass %s (%s) %s P(%.2f %.2f %.2f)\n", isHitFromOutside ? "outside" : "inside",
+    OPTIX_PRINTFI(photonPrd.depth, "Photon hit glass %s (%s) %s P(%.2f %.2f %.2f)\n", isHitFromOutside ? "outside" : "inside",
         willTravelInsideGlass(isHitFromOutside, isReflected)  ? "will travel inside" : "will travel outside", isReflected ? "reflect":"refract", hitPoint.x, hitPoint.y, hitPoint.z);
 
     photonPrd.depth++;

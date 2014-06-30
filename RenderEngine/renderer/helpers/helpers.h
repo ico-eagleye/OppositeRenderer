@@ -20,8 +20,8 @@
 
 
 #define OPTIX_DEBUG_STD_PRINTF 0
-#define OPTIX_DEBUG_PRINTF_SPACES 0		// printing multiple consecutive spaces seems ramdom - doesn't always work
-#define OPTIX_DEBUG_PRINTF_IDX 1		  // printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_PRINTFI_SPACES 0      // printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems ramdom - doesn't always work
 #define OPTIX_DEBUG_ID_X 0
 #define OPTIX_DEBUG_ID_Y 0
 
@@ -33,23 +33,22 @@
 #endif
 
 #if ENABLE_RENDER_DEBUG_OUTPUT
-// TODO rename
-#define OPTIX_DEBUG_PRINT(depth, str, ...) \
+#define OPTIX_PRINTFI(depth, str, ...) \
 	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
 	{  \
-		if (OPTIX_DEBUG_PRINTF_IDX) \
+		if (OPTIX_PRINTFI_IDX) \
 		{ \
 			if (OPTIX_DEBUG_STD_PRINTF) \
 				OPTIX_PRINTF_FUN("%d, %d - ", launchIndex.x, launchIndex.y); \
 			else \
 				OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
 		} \
-		if (OPTIX_DEBUG_PRINTF_SPACES) for(int i = 0; i < depth; i++) { OPTIX_PRINTF_FUN(" "); } \
+		if (OPTIX_PRINTFI_SPACES) for(int i = 0; i < depth; i++) { OPTIX_PRINTF_FUN(" "); } \
 		OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
 	}
 
 // original
-//#define OPTIX_DEBUG_PRINT(depth, str, ...) \
+//#define OPTIX_PRINTFI(depth, str, ...) \
 //	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
 //	{  \
 //	OPTIX_PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
@@ -65,7 +64,7 @@
 
 
 #else
-#define OPTIX_DEBUG_PRINT(depth, str, ...) // nothing
+#define OPTIX_PRINTFI(depth, str, ...) // nothing
 #define OPTIX_PRINTF(str, ...)
 #endif
 

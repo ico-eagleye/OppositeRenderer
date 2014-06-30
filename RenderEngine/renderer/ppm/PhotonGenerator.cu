@@ -129,7 +129,7 @@ RT_PROGRAM void generator()
 rtDeclareVariable(PhotonPRD, photonPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
-	OPTIX_DEBUG_PRINT(photonPrd.depth, "Photon missed geometry.\n");
+	OPTIX_PRINTFI(photonPrd.depth, "Photon missed geometry.\n");
 }
 
 

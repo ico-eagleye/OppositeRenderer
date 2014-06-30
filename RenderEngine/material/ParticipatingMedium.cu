@@ -59,7 +59,7 @@ RT_PROGRAM void closestHitRadiance()
     bool isHitFromOutside = hitFromOutside(ray.direction, worldShadingNormal);
     double tHitStack = tHit + 0.1 - 0.1; // Important, prevents compiler optimization on variable
 
-    /*OPTIX_DEBUG_PRINT(0, "Hit media (%.2f %.2f %.2f) %s (attn: %.2f %.2f  %.2f)\n", hitPoint.x, hitPoint.y, hitPoint.z, isHitFromOutside ? "outside" : "inside", 
+    /*OPTIX_PRINTFI(0, "Hit media (%.2f %.2f %.2f) %s (attn: %.2f %.2f  %.2f)\n", hitPoint.x, hitPoint.y, hitPoint.z, isHitFromOutside ? "outside" : "inside", 
         radiancePrd.attenuation.x, radiancePrd.attenuation.y, radiancePrd.attenuation.z);*/
     
     if(isHitFromOutside)
@@ -126,13 +126,13 @@ RT_PROGRAM void closestHitPhoton()
 
     if(hitInside && ray.ray_type == RayType::PHOTON_IN_PARTICIPATING_MEDIUM)
     {
-        //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Hit medium P(%.2f %.2f %.2f) from inside: move past\n", hitPoint.x, hitPoint.y, hitPoint.z);
+        //OPTIX_PRINTFI(photonPrd.depth-1, "Hit medium P(%.2f %.2f %.2f) from inside: move past\n", hitPoint.x, hitPoint.y, hitPoint.z);
         Ray newRay = Ray(hitPoint+0.0001*ray.direction, ray.direction, RayType::PHOTON, 0.001, RT_DEFAULT_MAX);
         rtTrace(sceneRootObject, newRay, photonPrd);
         return;
     }
 
-    //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Hit medium %s P(%.2f %.2f %.2f) RT=%d\n", hitInside ? "inside" : "outside", hitPoint.x, hitPoint.y, hitPoint.z, ray.ray_type);
+    //OPTIX_PRINTFI(photonPrd.depth-1, "Hit medium %s P(%.2f %.2f %.2f) RT=%d\n", hitInside ? "inside" : "outside", hitPoint.x, hitPoint.y, hitPoint.z, ray.ray_type);
 
     float sample = getRandomUniformFloat(&photonPrd.randomState);
     float scatterLocationT = - logf(1-sample)/sigma_t;
@@ -142,7 +142,7 @@ RT_PROGRAM void closestHitPhoton()
     if(launchIndex.x == 185000)
     rtPrintf("", photonPrd.depth-1);// line necessary due to optix bug...
 
-    //OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Probing [0,t] ...\n");
+    //OPTIX_PRINTFI(photonPrd.depth-1, "Probing [0,t] ...\n");
 
     // We need to see if anything obstructs the ray in the interval from the hitpoint to the scatter location.
     // If nothings obstructs then we scatter at eventPosition. Otherwise, the photon continues on its path and we don't do anything
@@ -186,7 +186,7 @@ RT_PROGRAM void closestHitPhoton()
 
         float3 scatterDirection = sampleUnitSphere(getRandomUniformFloat2(&photonPrd.randomState));
 
-        OPTIX_DEBUG_PRINT(photonPrd.depth-1, "Not interrupted. Store, scatter P(%.2f %.2f %.2f) D(%.2f %.2f %.2f)\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, 
+        OPTIX_PRINTFI(photonPrd.depth-1, "Not interrupted. Store, scatter P(%.2f %.2f %.2f) D(%.2f %.2f %.2f)\n", scatterPosition.x, scatterPosition.y, scatterPosition.z, 
             scatterDirection.x, scatterDirection.y, scatterDirection.z);
 
         Ray scatteredRay(scatterPosition, scatterDirection, RayType::PHOTON, 0.001, RT_DEFAULT_MAX);
@@ -195,7 +195,7 @@ RT_PROGRAM void closestHitPhoton()
     }
     else
     {
-        //OPTIX_DEBUG_PRINT(depth-1, "Found surface in [0,t], no scatter!\n");
+        //OPTIX_PRINTFI(depth-1, "Found surface in [0,t], no scatter!\n");
     }
 #endif
 }
