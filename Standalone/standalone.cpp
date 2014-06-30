@@ -13,14 +13,53 @@
 #include <QThread>
 #include <QTextStream>
 #include <qmessagebox.h>
+#include <tchar.h>
 
 //#include <vld.h>
+
+
+int fileExists(char * file)
+{
+    WIN32_FIND_DATA FindFileData;
+    HANDLE handle = FindFirstFile(file, &FindFileData) ;
+    int found = handle != INVALID_HANDLE_VALUE;
+    if (found) 
+    {
+        FindClose(handle);
+    }
+    return found;
+}
+
+
+void attachConEmu()
+{
+#ifndef _WIN64
+    char * conEmuPath = "C:\\Tools\\ConEmu\\ConEmu\\ConEmuC.exe";
+    char * createProcCmd = "\"C:\\Tools\\ConEmu\\ConEmu\\ConEmuC.exe\" /AUTOATTACH";
+#else
+    char * conEmuPath = "C:\\Tools\\ConEmu\\ConEmu\\ConEmuC64.exe";
+    char * createProcCmd = "\"C:\\Tools\\ConEmu\\ConEmu\\ConEmuC64.exe\" /AUTOATTACH";
+#endif
+    if (fileExists(conEmuPath))
+    {
+        printf("Attaching ConEmu console\n");
+        STARTUPINFO si = { sizeof(si) }; 
+        PROCESS_INFORMATION pi = {};
+        if (CreateProcess(NULL, createProcCmd,
+            NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi))
+        { 
+            CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
+        }
+    }
+}
+
 
 int main( int argc, char** argv )
 {
     QApplication qApplication(argc, argv);
     qApplication.setOrganizationName("Opposite Renderer");
     qApplication.setApplicationName("Opposite Renderer");
+    attachConEmu();
 
     QTextStream out(stdout);
     QTextStream in(stdin);
