@@ -58,7 +58,7 @@ RT_PROGRAM void lightPass()
     if (1 < lights.size())
     {
         float sample = getRandomUniformFloat(&lightPrd.randomState);
-        lightIndex = intmin((int)(sample*lights.size()), lights.size()-1);
+        lightIndex = intmin((int)(sample*lights.size()), int(lights.size()-1));
     }
 
     const Light light = lights[lightIndex];

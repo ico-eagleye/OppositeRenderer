@@ -60,7 +60,7 @@ RT_PROGRAM void kernel()
         for(int shadowSample = 0; shadowSample < numShadowSamples; shadowSample++)
         {
             float sample = getRandomUniformFloat(&randomStates[launchIndex]);
-            int randomLightIndex = intmin(int(sample*numLights), lights.size()-1);
+            int randomLightIndex = intmin(int(sample*numLights), int(lights.size()-1));
             Light & light = lights[randomLightIndex];
             float scale = numLights;
             float3 lightContrib = getLightContribution(light, rec.position, rec.normal, sceneRootObject, randomStates[launchIndex]);

@@ -90,7 +90,7 @@ RT_PROGRAM void generator()
 	if(lights.size() > 1)
 	{
 		float sample = getRandomUniformFloat(&photonPrd.randomState);
-		lightIndex = intmin((int)(sample*lights.size()), lights.size()-1);
+		lightIndex = intmin((int)(sample*lights.size()), int(lights.size()-1));
 	}
 
 	Light light = lights[lightIndex];
