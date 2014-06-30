@@ -121,7 +121,8 @@ public:
 
 class Lambertian : public BxDF 
 {
-private:
+//private:
+public:
     optix::float3  _reflectance;
 
 public:
@@ -164,7 +165,10 @@ public:
 
     __device__ __forceinline__ float reflectProbability() const
     {
-        return optix::luminanceCIE(_reflectance);
+        float lum = optix::luminanceCIE(_reflectance);
+        //OPTIX_PRINTF("reflectProbability - refl %f %f %f lum %f\n",
+        //    _reflectance.x, _reflectance.y, _reflectance.z, lum);
+        return lum;
     }
 
     __device__ __forceinline__ float transmitProbability() const

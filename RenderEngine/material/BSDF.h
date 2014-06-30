@@ -7,11 +7,15 @@
 #include "renderer/helpers/reflection.h"
 #include "BxDF.h"
 #include "math/DifferentialGeometry.h"
-
+#include <device_functions.h>
 
 #define CALL_BXDF_CONST_VIRTUAL_FUNCTION(lvalue, op, bxdf, function, ...) \
     if (bxdf->type() & BxDF::Lambertian) \
         lvalue op reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__);
+
+//#define CAST_BXDF_TO_SUBTYPE(pointerVariable, bxdf) \
+//    if (bxdf->type() & BxDF::Lambertian) \
+//        Lambertian pointerVariable = reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__);
 
 class BSDF 
 {
@@ -34,6 +38,10 @@ public:
         _geometricNormal = aWorldGeometricNormal;
         _diffGemetry = aDiffGeomShading;
         _nBxDFs = 0;
+        // nvcc give fails without clear error when trying to memset all at once
+        memset(_bxdfList, 0, MAX_N_BXDFS * MAX_BXDF_SIZE);
+        memset(_bxdfPickProb, 0, MAX_N_BXDFS * sizeof(float));
+        _continuationProb = 0.f;
     }
 
     // For simple case when not differentiating between gemoetric and shading normal,
@@ -43,6 +51,9 @@ public:
         _diffGemetry.SetFromZ(aWorldNormal);
         _geometricNormal = aWorldNormal;
         _nBxDFs = 0;
+        memset(_bxdfList, 0, MAX_N_BXDFS * MAX_BXDF_SIZE);
+        memset(_bxdfPickProb, 0, MAX_N_BXDFS * sizeof(float));
+        _continuationProb = 0.f;
     }
 
     __device__ __forceinline__ unsigned int nBxDFs() const { return _nBxDFs; }
@@ -58,23 +69,36 @@ public:
         return count;
     }
 
+    // Continuation probability for Russian roulette
     __device__ __forceinline__ float continuationProb() const { return _continuationProb; }
 
     // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
-    __device__ __inline__ int AddBxdf(const BxDF & bxdf)
+    __device__ __inline__ int AddBxDF(const BxDF * bxdf)
     {
+        //OPTIX_PRINTF("AddBxDF - passed BxDF 0x%X\n", sizeof(BxDF * ), (optix::optix_size_t) bxdf);
         if (_nBxDFs == MAX_N_BXDFS) return 0;
-
+        
+        // get BxDF list address
         BxDF *pBxDF = reinterpret_cast<BxDF *>(&_bxdfList[_nBxDFs * MAX_BXDF_SIZE]);
-        *pBxDF = bxdf;
+        //OPTIX_PRINTF("AddBxDF - this 0x%X BxDF count %d target address 0x%X \n", 
+        //    (optix::optix_size_t) this, _nBxDFs, (optix::optix_size_t) pBxDF);
+        memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if coppy too much, extra bytes won't be used by target type anyway
+        
+        //Lambertian *lamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(bxdf));
+        //Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
+        //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
+        //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
 
-        float pickProb = pBxDF->reflectProbability() + pBxDF->transmitProbability();
+        // setting pick probabilty unweighted by other BxDFs, weighted during sampling based sampled BxDF types
+        float pickProb = 0.f;
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
         _bxdfPickProb[_nBxDFs] = pickProb;
 
         // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
         // to make sure the weight of sample never rise
         _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
-
+        //OPTIX_PRINTF("AddBxDF - _nBxDFs %d _continuationProb %f _bxdfPickProb[_nBxDFs] %f \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs]);
         _nBxDFs++;
         return 1;
     }
@@ -294,7 +318,8 @@ public:
 
     __device__ __forceinline__ VcmBSDF( const DifferentialGeometry aDiffGeomShading,
                                         const optix::float3      & aWorldGeometricNormal,
-                                        const optix::float3      & aIncidentDir ) : BSDF(aWorldGeometricNormal)
+                                        const optix::float3      & aIncidentDir ) : 
+                               BSDF( aDiffGeomShading, aWorldGeometricNormal )
     {
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
@@ -307,6 +332,8 @@ public:
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
 
+    __device__ __forceinline__ int isValid() const { return EPS_COSINE < _localDirFix.z; }
+
     __device__ __forceinline__ optix::float3 localDirFix() const { return _localDirFix; }
 
 
@@ -315,18 +342,23 @@ public:
     // For VCM evaluation the stored direction localDirFix is used as Wo, generated direction aWorldDirGen as Wi,
     // either when tracing from light or camera. Similary directPdf corresponds sampling from Wo->Wi, reverse to Wi->Wo
     __device__ optix::float3 vcmF( const optix::float3 & aWorldDirGen,
+                                   float               & oCosThetaGen,
                                    float               * oDirectPdfW = NULL,
                                    float               * oReversePdfW = NULL,
                                    BxDF::Type            aSampleType = BxDF::All ) const
     {
         optix::float3 localDirGen = _diffGemetry.ToLocal(aWorldDirGen);
         optix::float3 worldDirFix = _diffGemetry.ToWorld(_localDirFix);
+        //OPTIX_PRINTF("vcmF - _localDirFix %f %f %f localDirGen %f %f %f \n",
+        //    _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);
 
         if (oDirectPdfW) *oDirectPdfW = 0.f;
         if (oReversePdfW) *oReversePdfW = 0.f;
 
         if (_localDirFix.z < EPS_COSINE || localDirGen.z < EPS_COSINE)
             return make_float3(0.f);
+
+        oCosThetaGen = abs(localDirGen.z);
 
         // Calculate f.
         if (optix::dot(_geometricNormal, aWorldDirGen) * optix::dot(_geometricNormal, worldDirFix) >= 0.0f)  
@@ -356,6 +388,7 @@ public:
             if (oDirectPdfW) *oDirectPdfW /= static_cast<float>(numMatched);
             if (oReversePdfW) *oReversePdfW /= static_cast<float>(numMatched);
         }
+        //OPTIX_PRINTF("vcmF - _nBxDFs %d numMatched %d f %f %f %f \n", _nBxDFs, numMatched, f.x, f.y, f.z);
         return f;
     }
 

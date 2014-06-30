@@ -86,6 +86,25 @@ static __host__ __device__ __inline__ float vcmMis(const float & aPdf)
     return aPdf;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Utilities for converting PDF between Area (A) and Solid angle (W)
+// WtoA = PdfW * cosine / distance_squared
+// AtoW = PdfA * distance_squared / cosine
+__host__ __device__ __inline__ float PdfWtoA( const float aPdfW,
+                                              const float aDist,
+                                              const float aCosThere )
+{
+    return aPdfW * std::abs(aCosThere) / sqr(aDist);
+}
+
+__host__ __device__ __inline__ float PdfAtoW( const float aPdfA,
+                                              const float aDist,
+                                              const float aCosThere )
+{
+    return aPdfA * sqr(aDist) / std::abs(aCosThere);
+}
+
+
 // <Sampling code from Optix SDK>
 //Create ONB from normalaized vector
 static __device__ __inline__ void createONB( 

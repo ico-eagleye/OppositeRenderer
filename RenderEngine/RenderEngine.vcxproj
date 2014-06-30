@@ -127,7 +127,7 @@
       <NvccCompilation>ptx</NvccCompilation>
       <CompileOut>$(OutDir)%(Filename)%(Extension).ptx</CompileOut>
       <FastMath>true</FastMath>
-      <KeepDir>$(IntDir)</KeepDir>
+      <KeepDir>$(IntDir)\cuda_intermediate</KeepDir>
       <GenerateLineInfo>false</GenerateLineInfo>
       <Optimization>InheritFromHost</Optimization>
       <MaxRegCount />
@@ -259,8 +259,6 @@
   <ItemGroup>
     <ClInclude Include="material\BSDF.h" />
     <ClInclude Include="material\BxDF.h" />
-    <ClInclude Include="material\VcmBsdfData.h" />
-    <ClInclude Include="material\VcmBsdfEvalProgram.h" />
     <ClInclude Include="math\AAB.h" />
     <ClInclude Include="math\DifferentialGeometry.h" />
     <ClInclude Include="math\Sphere.h" />
@@ -386,6 +384,8 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <Keep Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</Keep>
+      <Keep Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</Keep>
     </CudaCompile>
     <CudaCompile Include="material\Glass.cu" />
     <CudaCompile Include="material\ParticipatingMedium.cu" />
@@ -422,6 +422,8 @@
     </CudaCompile>
     <CudaCompile Include="renderer\vcm\LightPathGeneratorVCM.cu">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <CudaCompile Include="renderer\vcm\VCMCameraPass.cu" />
   </ItemGroup>

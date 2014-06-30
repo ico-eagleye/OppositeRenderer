@@ -1,3 +1,4 @@
+#pragma once
 #include <optix_world.h>
 #include "optixu_math_namespace.h"
 
@@ -37,7 +38,7 @@ class DifferentialGeometry
     }
 
     // sets from normal
-    __device__  void SetFromZ(const optix::float3& z)
+    __device__ __inline__ void SetFromZ(const optix::float3& z)
     {
         optix::float3 mZ = optix::normalize(z);
         optix::float3 tmpX = (std::abs(mZ.x) > 0.99f) ? make_float3(0.f, 1.f, 0.f) : make_float3(1.f, 0.f, 0.f);

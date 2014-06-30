@@ -98,7 +98,7 @@ __inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float
 {
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
     aLightPrd.dVCM /= sqr(aRayLen);
-    aLightPrd.dVCM *= vcmMis(aCosThetaIn);  // vmarz?: need abs here?
+    aLightPrd.dVCM *= vcmMis(aCosThetaIn);
     aLightPrd.dVC *= vcmMis(aCosThetaIn);
     aLightPrd.dVM *= vcmMis(aCosThetaIn);
 }

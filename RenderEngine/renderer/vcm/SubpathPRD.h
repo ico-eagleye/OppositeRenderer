@@ -8,7 +8,6 @@
 #include "renderer/RandomState.h"
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
-#include "material/VcmBsdfData.h"
 
 struct SubpathPRD
 {

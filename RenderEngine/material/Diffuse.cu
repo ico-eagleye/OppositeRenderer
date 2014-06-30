@@ -20,8 +20,6 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/vcm.h"
-#include "material/VcmBsdfData.h"
-#include "material/VcmBsdfEvalProgram.h"
 #include "material/BxDF.h"
 #include "material/BSDF.h"
 
@@ -134,11 +132,17 @@ rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
 
-__device__ __inline__ void getVcmBSDF(VcmBSDF &bsdf, float3 & aNormal, float3 & aHitDir)
+
+//__noinline__ // seems to cause above error
+// "_rtContextCompile" caught exception: Assertion failed: "insn->isMove() || insn->isLoad() || insn->isAdd()", [5639172]
+__device__ __inline__ void setVcmBSDF(VcmBSDF &bsdf, float3 & aWorldNormal, float3 & aWorldHitDir)
 {
     Lambertian lambertian = Lambertian(Kd);
-    bsdf = VcmBSDF(aNormal, aHitDir);
-    bsdf.AddBxdf(lambertian);
+    //OPTIX_PRINTF("setVcmBSDF - Lambertian._reflectance %f %f %f addr 0x%X\n", 
+    //    lambertian._reflectance.x, lambertian._reflectance.y, lambertian._reflectance.z, 
+    //    (optix::optix_size_t)&lambertian._reflectance);
+    bsdf = VcmBSDF(aWorldNormal, aWorldHitDir);
+    bsdf.AddBxDF(&lambertian);
 }
 
 
@@ -158,7 +162,7 @@ RT_PROGRAM void closestHitLight()
     // vmarz TODO infinite lights need attitional handling
     float cosThetaIn = dot(worldShadingNormal, -ray.direction);
     //OPTIX_DEBUG_PRINT(subpathPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
-    if (cosThetaIn < 0.f) // vmarz TODO check validity
+    if (cosThetaIn < EPS_COSINE) // reject if cos too low
     {
         subpathPrd.done = 1;
         return;
@@ -173,9 +177,7 @@ RT_PROGRAM void closestHitLight()
     lightVertex.dVCM = subpathPrd.dVCM;
     lightVertex.dVC = subpathPrd.dVC;
     lightVertex.dVM = subpathPrd.dVM;
-    getVcmBSDF(lightVertex.bsdf, shadingNormal, ray.direction);
-    //lightVertex.bsdfData.material = VcmMeterial::DIFFUSE;
-    //lightVertex.bsdfData.bsdfDiffuse.Kd = Kd;
+    setVcmBSDF(lightVertex.bsdf, shadingNormal, ray.direction);
 
     // store path vertex
     if (lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
@@ -230,33 +232,75 @@ __device__ int isOccluded(optix::float3 point, optix::float3 direction, float tM
     shadowPrd.attenuation = 1.0f;
     Ray occlusionRay(point, direction, RayType::SHADOW, EPS_RAY, tMax - 2.f*EPS_RAY);
     rtTrace(sceneRootObject, occlusionRay, shadowPrd);
-    return shadowPrd.attenuation != 0.f;
+    return shadowPrd.attenuation == 0.f;
 }
 
 
 // Connects vertices and accumulates path contribution in aCameraPrd.color
-__device__ void connectVertices(LightVertex & aVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd, optix::float3 & aCameraHitpoint)
+__device__ void connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd, optix::float3 & aCameraHitpoint)
 {
-    //rtPrintf("%d %d - d %d - conn  %f %f %f and %f %f %f\n", aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y,
+    //rtPrintf("%d %d - d %d - conn %f %f %f and %f %f %f\n", aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y,
     //    aCameraPrd.depth, aCameraHitpoint.x, aCameraHitpoint.y, aCameraHitpoint.z,
-    //    aVertex.hitPoint.x, aVertex.hitPoint.y, aVertex.hitPoint.z);
-    // check occlusion
+    //    alightVertex.hitPoint.x, alightVertex.hitPoint.y, alightVertex.hitPoint.z);
 
     // Get connection
-    float3 direction = aVertex.hitPoint - aCameraHitpoint;
+    float3 direction = alightVertex.hitPoint - aCameraHitpoint;
     float dist2      = dot(direction, direction);
     float distance   = sqrt(dist2);
     direction       /= distance;
 
     // Evaluate BSDF at camera vertex
-    float directPdfW, reversePdfW;
-    const float3 cameraBsdfFactor = aCameraBsdf.vcmF(direction, &directPdfW, &reversePdfW);
+    float cameraCosTheta, cameraBsdfDirPdfW, cameraBsdfRevPdfW;
+    const float3 cameraBsdfFactor = aCameraBsdf.vcmF(direction, cameraCosTheta, &cameraBsdfDirPdfW, &cameraBsdfRevPdfW);
+    //rtPrintf("%d %d - d %d - conn - cameraBsdfFactor %f %f %f\n", 
+    //    aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y, aCameraPrd.depth, 
+    //    cameraBsdfFactor.x, cameraBsdfFactor.y, cameraBsdfFactor.z);
     if (isZero(cameraBsdfFactor))
         return;
+
+    // Add camera continuation probability (for russian roulette)
+    const float cameraCont = aCameraBsdf.continuationProb();
+    cameraBsdfDirPdfW *= cameraCont;
+    cameraBsdfRevPdfW *= cameraCont;
+
+    // Evaluate BSDF at light vertex
+    float lightCosTheta, lightBsdfDirPdfW, lightBsdfRevPdfW;
+    const float3 lightBsdfFactor = alightVertex.bsdf.vcmF(-direction, lightCosTheta, &lightBsdfDirPdfW, &lightBsdfRevPdfW);
+
+    // Geometry term
+    const float geometryTerm = lightCosTheta * cameraCosTheta / dist2;
+    //rtPrintf("%d %d - d %d - conn - gemoetryTermp %f\n", geometryTerm);
+    if (geometryTerm < 0.f)
+        return;
+
+    // Convert solid angle pdfs to area pdfs
+    const float cameraBsdfDirPdfA = PdfWtoA(cameraBsdfDirPdfW, distance, cameraCosTheta);
+    const float lightBsdfDirPdfA = PdfWtoA(lightBsdfRevPdfW, distance, lightCosTheta);
+
+    // Partial light sub-path MIS weight [tech. rep. (40)]
+    const float wLight = vcmMis(cameraBsdfDirPdfA) * 
+        ( misVmWeightFactor + alightVertex.dVCM + alightVertex.dVC * vcmMis(lightBsdfRevPdfW) );
+    // lightBsdfRevPdfW is Reverse with respect to light path, e.g. in eye path progression 
+    // dirrection (note same arrow dirs in formula)
+    // note (40) and (41) uses light subpath Y and camera subpath z
+
+    // Partial eye sub-path MIS weight [tech. rep. (41)]
+    const float wCamera = vcmMis(lightBsdfDirPdfA) * 
+        ( misVmWeightFactor + aCameraPrd.dVCM + aCameraPrd.dVC * vcmMis(cameraBsdfRevPdfW) );
+
+    // Full path MIS weight [tech. rep. (37)]
+    const float misWeight = 1.f / (wLight + 1.f + wCamera);
+
+    const float3 contrib = (misWeight * geometryTerm) * cameraBsdfFactor * lightBsdfFactor *
+        aCameraPrd.throughput * alightVertex.throughput;
 
     if (isOccluded(aCameraHitpoint, direction, distance))
         return;
     
+    aCameraPrd.color += contrib;
+    //rtPrintf("%d %d - d %d - Contrib vetext at %f %f %f\n",
+    //    aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y, aCameraPrd.depth, contrib.x, contrib.y, contrib.z);
+
     //Lambertian * lambertian = reinterpret_cast<Lambertian *>(aVertex.bsdf.bxdfAt(0));
     //float3 kd = lambertian->rho(1, NULL, NULL);
     //rtPrintf("%d %d Unoccluded vetext at %f %f %f dirFix %f %f %f Kd %f %f %f\n",
@@ -264,8 +308,6 @@ __device__ void connectVertices(LightVertex & aVertex, VcmBSDF & aCameraBsdf, Su
     //    aVertex.hitPoint.x, aVertex.hitPoint.y, aVertex.hitPoint.z,
     //    aVertex.bsdf.localDirFix().x, aVertex.bsdf.localDirFix().y, aVertex.bsdf.localDirFix().z,
     //    kd.x, kd.y, kd.z);
-
-    float cosLight; // cos of incident vector at light vertex from camera vertex
 }
 
 
@@ -290,15 +332,15 @@ RT_PROGRAM void vcmClosestHitCamera()
     // vmarz TODO infinite lights need attitional handling
     float cosThetaIn = dot(worldShadingNormal, -ray.direction);
     //OPTIX_DEBUG_PRINT(subpathPrd.depth, "Hit - cos theta %f \n", hitCosTheta);
-    if (cosThetaIn < 0.f) // vmarz TODO check validity
+    if (cosThetaIn < EPS_COSINE) // reject if cos too low
     {
         subpathPrd.done = 1;
         return;
     }   
 
     updateMisTermsOnHit(subpathPrd, cosThetaIn, tHit);
-    VcmBSDF cameraBsdf = VcmBSDF(worldShadingNormal, ray.direction);
-
+    VcmBSDF cameraBsdf; //= VcmBSDF(worldShadingNormal, ray.direction);
+    setVcmBSDF(cameraBsdf, worldShadingNormal, ray.direction);
     // TODO connect to light source
 
     // Connect to ligth vertices

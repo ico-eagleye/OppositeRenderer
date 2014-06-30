@@ -49,24 +49,28 @@ const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_P
 //const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 512u;
 //const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 128u;
 //const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 128u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 16u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 16u;
-const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 2u;
-const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 2u;
+const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 16u;
+const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 16u;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 2u;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 2u;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 1u;
+//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 1u;
 
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 512u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 512u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 256u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 256u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 32u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 32u;
+const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 32u;
+const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 32u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 4u;
 //const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 4u;
-const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 2u;
-const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 2u;
+//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 2u;
+//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 2u;
 
-#define VCM_CAMERA_PASS_LAUNCH_WIDTH 2u
-#define VCM_CAMERA_PASS_LAUNCH_HEIGHT 2u
+//#define VCM_CAMERA_PASS_LAUNCH_WIDTH 2u
+//#define VCM_CAMERA_PASS_LAUNCH_HEIGHT 2u
+#define DEBUG_VCM_CAMERA_PASS_LAUNCH_WIDTH 1u
+#define DEBUG_VCM_CAMERA_PASS_LAUNCH_HEIGHT 1u
 
 const unsigned int OptixRenderer::VCM_NUM_LIGHT_VERTEX_CONNECTIONS = 3u;
 
@@ -738,9 +742,9 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_CAMERA_PASS");
                 sutilCurrentTime( &t0 );
-                //m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, m_width, m_height );
-                m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, 
-                    VCM_CAMERA_PASS_LAUNCH_WIDTH, VCM_CAMERA_PASS_LAUNCH_WIDTH );
+                m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, m_width, m_height );
+                //m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, 
+                //    DEBUG_VCM_CAMERA_PASS_LAUNCH_WIDTH, DEBUG_VCM_CAMERA_PASS_LAUNCH_WIDTH );
                 sutilCurrentTime( &t1 );
                 dbgPrintf("Camera pass launch time: %.4f.\n", t1-t0);
             }

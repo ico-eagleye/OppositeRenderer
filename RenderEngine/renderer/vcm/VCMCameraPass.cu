@@ -25,6 +25,7 @@ rtDeclareVariable(rtObject, sceneRootObject, , );
 rtDeclareVariable(Camera, camera, , );
 rtBuffer<Light, 1> lights;
 rtBuffer<float3, 2> outputBuffer;
+rtDeclareVariable(uint, localIterationNumber, , );
 rtBuffer<RandomState, 2> randomStates;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
@@ -36,6 +37,17 @@ rtDeclareVariable(float, vcmMisVcWeightFactor, , ); // vmarz TODO set
 rtDeclareVariable(float, vcmMisVmWeightFactor, , ); // vmarz TODO set
 rtDeclareVariable(uint, vcmLightSubpathCount, , ); // vmarz TODO set
 
+static __device__ __inline float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
+{
+    if(localIterationNumber >= 1)
+    {
+        return oldRadiance + (newRadiance-oldRadiance)/(localIterationNumber+1);
+    }
+    else
+    {
+        return newRadiance;
+    }
+}
 
 RT_PROGRAM void cameraPass()
 {
@@ -90,6 +102,7 @@ RT_PROGRAM void cameraPass()
         //OPTIX_DEBUG_PRINT(cameraPrd.depth, "G %d - new dir %f %f %f\n", i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
     }
 
+    outputBuffer[launchIndex] = averageInNewRadiance(cameraPrd.color, outputBuffer[launchIndex], localIterationNumber);
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 

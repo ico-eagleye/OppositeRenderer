@@ -27,24 +27,25 @@
 
 
 #if OPTIX_DEBUG_STD_PRINTF
-#define OPTIX_PRINTF printf
+#define OPTIX_PRINTF_FUN printf
 #else
-#define OPTIX_PRINTF rtPrintf
+#define OPTIX_PRINTF_FUN rtPrintf
 #endif
 
 #if ENABLE_RENDER_DEBUG_OUTPUT
+// TODO rename
 #define OPTIX_DEBUG_PRINT(depth, str, ...) \
 	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
 	{  \
 		if (OPTIX_DEBUG_PRINTF_IDX) \
 		{ \
 			if (OPTIX_DEBUG_STD_PRINTF) \
-				OPTIX_PRINTF("%d, %d - ", launchIndex.x, launchIndex.y); \
+				OPTIX_PRINTF_FUN("%d, %d - ", launchIndex.x, launchIndex.y); \
 			else \
-				OPTIX_PRINTF("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
+				OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
 		} \
-		if (OPTIX_DEBUG_PRINTF_SPACES) for(int i = 0; i < depth; i++) { OPTIX_PRINTF(" "); } \
-		OPTIX_PRINTF(str, __VA_ARGS__); \
+		if (OPTIX_DEBUG_PRINTF_SPACES) for(int i = 0; i < depth; i++) { OPTIX_PRINTF_FUN(" "); } \
+		OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
 	}
 
 // original
@@ -55,8 +56,17 @@
 //	for(int i = 0; i < depth; i++) { OPTIX_PRINTF(" "); } \
 //	OPTIX_PRINTF(str, __VA_ARGS__); \
 //	}
+
+#ifdef __CUDACC__
+#define OPTIX_PRINTF(str, ...) OPTIX_PRINTF_FUN(str, __VA_ARGS__);
+#else
+#define OPTIX_PRINTF(str, ...)
+#endif
+
+
 #else
 #define OPTIX_DEBUG_PRINT(depth, str, ...) // nothing
+#define OPTIX_PRINTF(str, ...)
 #endif
 
 

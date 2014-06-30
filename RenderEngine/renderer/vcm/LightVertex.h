@@ -2,7 +2,6 @@
 
 #pragma once
 //#include <optix_world.h>
-#include "material/VcmBsdfData.h"
 #include "material/BSDF.h"
 
 struct LightVertex
@@ -14,6 +13,4 @@ struct LightVertex
     float   dVCM;
     float   dVC;
     float   dVM;
-    // bsdf data
-    //VcmBsdfData bsdfData;
 };
