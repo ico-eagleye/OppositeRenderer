@@ -44,6 +44,7 @@ rtBuffer<uint, 2> lightVertexCountBuffer;
 RT_PROGRAM void lightPass()
 {
     SubpathPRD lightPrd;
+    lightPrd.launchIndex = launchIndex;
     lightPrd.depth = 0;
     lightPrd.done = 0;
     lightPrd.dVC = 0;
@@ -98,8 +99,7 @@ RT_PROGRAM void miss()
 {
     lightPrd.done = 1;
     //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
-    //OPTIX_PRINTFI(lightPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, lightPrd.depth,
-    //            lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+    OPTIX_PRINTFI(lightPrd.depth, "MISS depth ndir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
 }
 
 

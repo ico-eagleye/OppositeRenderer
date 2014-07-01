@@ -72,7 +72,8 @@ const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 32u;
 #define DEBUG_VCM_CAMERA_PASS_LAUNCH_WIDTH 1u
 #define DEBUG_VCM_CAMERA_PASS_LAUNCH_HEIGHT 1u
 
-const unsigned int OptixRenderer::VCM_NUM_LIGHT_VERTEX_CONNECTIONS = 3u;
+//const unsigned int OptixRenderer::VCM_NUM_LIGHT_VERTEX_CONNECTIONS = 3u;
+const unsigned int OptixRenderer::VCM_NUM_LIGHT_VERTEX_CONNECTIONS = 1u;
 
 using namespace optix;
 
