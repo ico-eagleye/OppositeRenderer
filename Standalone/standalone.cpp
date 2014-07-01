@@ -64,8 +64,8 @@ int main( int argc, char** argv )
     QTextStream out(stdout);
     QTextStream in(stdin);
     
-    setvbuf(stdout, NULL, _IONBF, NULL);	// vmarz: disable output stream buffering, otherwise printf output doesn't show up consistently
-    setvbuf(stderr, NULL, _IONBF, NULL);
+    //setvbuf(stdout, NULL, _IONBF, NULL);	// vmarz: disable output stream buffering, otherwise printf output doesn't show up consistently
+    //setvbuf(stderr, NULL, _IONBF, NULL);
 
     try
     {
