@@ -56,6 +56,7 @@ RT_PROGRAM void cameraPass()
     SubpathPRD cameraPrd;
     cameraPrd.randomState = randomStates[launchIndex];
     cameraPrd.throughput = make_float3(1.0f);
+    cameraPrd.color = make_float3(0.0f);
     cameraPrd.depth = 0;
     cameraPrd.done = 0;
     cameraPrd.dVC = 0;
@@ -73,6 +74,7 @@ RT_PROGRAM void cameraPass()
     Ray cameraRay = Ray(cameraPrd.origin, cameraPrd.direction, RayType::CAMERA_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
     initCameraPayload(cameraPrd, camera, pixelSizeFactor, vcmLightSubpathCount);
+    OPTIX_PRINTFI(0, "Gen C - start - dVCM %f\n", cameraPrd.dVCM);
 
     // Trace    
     for (int i=0;;i++)
@@ -103,8 +105,11 @@ RT_PROGRAM void cameraPass()
     }
 
     float3 avgColor = averageInNewRadiance(cameraPrd.color, outputBuffer[launchIndex], localIterationNumber);
-    OPTIX_PRINTF("iter %d prd.color %f %f %f avColor %f %f %f\n", localIterationNumber,
+    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE  - iter %d prd.color %f %f %f avColor %f %f %f\n", localIterationNumber,
         cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
+    //OPTIX_PRINTF("%d , %d - d %d - iter %d prd.color %f %f %f avColor %f %f %f\n", 
+    //    launchIndex.x, launchIndex.y, cameraPrd.depth, localIterationNumber,
+    //    cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
 
     outputBuffer[launchIndex] = avgColor;
     randomStates[launchIndex] = cameraPrd.randomState;
@@ -116,8 +121,8 @@ RT_PROGRAM void miss()
 {
     cameraPrd.done = 1;
     //OPTIX_PRINTFI(cameraPrd.depth, "Miss\n");
-    //OPTIX_PRINTFI(cameraPrd.depth, "%d %d: MISS depth %d ndir %f %f %f\n", launchIndex.x, launchIndex.y, cameraPrd.depth,
-    //                  cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - MISS dirW %f %f %f\n",
+                      cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z);
 }
 
 

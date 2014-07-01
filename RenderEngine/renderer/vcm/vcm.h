@@ -58,12 +58,13 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
 __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera & aCamera, 
-                                                    const optix::float2 & aPixelSizeFactor, const optix::uint & aVcmLightSubpathCount)
+                                           const optix::float2 & aPixelSizeFactor, const optix::uint & aVcmLightSubpathCount)
 {
     using namespace optix;
 
     // pdf conversion factor from area on image plane to solid angle on ray
     float cosAtCamera = dot(normalize(aCamera.lookdir), aCameraPrd.direction);
+    float distToImgPlane = length(aCamera.lookdir);
     float imagePointToCameraDist = length(aCamera.lookdir) / cosAtCamera;
     float imageToSolidAngleFactor = sqr(imagePointToCameraDist) / cosAtCamera;
 
@@ -74,6 +75,8 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
     //float p0connect = areaSamplePdf;      // cancel out
     //float p0trace = areaSamplePdf;        // cancel out
     float cameraPdf = areaSamplePdf * imageToSolidAngleFactor;
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - cosC %f planeDist %f pixA solidAngleFact %f camPdf %f\n", 
+        cosAtCamera, distToImgPlane, imageToSolidAngleFactor, pixelArea);
 
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
     aCameraPrd.dVC = .0f;
@@ -86,6 +89,8 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
     // p1 = p1_ro * g1 = areaSamplePdf * imageToSolidAngleFactor * g1 [g1 added after tracing]
     // p0connect/p0trace cancel out in our case
     aCameraPrd.dVCM = vcmMis( aVcmLightSubpathCount / cameraPdf );
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - dVCM %f lightSubCount %d camPdf %f\n", aCameraPrd.dVCM, 
+        aVcmLightSubpathCount, cameraPdf);
 
     //cameraPrd.specularPath = 1; // vmarz TODO ?
 }
@@ -97,10 +102,10 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
 __inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
 {
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
-    aLightPrd.dVCM /= sqr(aRayLen);
-    aLightPrd.dVCM *= vcmMis(aCosThetaIn);
-    aLightPrd.dVC *= vcmMis(aCosThetaIn);
-    aLightPrd.dVM *= vcmMis(aCosThetaIn);
+    aLightPrd.dVCM *= vcmMis(sqr(aRayLen));
+    aLightPrd.dVCM /= vcmMis(aCosThetaIn);
+    aLightPrd.dVC  /= vcmMis(aCosThetaIn);
+    aLightPrd.dVM  /= vcmMis(aCosThetaIn);
 }
 
 
