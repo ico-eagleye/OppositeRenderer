@@ -19,33 +19,54 @@
 // corruption issues. It does complicate debugging process, hence the mulptiple switches for the macro below
 
 
-#define OPTIX_DEBUG_STD_PRINTF 0
-#define OPTIX_PRINTFI_SPACES 0      // printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_DEBUG_STD_PRINTF 1
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems ramdom - doesn't always work
 #define OPTIX_DEBUG_ID_X 0
 #define OPTIX_DEBUG_ID_Y 0
 
 
-#if OPTIX_DEBUG_STD_PRINTF
+#if OPTIX_DEBUG_STD_PRINTF || !defined(__CUDACC__)
 #define OPTIX_PRINTF_FUN printf
 #else
 #define OPTIX_PRINTF_FUN rtPrintf
 #endif
 
+
 #if ENABLE_RENDER_DEBUG_OUTPUT
+
+// OPTIX_XXX_DISABLE may disable printf in some individual file to avoid recompilation of everything
+#ifndef OPTIX_PRINTFI_DISABLE
 #define OPTIX_PRINTFI(depth, str, ...) \
-	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
-	{  \
-		if (OPTIX_PRINTFI_IDX) \
-		{ \
-			if (OPTIX_DEBUG_STD_PRINTF) \
-				OPTIX_PRINTF_FUN("%d, %d - ", launchIndex.x, launchIndex.y); \
-			else \
-				OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
-		} \
-		if (OPTIX_PRINTFI_SPACES) for(int i = 0; i < depth; i++) { OPTIX_PRINTF_FUN(" "); } \
-		OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
-	}
+    if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
+    {  \
+        if (OPTIX_PRINTFI_IDX) \
+        { \
+            OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
+        } \
+        OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
+    }
+#endif
+
+#ifndef OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFID(launchId, str, ...) \
+    if (launchId.x == OPTIX_DEBUG_ID_X && launchId.y == OPTIX_DEBUG_ID_Y) \
+    {  \
+        if (OPTIX_PRINTFI_IDX) \
+        { \
+            OPTIX_PRINTF_FUN("%d, %d - d X - ", launchId.x, launchId.y); \
+        } \
+        OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
+    }
+#endif
+
+#ifndef OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFIALL(depth, str, ...) \
+    if (OPTIX_PRINTFI_IDX) \
+    { \
+        OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
+    } \
+    OPTIX_PRINTF_FUN(str, __VA_ARGS__);
+#endif
 
 // original
 //#define OPTIX_PRINTFI(depth, str, ...) \
@@ -57,15 +78,19 @@
 //	}
 
 #ifdef __CUDACC__
+#ifndef OPTIX_PRINTF_DISABLE
 #define OPTIX_PRINTF(str, ...) OPTIX_PRINTF_FUN(str, __VA_ARGS__);
+#endif
 #else
 #define OPTIX_PRINTF(str, ...)
 #endif
 
 
-#else
+#else // !ENABLE_RENDER_DEBUG_OUTPUT
+
 #define OPTIX_PRINTFI(depth, str, ...) // nothing
 #define OPTIX_PRINTF(str, ...)
+
 #endif
 
 
@@ -74,46 +99,46 @@
 // Create ONB from normalized normal (code: Physically Based Rendering, Pharr & Humphreys pg. 63)
 static  __device__ __inline__ void createCoordinateSystem( const optix::float3& N, optix::float3& U, optix::float3& V/*, optix::float3& W*/ )
 {
-	using namespace optix;
+    using namespace optix;
 
-	if(fabs(N.x) > fabs(N.y))
-	{
-		float invLength = 1.f/sqrtf(N.x*N.x + N.z*N.z);
-		U = make_float3(-N.z*invLength, 0.f, N.x*invLength);
-	}
-	else
-	{
-		float invLength = 1.f/sqrtf(N.y*N.y + N.z*N.z);
-		U = make_float3(0.f, N.z*invLength, -N.y*invLength);
-	}
-	V = cross(N, U);
+    if(fabs(N.x) > fabs(N.y))
+    {
+        float invLength = 1.f/sqrtf(N.x*N.x + N.z*N.z);
+        U = make_float3(-N.z*invLength, 0.f, N.x*invLength);
+    }
+    else
+    {
+        float invLength = 1.f/sqrtf(N.y*N.y + N.z*N.z);
+        U = make_float3(0.f, N.z*invLength, -N.y*invLength);
+    }
+    V = cross(N, U);
 }
 
 static __device__ __host__ __forceinline__ float maxf(float a, float b)
 {
-	return a > b ? a : b;
+    return a > b ? a : b;
 }
 
 // Returns true if ray direction points in the opposite direction 
 // as the normal, where the normal points outwards from the face
 static __device__ __host__ __inline__ bool hitFromOutside(const optix::float3 & rayDirection, const optix::float3 & normal)
 {
-	return (optix::dot(normal, rayDirection) < 0);
+    return (optix::dot(normal, rayDirection) < 0);
 }
 
 static __device__ __forceinline__ int intmin(int a, int b)
 {
-	return a < b ? a : b;
+    return a < b ? a : b;
 }
 
 static __device__ __forceinline__ int intmin(unsigned int a, unsigned int b)
 {
-	return a < b ? a : b;
+    return a < b ? a : b;
 }
 
 static __device__ __forceinline__ float favgf(const optix::float3 & v )
 {
-	return (v.x+v.y+v.z)*0.3333333333f;
+    return (v.x+v.y+v.z)*0.3333333333f;
 }
 
 template<typename T>
@@ -122,6 +147,6 @@ __device__ __forceinline__ T sqr(const T& a) { return a*a; }
 
 static __device__ __forceinline__ bool isZero(const optix::float3 & v )
 {
-	return v.x == 0.f && v.y == 0.f && v.z == 0.f;
+    return v.x == 0.f && v.y == 0.f && v.z == 0.f;
 }
 
