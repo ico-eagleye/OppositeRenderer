@@ -48,7 +48,7 @@ public:
     // generates tangent and bitangent
     __device__ __forceinline__ BSDF( const optix::float3 & aWorldNormal )
     {
-        _diffGemetry.SetFromZ(aWorldNormal);
+        _diffGemetry.SetFromNormal(aWorldNormal);
         _geometricNormal = aWorldNormal;
         _nBxDFs = 0;
         memset(_bxdfList, 0, MAX_N_BXDFS * MAX_BXDF_SIZE);
@@ -57,6 +57,8 @@ public:
     }
 
     __device__ __forceinline__ unsigned int nBxDFs() const { return _nBxDFs; }
+
+    __device__ __forceinline__ const DifferentialGeometry & differentialGeometry() const { return _diffGemetry; }
 
     __device__ __forceinline__ unsigned int nBxDFs(BxDF::Type aType) const
     {
@@ -345,20 +347,44 @@ public:
                                    float               & oCosThetaGen,
                                    float               * oDirectPdfW = NULL,
                                    float               * oReversePdfW = NULL,
+                                   const uint2         * dbgLaunchIndex = NULL,
                                    BxDF::Type            aSampleType = BxDF::All ) const
     {
+        if (dbgLaunchIndex)
+        {
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - WorldDirGen %f %f %f\n",
+                aWorldDirGen.x, aWorldDirGen.y, aWorldDirGen.z);
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  b       %f %f %f\n",
+                _diffGemetry.bitangent.x, _diffGemetry.bitangent.y, _diffGemetry.bitangent.z);
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  t       %f %f %f\n",
+                _diffGemetry.tangent.x, _diffGemetry.tangent.y, _diffGemetry.tangent.z);
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  n       %f %f %f\n",
+                _diffGemetry.normal.x, _diffGemetry.normal.y, _diffGemetry.normal.z);
+        }
+        
         optix::float3 localDirGen = _diffGemetry.ToLocal(aWorldDirGen);
         optix::float3 worldDirFix = _diffGemetry.ToWorld(_localDirFix);
-        //OPTIX_PRINTF("vcmF - _localDirFix %f %f %f localDirGen %f %f %f \n",
-        //    _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);
+        /*OPTIX_PRINTF("vcmF - _localDirFix %f %f %f localDirGen %f %f %f \n",
+            _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);*/
+        if (dbgLaunchIndex)
+        {
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - _localDirFix %f %f %f localDirGen %f %f %f \n",
+            _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);
+        }
 
         if (oDirectPdfW) *oDirectPdfW = 0.f;
         if (oReversePdfW) *oReversePdfW = 0.f;
 
         if (_localDirFix.z < EPS_COSINE || localDirGen.z < EPS_COSINE)
+        {
             return make_float3(0.f);
+        }
 
         oCosThetaGen = abs(localDirGen.z);
+        if (dbgLaunchIndex)
+        {
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - oCosThetaGen %f localDirGen.z %f\n", oCosThetaGen, localDirGen.z);
+        }
 
         // Calculate f.
         if (optix::dot(_geometricNormal, aWorldDirGen) * optix::dot(_geometricNormal, worldDirFix) >= 0.0f)  
@@ -389,6 +415,12 @@ public:
             if (oReversePdfW) *oReversePdfW /= static_cast<float>(numMatched);
         }
         //OPTIX_PRINTF("vcmF - _nBxDFs %d numMatched %d f %f %f %f \n", _nBxDFs, numMatched, f.x, f.y, f.z);
+        if (dbgLaunchIndex)
+        {
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - _nBxDFs %d numMatched %d f %f %f %f \n", 
+                _nBxDFs, numMatched, f.x, f.y, f.z);
+        }
+
         return f;
     }
 

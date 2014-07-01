@@ -4,27 +4,28 @@
 
 class DifferentialGeometry 
 {
-    private:
-        optix::float3  normal;
-        optix::float3  tangent;
+private:
+public:
+        // basis matrix columns (row of the inverse)
         optix::float3  bitangent;
-        optix::float3  mX, mY, mZ;
+        optix::float3  tangent;
+        optix::float3  normal;
 
-    public:
+public:
     __device__ __forceinline__  DifferentialGeometry()
     {
-        mX = make_float3(1.f, 0.f, 0.f);
-        mY = make_float3(0.f, 1.f, 0.f);
-        mZ = make_float3(0.f, 0.f, 1.f);
+        bitangent = make_float3(1.f, 0.f, 0.f);
+        tangent   = make_float3(0.f, 1.f, 0.f);
+        normal    = make_float3(0.f, 0.f, 1.f);
     };
 
     // parameters - bitangent, tangent, normal
     __device__ __forceinline__ DifferentialGeometry(
-        const optix::float3 x,
-        const optix::float3 y,
+        const optix::float3 b,
+        const optix::float3 t,
         const optix::float3 z
     ) :
-        mX(x), mY(y), mZ(z) 
+        bitangent(b), tangent(t), normal(z) 
     {}
 
     // sets from tangent t and normal n
@@ -32,31 +33,37 @@ class DifferentialGeometry
         const optix::float3 t,
         const optix::float3 n
     ) :
-        mY(t), mZ(n) 
+        tangent(t), normal(n) 
     {
-        mX = optix::normalize(optix::cross(t,n));
+        bitangent = optix::normalize(optix::cross(t,n));
     }
 
     // sets from normal
-    __device__ __inline__ void SetFromZ(const optix::float3& z)
+    __device__ __inline__ void SetFromNormal(const optix::float3& n)
     {
-        optix::float3 mZ = optix::normalize(z);
-        optix::float3 tmpX = (std::abs(mZ.x) > 0.99f) ? make_float3(0.f, 1.f, 0.f) : make_float3(1.f, 0.f, 0.f);
-        mY = optix::normalize( optix::cross(mZ, tmpX) );
-        mX = optix::cross(mY, mZ);
+        normal = optix::normalize(n);
+        optix::float3 tmpBiTan = (std::abs(normal.x) > 0.99f) ? make_float3(0.f, 1.f, 0.f) : make_float3(1.f, 0.f, 0.f);
+        tangent = optix::normalize( optix::cross(normal, tmpBiTan) );
+        bitangent = optix::cross(tangent, normal);
     }
 
     __device__  __inline__ optix::float3 ToWorld(const optix::float3& a) const
     {
-        return mX * a.x + mY * a.y + mZ * a.z;
+        // basis vectors are columns of a matrix multiplied by a
+        return bitangent * a.x + 
+               tangent   * a.y + 
+               normal    * a.z;
     }
 
     __device__  __inline__ optix::float3 ToLocal(const optix::float3& a) const
     {
-        return make_float3(optix::dot(a, mX), optix::dot(a, mY), optix::dot(a, mZ));
+        // a multiplied by the inverse of the basis matrix
+        return make_float3(optix::dot(bitangent, a), 
+                           optix::dot(tangent,   a), 
+                           optix::dot(normal,    a));
     }
 
-    __device__ __forceinline__  const optix::float3 Bitangent() const { return mX; }
-    __device__ __forceinline__  const optix::float3 Tangent()   const { return mY; }
-    __device__ __forceinline__  const optix::float3 Normal()    const { return mZ; }
+    __device__ __forceinline__  const optix::float3 Bitangent() const { return bitangent; }
+    __device__ __forceinline__  const optix::float3 Tangent()   const { return tangent; }
+    __device__ __forceinline__  const optix::float3 Normal()    const { return normal; }
 };
