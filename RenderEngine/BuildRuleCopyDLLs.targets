@@ -27,11 +27,13 @@
   <!-- Libs x64 --> 
   <ItemGroup Condition="'$(Platform)'=='x64'">
     <DllFiles Include="$(ASSIMP_PATH)\bin\x64\*.dll"/>
+    <DllFiles Include="$(CudaToolkitBinDir)\cudart64*.dll"/>    
   </ItemGroup>
   
   <!-- Libs Win32 --> 
   <ItemGroup Condition="'$(Platform)'=='Win32'">
     <DllFiles Include="$(ASSIMP_PATH)\bin\x86\*.dll"/>
+    <DllFiles Include="$(CudaToolkitBinDir)\cudart32*.dll"/>
   </ItemGroup>
 
   <!-- Libs with auto derived paths -->  
