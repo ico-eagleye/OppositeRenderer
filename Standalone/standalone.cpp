@@ -97,7 +97,7 @@ int main( int argc, char** argv )
             in >> deviceNumber;
         }
 
-        out << deviceNumber << endl;
+        out << "Using device: " << deviceNumber << endl;
 
         ComputeDevice device = repo.at(deviceNumber);
         StandaloneApplication application = StandaloneApplication(qApplication, device);
