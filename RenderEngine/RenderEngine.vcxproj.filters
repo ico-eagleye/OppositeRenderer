@@ -73,6 +73,7 @@
     <ClCompile Include="scene\IScene.cpp">
       <Filter>scene</Filter>
     </ClCompile>
+    <ClCompile Include="scene\CornellSmall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="select.h" />
@@ -182,6 +183,7 @@
     <ClInclude Include="material\BSDF.h" />
     <ClInclude Include="renderer\helpers\reflection.h" />
     <ClInclude Include="math\DifferentialGeometry.h" />
+    <ClInclude Include="scene\CornellSmall.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sutil">

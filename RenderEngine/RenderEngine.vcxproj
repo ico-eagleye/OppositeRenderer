@@ -273,6 +273,7 @@
     <ClInclude Include="renderer\vcm\LightVertex.h" />
     <ClInclude Include="renderer\vcm\SubpathPRD.h" />
     <ClInclude Include="renderer\vcm\vcm.h" />
+    <ClInclude Include="scene\CornellSmall.h" />
     <ClInclude Include="util\imageformats\libtga\tga.h" />
     <ClInclude Include="util\imageformats\libtga\tgaconfig.h" />
     <ClInclude Include="util\Image.h" />
@@ -331,6 +332,7 @@
     <ClCompile Include="clientserver\RenderServerRenderRequestDetails.cpp" />
     <ClCompile Include="math\AAB.cpp" />
     <ClCompile Include="math\Sphere.cpp" />
+    <ClCompile Include="scene\CornellSmall.cpp" />
     <ClCompile Include="util\imageformats\libtga\tga.c" />
     <ClCompile Include="util\imageformats\libtga\tgaread.c" />
     <ClCompile Include="util\imageformats\libtga\tgawrite.c" />
