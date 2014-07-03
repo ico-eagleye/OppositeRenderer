@@ -182,14 +182,15 @@ public:
                                                    float * oDirectPdfW = NULL,
                                                    float * oReversePdfW = NULL) const
     {
+        using namespace optix;
         if(aWo.z < EPS_COSINE || aWi.z < EPS_COSINE)
             return make_float3(0.f);
 
-        if (*oDirectPdfW != NULL) 
-            *oDirectPdfW = optix::fmaxf(0.f, aWi.z * M_1_PIf); // dir.z is equal to cosTheta
+        if (oDirectPdfW) 
+            *oDirectPdfW = fmaxf(0.f, aWi.z * M_1_PIf); // dir.z is equal to cosTheta
 
-        if (*oReversePdfW != NULL) 
-            *oReversePdfW =  optix::fmaxf(0.f, aWo.z * M_1_PIf);
+        if (oReversePdfW) 
+            *oReversePdfW = fmaxf(0.f, aWo.z * M_1_PIf);
 
         return _reflectance * M_1_PIf;
     }
