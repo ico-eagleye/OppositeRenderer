@@ -4,6 +4,10 @@
  * file that was distributed with this source code.
 */
 
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
+
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
@@ -45,14 +49,23 @@ RT_PROGRAM void lightPass()
 {
     SubpathPRD lightPrd;
     lightPrd.launchIndex = launchIndex;
-    lightPrd.depth = 0;
-    lightPrd.done = 0;
-    lightPrd.dVC = 0;
-    lightPrd.dVM = 0;
-    lightPrd.dVCM = 0;
+    lightPrd.throughput = make_float3(1.f);
+    OPTIX_PRINTFI(0, "HitCL - prd.througput   % 14f % 14f % 14f\n", 
+        lightPrd.throughput .x, lightPrd.throughput .y, lightPrd.throughput .z);
+    lightPrd.depth = 0.f;
+    lightPrd.done = 0.f;
+    lightPrd.dVC = 0.f;
+    lightPrd.dVM = 0.f;
+    lightPrd.dVCM = 0.f;
     lightPrd.randomState = randomStates[launchIndex];
     if (lightVertexCountEstimatePass)
+    {
         lightVertexCountBuffer[launchIndex] = 0u;
+        OPTIX_PRINTFI(lightPrd.depth, "GenCL - LIGHT ESTIMATE PASS\n");
+    }
+    else
+        OPTIX_PRINTFI(lightPrd.depth, "GenCL - LIGHT STORE PASS\n");
+
 
     // vmarz TODO: pick based on light power
     int lightIndex = 0;
@@ -99,7 +112,9 @@ RT_PROGRAM void miss()
 {
     lightPrd.done = 1;
     //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
-    OPTIX_PRINTFI(lightPrd.depth, "MISS depth ndir %f %f %f\n", lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z);
+    OPTIX_PRINTFI(lightPrd.depth, "GenCL - MISS dirW % 14f % 14f % 14f          from % 14f % 14f % 14f \n",
+                      lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z,
+                      lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
 }
 
 

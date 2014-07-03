@@ -57,7 +57,6 @@ static __device__ __inline__ float3 averageInNewRadiance(const float3 newRadianc
 RT_PROGRAM void cameraPass()
 {
     //if (launchIndex.x != 0 || launchIndex.y != 0) return;
-
     SubpathPRD cameraPrd;
     cameraPrd.randomState = randomStates[launchIndex];
     cameraPrd.throughput = make_float3(1.0f);
@@ -110,8 +109,9 @@ RT_PROGRAM void cameraPass()
     }
 
     float3 avgColor = averageInNewRadiance(cameraPrd.color, outputBuffer[launchIndex], localIterationNumber);
-    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE  - iter %d prd.color %f %f %f avColor %f %f %f\n", localIterationNumber,
-        cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f\n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "             avg  % 14f % 14f % 14f\n", avgColor.x, avgColor.y, avgColor.z);
+
     //OPTIX_PRINTF("%d , %d - d %d - iter %d prd.color %f %f %f avColor %f %f %f\n", 
     //    launchIndex.x, launchIndex.y, cameraPrd.depth, localIterationNumber,
     //    cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
@@ -126,8 +126,9 @@ RT_PROGRAM void miss()
 {
     cameraPrd.done = 1;
     //OPTIX_PRINTFI(cameraPrd.depth, "Miss\n");
-    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - MISS dirW %f %f %f\n",
-                      cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - MISS dirW % 14f % 14f % 14f          from % 14f % 14f % 14f \n",
+                      cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z,
+                      cameraPrd.origin.x, cameraPrd.origin.y, cameraPrd.origin.z);
 }
 
 

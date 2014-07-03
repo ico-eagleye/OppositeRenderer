@@ -13,7 +13,7 @@
 
 // Initialize light payload - througput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
 __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
-                                                  const float & misVcWeightFactor)
+                                          const float & misVcWeightFactor)
 {
     using namespace optix;
 
@@ -21,13 +21,17 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
     float directPdfW;
     float cosAtLight;
     aLightPrd.throughput = lightEmit(aLight, aLightPrd.randomState, aLightPrd.origin, aLightPrd.direction,
-        emissionPdfW, directPdfW, cosAtLight);
+        emissionPdfW, directPdfW, cosAtLight, &aLightPrd.launchIndex);
     // vmarz?: do something similar as done for photon emission, emit towards scene when light far from scene?
 
     emissionPdfW *= aLightPickPdf;
     directPdfW *= aLightPickPdf;
     aLightPrd.throughput /= emissionPdfW;
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
+    OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - emission Pdf    % 14f     directPdfW % 14f\n", 
+        directPdfW, directPdfW);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
+        aLightPrd.throughput .x, aLightPrd.throughput .y, aLightPrd.throughput .z);
 
     // Partial light sub-path MIS quantities. [tech. rep. (31)-(33)]
     // Evaluation is completed after tracing the emission ray
@@ -75,8 +79,8 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
     //float p0connect = areaSamplePdf;      // cancel out
     //float p0trace = areaSamplePdf;        // cancel out
     float cameraPdf = areaSamplePdf * imageToSolidAngleFactor;
-    OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - cosC %f planeDist %f pixA solidAngleFact %f camPdf %f\n", 
-        cosAtCamera, distToImgPlane, imageToSolidAngleFactor, pixelArea);
+    //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - cosC %f planeDist %f pixA solidAngleFact %f camPdf %f\n", 
+    //    cosAtCamera, distToImgPlane, imageToSolidAngleFactor, pixelArea);
 
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
     aCameraPrd.dVC = .0f;
@@ -89,8 +93,8 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
     // p1 = p1_ro * g1 = areaSamplePdf * imageToSolidAngleFactor * g1 [g1 added after tracing]
     // p0connect/p0trace cancel out in our case
     aCameraPrd.dVCM = vcmMis( aVcmLightSubpathCount / cameraPdf );
-    OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - dVCM %f lightSubCount %d camPdf %f\n", aCameraPrd.dVCM, 
-        aVcmLightSubpathCount, cameraPdf);
+    //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - dVCM %f lightSubCount %d camPdf %f\n", aCameraPrd.dVCM, 
+    //    aVcmLightSubpathCount, cameraPdf);
 
     //cameraPrd.specularPath = 1; // vmarz TODO ?
 }

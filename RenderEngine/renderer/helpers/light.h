@@ -80,16 +80,28 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
 
 optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & aRandomState,
                                             float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
-                                            float & oDirectPdfA, float & oCosThetaLight)
+                                            float & oDirectPdfA, float & oCosThetaLight,
+                                            optix::uint2 *launchIdx = NULL)
 {
     float3 radiance = optix::make_float3(0);
     float2 dirRnd = getRandomUniformFloat2(&aRandomState);
 
+    if (launchIdx)
+    {
+        OPTIX_PRINTFID((*launchIdx), "GenLi - light type      %d \n", aLight.lightType);
+    }
+
     if(aLight.lightType == Light::AREA)
     {
+        if (launchIdx)
+        {
+            OPTIX_PRINTFID((*launchIdx), "GenLi - light Lemit     % 14f % 14f % 14f\n",
+                aLight.Lemit.x, aLight.Lemit.y, aLight.Lemit.z);
+        }
         float2 posRnd = getRandomUniformFloat2(&aRandomState);
         oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
         oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
+        oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
         oEmissionPdfW *= aLight.inverseArea;
         oDirectPdfA = aLight.inverseArea;
         radiance = aLight.Lemit * oCosThetaLight;
@@ -106,6 +118,5 @@ optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & 
         // Todo find correct direct light for spot light
     }
     
-    oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
     return radiance;
 };
