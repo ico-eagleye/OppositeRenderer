@@ -667,6 +667,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             const float vmNormalizationFactor = 1.f / (ppmRadiusSquared * M_PIf * lightSubPathCount);
                 
             // MIS weight constant [tech. rep. (20)]
+            // etaVCM = numMergedSubpaths / numConnectedSubpaths
             const float etaVCM = (lightSubPathCount / cameraSubPathCount) * M_PIf * ppmRadiusSquared; // vmarz TODO check initial radius, seems big
             const float misVmWeightFactor = m_vcmUseVM ? vcmMis(etaVCM)       : 0.f;
             const float misVcWeightFactor = m_vcmUseVC ? vcmMis(1.f / etaVCM) : 0.f;

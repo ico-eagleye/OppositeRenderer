@@ -4,6 +4,10 @@
  * file that was distributed with this source code.
 */
 
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
+
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
@@ -48,6 +52,7 @@ static __device__ __inline__ float3 averageInNewRadiance(const float3 newRadianc
         return newRadiance;
     }
 }
+
 
 RT_PROGRAM void cameraPass()
 {

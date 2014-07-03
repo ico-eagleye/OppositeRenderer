@@ -1,7 +1,10 @@
 #pragma once
 
-// Partially borrowed from https://github.com/LittleCVR/MaoPPM
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
 
+// Partially borrowed from https://github.com/LittleCVR/MaoPPM
 #include <optix_world.h>
 #include <optixu/optixu_math_namespace.h>
 #include "renderer/helpers/reflection.h"
@@ -310,6 +313,7 @@ protected:
 
 
 
+//               //
 class VcmBSDF : public BSDF
 {
 private:
@@ -347,29 +351,33 @@ public:
                                    float               & oCosThetaGen,
                                    float               * oDirectPdfW = NULL,
                                    float               * oReversePdfW = NULL,
-                                   const uint2         * dbgLaunchIndex = NULL,
+                                   const optix::uint2  * dbgLaunchIndex = NULL,
                                    BxDF::Type            aSampleType = BxDF::All ) const
     {
+        using namespace optix;
+
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - WorldDirGen %f %f %f\n",
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -     WorldDirGen % 14f % 14f % 14f \n",
                 aWorldDirGen.x, aWorldDirGen.y, aWorldDirGen.z);
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  b       %f %f %f\n",
-                _diffGemetry.bitangent.x, _diffGemetry.bitangent.y, _diffGemetry.bitangent.z);
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  t       %f %f %f\n",
-                _diffGemetry.tangent.x, _diffGemetry.tangent.y, _diffGemetry.tangent.z);
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  n       %f %f %f\n",
-                _diffGemetry.normal.x, _diffGemetry.normal.y, _diffGemetry.normal.z);
+            //OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  b       %f %f %f\n",
+            //    _diffGemetry.bitangent.x, _diffGemetry.bitangent.y, _diffGemetry.bitangent.z);
+            //OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  t       %f %f %f\n",
+            //    _diffGemetry.tangent.x, _diffGemetry.tangent.y, _diffGemetry.tangent.z);
+            //OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  n       %f %f %f\n",
+            //    _diffGemetry.normal.x, _diffGemetry.normal.y, _diffGemetry.normal.z);
         }
         
-        optix::float3 localDirGen = _diffGemetry.ToLocal(aWorldDirGen);
-        optix::float3 worldDirFix = _diffGemetry.ToWorld(_localDirFix);
+        float3 localDirGen = _diffGemetry.ToLocal(aWorldDirGen);
+        float3 worldDirFix = _diffGemetry.ToWorld(_localDirFix);
         /*OPTIX_PRINTF("vcmF - _localDirFix %f %f %f localDirGen %f %f %f \n",
             _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);*/
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - _localDirFix %f %f %f localDirGen %f %f %f \n",
-            _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -    _localDirFix % 14f % 14f % 14f \n",
+                _localDirFix.x, _localDirFix.y, _localDirFix.z);
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -    _localDirGen % 14f % 14f % 14f \n",
+                localDirGen.x, localDirGen.y, localDirGen.z);
         }
 
         if (oDirectPdfW) *oDirectPdfW = 0.f;
@@ -381,19 +389,15 @@ public:
         }
 
         oCosThetaGen = abs(localDirGen.z);
-        if (dbgLaunchIndex)
-        {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - oCosThetaGen %f localDirGen.z %f\n", oCosThetaGen, localDirGen.z);
-        }
 
         // Calculate f.
-        if (optix::dot(_geometricNormal, aWorldDirGen) * optix::dot(_geometricNormal, worldDirFix) >= 0.0f)  
+        if (dot(_geometricNormal, aWorldDirGen) * dot(_geometricNormal, worldDirFix) >= 0.0f)  
             aSampleType = BxDF::Type(aSampleType & ~BxDF::Transmission);      // ignore BTDF
         else
             aSampleType = BxDF::Type(aSampleType & ~BxDF::Reflection);        // ignore BRDF
         
         // Sum all matched BxDF's f and probability
-        optix::float3 f = optix::make_float3(0.0f);
+        float3 f = optix::make_float3(0.0f);
         float dPdfW, rPdfW;
         int numMatched = 0;
 
@@ -406,6 +410,11 @@ public:
                 if (oDirectPdfW) *oDirectPdfW += dPdfW;
                 if (oReversePdfW) *oReversePdfW += rPdfW;
                 numMatched++;
+                if (dbgLaunchIndex)
+                {
+                    OPTIX_PRINTFID( (*dbgLaunchIndex), "vcmF  -           dPdfW % 14f          rPdfW % 14f \n",
+                        dPdfW, rPdfW );
+                }
             }
         }
 
@@ -417,8 +426,8 @@ public:
         //OPTIX_PRINTF("vcmF - _nBxDFs %d numMatched %d f %f %f %f \n", _nBxDFs, numMatched, f.x, f.y, f.z);
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - _nBxDFs %d numMatched %d f %f %f %f \n", 
-                _nBxDFs, numMatched, f.x, f.y, f.z);
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14d     numMatched % 14d \n", _nBxDFs, numMatched);            
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -          bsdf F % 14f % 14f % 14f \n", f.x, f.y, f.z);
         }
 
         return f;
