@@ -14,8 +14,8 @@
 Application::Application(QApplication & qApplication) :
     m_sequenceNumber(0),
     m_runningStatus(RunningStatus::STOPPED),
-    //m_renderMethod(RenderMethod::PATH_TRACING),
-    m_renderMethod(RenderMethod::BIDIRECTIONAL_PATH_TRACING),
+    m_renderMethod(RenderMethod::PATH_TRACING),
+    //m_renderMethod(RenderMethod::BIDIRECTIONAL_PATH_TRACING),
     m_rendererStatus(RendererStatus::NOT_INITIALIZED)
 {
     qRegisterMetaType<RunningStatus::E>("RunningStatus::E");
@@ -29,15 +29,16 @@ Application::Application(QApplication & qApplication) :
     connect(&m_sceneManager, SIGNAL(sceneLoadingNew()), this, SLOT(onSceneLoadingNew()));
     connect(&m_sceneManager, SIGNAL(sceneLoadError(QString)), this, SLOT(onSceneLoadError(QString)));
     
-    //m_outputSettingsModel.setWidth(640);
-    //m_outputSettingsModel.setHeight(640);
-    m_outputSettingsModel.setWidth(128);
-    m_outputSettingsModel.setHeight(128);
+    m_outputSettingsModel.setWidth(640);
+    m_outputSettingsModel.setHeight(640);
+    //m_outputSettingsModel.setWidth(128);
+    //m_outputSettingsModel.setHeight(128);
     //m_outputSettingsModel.setWidth(10); // small dimensions break something in rundom number generation
     //m_outputSettingsModel.setHeight(10);
     m_outputSettingsModel.setGamma(2.2f);
     m_PPMSettingsModel.setPPMInitialRadius(0.20);
-    m_sceneManager.setScene("Cornell");
+    //m_sceneManager.setScene("Cornell");
+    m_sceneManager.setScene("CornellSmall");
 
     connect(&m_outputSettingsModel, SIGNAL(resolutionUpdated()), this, SLOT(onOutputSettingsUpdated()));
     connect(&m_PPMSettingsModel, SIGNAL(updated()), this, SLOT(onPPMSettingsUpdated()));
@@ -234,6 +235,10 @@ void Application::setRendererStatus( RendererStatus::E val )
 {
     bool shouldEmit = m_rendererStatus != val;
     m_rendererStatus = val;
+
+    if (shouldEmit && m_rendererStatus == RendererStatus::RENDERING)
+        resetRenderTime();
+
     if(shouldEmit)
     {
         emit rendererStatusChanged();

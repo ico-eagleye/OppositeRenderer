@@ -65,15 +65,15 @@ MainWindowBase::MainWindowBase(Application& application)
     SceneDock* sceneDock = new SceneDock(this, application.getSceneManager());
     this->addDockWidget(Qt::RightDockWidgetArea, sceneDock);
 
-	// Console Dock
-	ConsoleDock *consoleDock = new ConsoleDock(this);
-	this->addDockWidget(Qt::BottomDockWidgetArea, consoleDock);
+    // Console Dock
+    ConsoleDock *consoleDock = new ConsoleDock(this);
+    this->addDockWidget(Qt::BottomDockWidgetArea, consoleDock);
 
-	// Show/hide dock toggle menu
-	menuDocks->addAction(outputDock->toggleViewAction());
-	menuDocks->addAction(cameraDock->toggleViewAction());
-	menuDocks->addAction(ppmDock->toggleViewAction());
-	menuDocks->addAction(sceneDock->toggleViewAction());
+    // Show/hide dock toggle menu
+    menuDocks->addAction(outputDock->toggleViewAction());
+    menuDocks->addAction(cameraDock->toggleViewAction());
+    menuDocks->addAction(ppmDock->toggleViewAction());
+    menuDocks->addAction(sceneDock->toggleViewAction());
     menuDocks->addAction(consoleDock->toggleViewAction());
 
     // Status Bar Running Status and Time
@@ -91,7 +91,7 @@ MainWindowBase::MainWindowBase(Application& application)
     m_statusbar_renderMethodLabel = new QLabel(this);
     this->statusBar()->addPermanentWidget(m_statusbar_renderMethodLabel, 1);
     m_statusbar_renderMethodLabel->setGeometry(100, 0, 100, 12);
-		
+        
     // Render Widget
 
     m_renderWidget = new RenderWidget(centralwidget, application.getCamera(), application.getOutputSettingsModel());
@@ -301,6 +301,10 @@ QString MainWindowBase::getApplicationStatusString(const Application & applicati
         else if(application.getRendererStatus() == RendererStatus::INITIALIZING_SCENE)
         {
             status += "Initializing scene";
+        }
+        else  if(application.getRendererStatus() == RendererStatus::STARTING_RENDERING)
+        {
+            status += "Launching";
         }
         else  if(application.getRendererStatus() == RendererStatus::RENDERING)
         {

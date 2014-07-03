@@ -74,7 +74,6 @@ private slots:
 
 signals:
     void runningStatusChanged();
-    void rendererStatusChanged();
     void renderMethodChanged();
     void cameraUpdated();
     void newFrameReadyForDisplay(const float*, unsigned long long);

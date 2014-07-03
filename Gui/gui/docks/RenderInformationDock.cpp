@@ -22,12 +22,9 @@ RenderInformationDock::RenderInformationDock(QWidget *parent, const RenderStatis
     this->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
     this->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
 
-    connect(&application, SIGNAL(runningStatusChanged()), 
-        this, SLOT(onRunningStatusChanged()));
-
-    connect(&renderStatisticsModel, SIGNAL(updated()), 
-        this, SLOT(onRenderStatisticsUpdated()));
-
+    connect(&application, SIGNAL(runningStatusChanged()), this, SLOT(onRunningStatusChanged()));
+    connect(&renderStatisticsModel, SIGNAL(updated()), this, SLOT(onRenderStatisticsUpdated()));
+    
     connect(ui->buttonRestartRender, SIGNAL(clicked()), this, SIGNAL(renderRestart()));
     connect(ui->buttonStatusToggleRender, SIGNAL(clicked()), this, SIGNAL(renderStatusToggle()));
 
@@ -83,7 +80,8 @@ void RenderInformationDock::onUpdateRenderTime()
     ui->runningStatusLabel->setText(MainWindowBase::getApplicationStatusString(m_application, false));
     ui->renderTimeLabel->setText(QString("%1 seconds").arg(m_application.getRenderTimeSeconds(), 0, 'f', 1));
     
-    if(m_application.getRenderTimeSeconds() > 0.5 && m_renderStatisticsModel.getNumIterations() > 0)
+    // don't count first iteration in timer calc due data push to gpu
+    if(m_application.getRenderTimeSeconds() > 0.5 && m_renderStatisticsModel.getNumIterations() > 1)
     {
         float iterationsPerSecond = m_renderStatisticsModel.getNumIterations()/m_application.getRenderTimeSeconds();
         ui->iterationsPerSecondLabel->setText(QString("%1").arg(iterationsPerSecond, 0, 'f', 4));

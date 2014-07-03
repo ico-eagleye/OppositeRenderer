@@ -50,11 +50,11 @@ StandaloneRenderManager::~StandaloneRenderManager()
 void StandaloneRenderManager::start()
 {
     m_application.setRendererStatus(RendererStatus::INITIALIZING_ENGINE);
-	try
-	{
-		m_renderer.initialize(m_device);
-	}
-	catch(const std::exception & E)
+    try
+    {
+        m_renderer.initialize(m_device);
+    }
+    catch(const std::exception & E)
     {
         QString error = QString("Error during initialization: %1").arg(E.what());
         emit renderManagerError(error);
@@ -80,7 +80,7 @@ void StandaloneRenderManager::renderNextIteration()
                 m_application.setRendererStatus(RendererStatus::INITIALIZING_SCENE);
                 m_renderer.initScene(*m_currentScene);
                 m_compileScene = false;
-                m_application.setRendererStatus(RendererStatus::RENDERING);
+                m_application.setRendererStatus(RendererStatus::STARTING_RENDERING);
             }
 
             // We only diplay one every X frames on screen (to make fair comparison with distributed renderer)
@@ -100,8 +100,11 @@ void StandaloneRenderManager::renderNextIteration()
             const double ppmRadiusSquaredNew = ppmRadiusSquared*(m_nextIterationNumber+PPMAlpha)/double(m_nextIterationNumber+1);
             m_PPMRadius = sqrt(ppmRadiusSquaredNew);
 
-            // Transfer the output buffer to CPU and signal ready for display
+            // set as rendering only after first iteration, since that one can slow due init and sync with gpu
+            if (m_application.getRendererStatus() != RendererStatus::RENDERING)
+                m_application.setRendererStatus(RendererStatus::RENDERING);
 
+            // Transfer the output buffer to CPU and signal ready for display
             if(shouldOutputIteration)
             {
                 if(m_outputBuffer == NULL)

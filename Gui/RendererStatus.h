@@ -7,5 +7,12 @@
 #pragma once
 namespace RendererStatus
 {
-    enum E {NOT_INITIALIZED, INITIALIZING_ENGINE, INITIALIZING_SCENE, RENDERING};
+    enum E 
+    {
+        NOT_INITIALIZED, 
+        INITIALIZING_ENGINE, 
+        INITIALIZING_SCENE, 
+        STARTING_RENDERING,
+        RENDERING
+    };
 }

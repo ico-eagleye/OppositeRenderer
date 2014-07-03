@@ -33,7 +33,7 @@ private slots:
     void onRunningStatusChanged();
     void onRenderStatisticsUpdated();
     void onUpdateRenderTime();
-    
+
 private:
     Ui::RenderInformationDock *ui;
     Application & m_application;
