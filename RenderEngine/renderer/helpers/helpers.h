@@ -31,7 +31,6 @@
 #define OPTIX_PRINTF_FUN rtPrintf
 #endif
 
-
 #if ENABLE_RENDER_DEBUG_OUTPUT
 
 // OPTIX_XXX_DISABLE may disable printf in some individual file to avoid recompilation of everything
@@ -45,6 +44,8 @@
         } \
         OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
     }
+#else
+#define OPTIX_PRINTFI(depth, str, ...)
 #endif
 
 #ifndef OPTIX_PRINTFID_DISABLE
@@ -57,6 +58,8 @@
         } \
         OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
     }
+#else
+#define OPTIX_PRINTFID(depth, str, ...)
 #endif
 
 #ifndef OPTIX_PRINTFIALL_DISABLE
@@ -66,6 +69,8 @@
         OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
     } \
     OPTIX_PRINTF_FUN(str, __VA_ARGS__);
+#else
+#define OPTIX_PRINTFIALL(depth, str, ...) 
 #endif
 
 // original
