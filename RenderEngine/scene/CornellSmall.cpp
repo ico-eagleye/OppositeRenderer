@@ -80,7 +80,7 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     Diffuse diffuseGreen = Diffuse(optix::make_float3( 0.05f, 0.8f, 0.05f ));
     Diffuse diffuseRed = Diffuse(optix::make_float3( 1.f, 0.05f, 0.05f ));
 
-    // Conrell box size in SmallVCM 2.56004
+    // Cornell box size in SmallVCM 2.56004
     // Floor
     gis.push_back( createParallelogram(0, context, optix::make_float3( 0.0f, 0.0f, 0.0f ),
         optix::make_float3( 0.0f, 0.0f, 2.5f ),
@@ -111,59 +111,59 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
         optix::make_float3( 0.0f, 2.5f, 0.0f ),
         diffuseRed ) );
 
-    // Short block
-    gis.push_back( createParallelogram(5, context, 
-        optix::make_float3( 130.0f, 165.0f, 65.0f) / 220.f,
-        optix::make_float3( -48.0f, 0.0f, 160.0f) / 220.f,
-        optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(6, context, 
-        optix::make_float3( 290.0f, 0.0f, 114.0f) / 220.f,
-        optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-        optix::make_float3( -50.0f, 0.0f, 158.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(7, context, 
-        optix::make_float3( 130.0f, 0.0f, 65.0f) / 220.f,
-        optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-        optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(8, context, 
-        optix::make_float3( 82.0f, 0.0f, 225.0f) / 220.f,
-        optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-        optix::make_float3( 48.0f, 0.0f, -160.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(9, context,
-        optix::make_float3( 240.0f, 0.0f, 272.0f) / 220.f,
-        optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-        optix::make_float3( -158.0f, 0.0f, -47.0f) / 220.f,
-        diffuseWhite));
-        
-    // Tall block
-    gis.push_back( createParallelogram(10, context, 
-        optix::make_float3( 423.0f, 340.0f, 247.0f) / 220.f,
-        optix::make_float3( -158.0f, 0.0f, 49.0f) / 220.f,
-        optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(11, context, 
-        optix::make_float3( 423.0f, 0.0f, 247.0f) / 220.f,
-        optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
-        optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(12, context, 
-        optix::make_float3( 472.0f, 0.0f, 406.0f) / 220.f,
-        optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
-        optix::make_float3( -158.0f, 0.0f, 50.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(13, context, 
-        optix::make_float3( 314.0f, 0.0f, 456.0f) / 220.f,
-        optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
-        optix::make_float3( -49.0f, 0.0f, -160.0f) / 220.f,
-        diffuseWhite ) );
-    gis.push_back( createParallelogram(14, context, 
-        optix::make_float3( 265.0f, 0.0f, 296.0f) / 220.f,
-        optix::make_float3( 0.0f, 340.1f, 0.0f) / 220.f,
-        optix::make_float3( 158.0f, 0.0f, -49.0f) / 220.f,
-        diffuseWhite ) );
+    //// Short block
+    //gis.push_back( createParallelogram(5, context, 
+    //    optix::make_float3( 130.0f, 165.0f, 65.0f) / 220.f,
+    //    optix::make_float3( -48.0f, 0.0f, 160.0f) / 220.f,
+    //    optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(6, context, 
+    //    optix::make_float3( 290.0f, 0.0f, 114.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+    //    optix::make_float3( -50.0f, 0.0f, 158.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(7, context, 
+    //    optix::make_float3( 130.0f, 0.0f, 65.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+    //    optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(8, context, 
+    //    optix::make_float3( 82.0f, 0.0f, 225.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+    //    optix::make_float3( 48.0f, 0.0f, -160.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(9, context,
+    //    optix::make_float3( 240.0f, 0.0f, 272.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+    //    optix::make_float3( -158.0f, 0.0f, -47.0f) / 220.f,
+    //    diffuseWhite));
+    //    
+    //// Tall block
+    //gis.push_back( createParallelogram(10, context, 
+    //    optix::make_float3( 423.0f, 340.0f, 247.0f) / 220.f,
+    //    optix::make_float3( -158.0f, 0.0f, 49.0f) / 220.f,
+    //    optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(11, context, 
+    //    optix::make_float3( 423.0f, 0.0f, 247.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
+    //    optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(12, context, 
+    //    optix::make_float3( 472.0f, 0.0f, 406.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
+    //    optix::make_float3( -158.0f, 0.0f, 50.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(13, context, 
+    //    optix::make_float3( 314.0f, 0.0f, 456.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
+    //    optix::make_float3( -49.0f, 0.0f, -160.0f) / 220.f,
+    //    diffuseWhite ) );
+    //gis.push_back( createParallelogram(14, context, 
+    //    optix::make_float3( 265.0f, 0.0f, 296.0f) / 220.f,
+    //    optix::make_float3( 0.0f, 340.1f, 0.0f) / 220.f,
+    //    optix::make_float3( 158.0f, 0.0f, -49.0f) / 220.f,
+    //    diffuseWhite ) );
         
     // Light
 
