@@ -66,15 +66,15 @@ MainWindowBase::MainWindowBase(Application& application)
     this->addDockWidget(Qt::RightDockWidgetArea, sceneDock);
 
     // Console Dock
-    ConsoleDock *consoleDock = new ConsoleDock(this);
-    this->addDockWidget(Qt::BottomDockWidgetArea, consoleDock);
+    //ConsoleDock *consoleDock = new ConsoleDock(this);
+    //this->addDockWidget(Qt::BottomDockWidgetArea, consoleDock);
 
     // Show/hide dock toggle menu
     menuDocks->addAction(outputDock->toggleViewAction());
     menuDocks->addAction(cameraDock->toggleViewAction());
     menuDocks->addAction(ppmDock->toggleViewAction());
     menuDocks->addAction(sceneDock->toggleViewAction());
-    menuDocks->addAction(consoleDock->toggleViewAction());
+    //menuDocks->addAction(consoleDock->toggleViewAction());
 
     // Status Bar Running Status and Time
 
