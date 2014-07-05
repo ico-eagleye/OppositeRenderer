@@ -11,7 +11,7 @@
 #include "renderer/vcm/SubpathPRD.h"
 
 
-// Initialize light payload - througput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
+// Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
 __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
                                           const float & misVcWeightFactor)
 {
@@ -29,7 +29,7 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
     aLightPrd.throughput /= emissionPdfW;
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
     OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - emission Pdf    % 14f     directPdfW % 14f\n", 
-        directPdfW, directPdfW);
+        emissionPdfW, directPdfW);
     OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
         aLightPrd.throughput .x, aLightPrd.throughput .y, aLightPrd.throughput .z);
 
@@ -44,7 +44,7 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
     //    p0_trace = areaSamplePdf * lightPickPdf
     //    p1 = directionSamplePdfW * g1 = (cos / Pi) * g1 [g1 added after tracing]
 
-    // e.g. if not delta ligth
+    // e.g. if not delta light
     if (!aLight.isDelta)
     {
     	const float usedCosLight = aLight.isFinite ? cosAtLight : 1.f;
@@ -88,8 +88,8 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
 
     // dVCM = ( p0connect / p0trace ) * ( nLightSamples / p1 )
     // p0connect/p0trace - potentially different sampling techniques 
-    //      p0connect - pdf for tecqhnique used when connecting to camera  during light tracing step
-    //      p0trace - pdf for tecqhnique used when sampling a ray starting point
+    //      p0connect - pdf for technique used when connecting to camera  during light tracing step
+    //      p0trace - pdf for technique used when sampling a ray starting point
     // p1 = p1_ro * g1 = areaSamplePdf * imageToSolidAngleFactor * g1 [g1 added after tracing]
     // p0connect/p0trace cancel out in our case
     aCameraPrd.dVCM = vcmMis( aVcmLightSubpathCount / cameraPdf );

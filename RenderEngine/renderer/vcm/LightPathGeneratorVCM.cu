@@ -4,8 +4,8 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
 #define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
@@ -50,8 +50,6 @@ RT_PROGRAM void lightPass()
     SubpathPRD lightPrd;
     lightPrd.launchIndex = launchIndex;
     lightPrd.throughput = make_float3(1.f);
-    OPTIX_PRINTFI(0, "HitCL - prd.througput   % 14f % 14f % 14f\n", 
-        lightPrd.throughput .x, lightPrd.throughput .y, lightPrd.throughput .z);
     lightPrd.depth = 0.f;
     lightPrd.done = 0.f;
     lightPrd.dVC = 0.f;
@@ -91,7 +89,7 @@ RT_PROGRAM void lightPass()
 
         if (lightPrd.done)
         {
-            //OPTIX_PRINTFI(lightPrd.depth, "Stop trace \n");
+            OPTIX_PRINTFI(lightPrd.depth, "GenCL - DONE LIGHT RAY \n\n");
             break;
         }
 
@@ -112,7 +110,7 @@ RT_PROGRAM void miss()
 {
     lightPrd.done = 1;
     //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
-    OPTIX_PRINTFI(lightPrd.depth, "GenCL - MISS dirW % 14f % 14f % 14f          from % 14f % 14f % 14f \n",
+    OPTIX_PRINTFI(lightPrd.depth, "GenCL -       MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
                       lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z,
                       lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
 }

@@ -723,7 +723,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_lightVertexCountEstimated = true;
             }
 
-            // Reset buffer index counter (not used it lenght estimate pass)
+            // Reset buffer index counter (not used it length estimate pass)
             optix::uint* bufferHost = static_cast<optix::uint*>(m_lightVertexBufferIndexBuffer->map());
             memset(bufferHost, 0, sizeof(optix::uint));
             m_lightVertexBufferIndexBuffer->unmap();

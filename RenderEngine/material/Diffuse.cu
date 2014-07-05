@@ -4,8 +4,8 @@
  * file that was distributed with this source code.
  */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
 #define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
@@ -285,7 +285,7 @@ __device__ void connectVertices(LightVertex & alightVertex, float alightVertexPi
 
     if (isZero(cameraBsdfFactor))
     {
-        OPTIX_PRINTFI(aCameraPrd.depth, "conn  - SKIP cam BSDF zero \n\n");
+        OPTIX_PRINTFI(aCameraPrd.depth, "conn  - SKIP connect Camera BSDF zero \n");
         return;
     }
 
@@ -398,10 +398,10 @@ RT_PROGRAM void vcmClosestHitCamera()
     }   
 
     OPTIX_PRINTFI(subpathPrd.depth, "Hit C - cosThetaIn      % 14f         rayLen % 14f\n", cosThetaIn, tHit);
-    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - MIS preUpd  dVC % 14f            dVM % 14f           dVCM % 14f\n",
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - MIS preUpd  dVC % 14e            dVM % 14e           dVCM % 14e\n",
         subpathPrd.dVC, subpathPrd.dVM, subpathPrd.dVCM);
     updateMisTermsOnHit(subpathPrd, cosThetaIn, tHit);
-    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - MIS postUpd dVC % 14f            dVM % 14f           dVCM % 14f\n",
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - MIS postUpd dVC % 14e            dVM % 14e           dVCM % 14e\n",
         subpathPrd.dVC, subpathPrd.dVM, subpathPrd.dVCM);
 
     VcmBSDF cameraBsdf;
@@ -445,6 +445,6 @@ RT_PROGRAM void vcmClosestHitCamera()
     // f * cosTheta / f_pdf
     subpathPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
     subpathPrd.origin = hitPoint;
-    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - new origing     % 14f % 14f % 14f\n", 
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - new origin     % 14f % 14f % 14f\n", 
       subpathPrd.origin.x, subpathPrd.origin.y, subpathPrd.origin.z);
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
 #define OPTIX_PRINTFIALL_DISABLE
 
 // Partially borrowed from https://github.com/LittleCVR/MaoPPM
