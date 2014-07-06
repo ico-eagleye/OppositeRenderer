@@ -58,6 +58,7 @@ RT_PROGRAM void cameraPass()
 {
     //if (launchIndex.x != 0 || launchIndex.y != 0) return;
     SubpathPRD cameraPrd;
+    cameraPrd.launchIndex = launchIndex;
     cameraPrd.randomState = randomStates[launchIndex];
     cameraPrd.throughput = make_float3(1.0f);
     cameraPrd.color = make_float3(0.0f);
@@ -66,7 +67,9 @@ RT_PROGRAM void cameraPass()
     cameraPrd.dVC = 0;
     cameraPrd.dVM = 0;
     cameraPrd.dVCM = 0;
-    cameraPrd.launchIndex = launchIndex;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    cameraPrd.dVC_unif_vert = 0;
+#endif
 
     float2 screen = make_float2( outputBuffer.size() );
     float2 sample = getRandomUniformFloat2(&cameraPrd.randomState);             // jitter pixel pos

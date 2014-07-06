@@ -8,6 +8,7 @@
 #include "renderer/RandomState.h"
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
+#include "renderer/vcm/config_vcm.h"
 
 struct SubpathPRD
 {
@@ -22,6 +23,9 @@ struct SubpathPRD
     float dVCM;
     float dVC;
     float dVM;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    float dVC_unif_vert;       // dVC for uniform connection vertex sampling, account for vertex pick probability
+#endif
     //uint  mIsFiniteLight :  1; // Just generate by finite light
     //uint  mSpecularPath  :  1; // All scattering events so far were specular
 };

@@ -138,6 +138,8 @@ rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 rtDeclareVariable(uint, lightSubpathMaxLen, , );
 #endif
 
+rtDeclareVariable(float, vertexPickPdf, , );
+
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
@@ -186,6 +188,12 @@ RT_PROGRAM void closestHitLight()
     lightVertex.dVCM = subpathPrd.dVCM;
     lightVertex.dVC = subpathPrd.dVC;
     lightVertex.dVM = subpathPrd.dVM;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    lightVertex.dVC = subpathPrd.dVC_unif_vert;
+    // There is no dVC_unif_vert in LightVertex since vertices are used only for connection between each other,
+    // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
+    // equations in [tech. rep. (38-47)]
+#endif
     setVcmBSDF(lightVertex.bsdf, worldShadingNormal, -ray.direction);
 
     DifferentialGeometry dg = lightVertex.bsdf.differentialGeometry();
@@ -243,7 +251,7 @@ RT_PROGRAM void closestHitLight()
     float bsdfRevPdfW = cosThetaIn * M_1_PIf;
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;
-    updateMisTermsOnScatter(subpathPrd, cosThetaOut, bsdfDirPdfW, bsdfRevPdfW, misVcWeightFactor, misVmWeightFactor);
+    updateMisTermsOnScatter(subpathPrd, cosThetaOut, bsdfDirPdfW, bsdfRevPdfW, misVcWeightFactor, misVmWeightFactor, &vertexPickPdf);
 
     // f * cosTheta / f_pdf
     subpathPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
@@ -274,7 +282,7 @@ __device__ int isOccluded(optix::float3 point, optix::float3 direction, float tM
 
 // Connects vertices and return contribution
 __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd,
-                                optix::float3 & aCameraHitpoint)
+                                  optix::float3 & aCameraHitpoint, const float const * aVertexPickPdf = NULL)
 {
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - cameraHitPoint  % 14f % 14f % 14f\n",
         aCameraHitpoint.x, aCameraHitpoint.y, aCameraHitpoint.z);
@@ -329,9 +337,19 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
     const float cameraBsdfDirPdfA = PdfWtoA(cameraBsdfDirPdfW, distance, cameraCosTheta);
     const float lightBsdfDirPdfA = PdfWtoA(lightBsdfDirPdfW, distance, lightCosTheta);
 
+    // aVertPickPdf is set only when unform vertex sampling used (connecting to all paths)
+    float invVertPickPdf = aVertexPickPdf ? (1.f / *aVertexPickPdf) : 1.f;
+    float aCameraPrd_dVC = aCameraPrd.dVC;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    aCameraPrd_dVC = aCameraPrd.dVC_unif_vert;
+    // There is no dVC_unif_vert in LightVertex since vertices are used only for connection between each other,
+    // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
+    // equations in [tech. rep. (38-47)]
+#endif
+
     // Partial light sub-path MIS weight [tech. rep. (40)]
     const float wLight = vcmMis(cameraBsdfDirPdfA) * 
-        ( misVmWeightFactor + alightVertex.dVCM + alightVertex.dVC * vcmMis(lightBsdfRevPdfW) );
+        ( misVmWeightFactor * invVertPickPdf + alightVertex.dVCM + alightVertex.dVC * vcmMis(lightBsdfRevPdfW) );
     // lightBsdfRevPdfW is Reverse with respect to light path, e.g. in eye path progression 
     // dirrection (note same arrow dirs in formula)
     // note (40) and (41) uses light subpath Y and camera subpath z
@@ -345,10 +363,10 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
 
     // Partial eye sub-path MIS weight [tech. rep. (41)]
     const float wCamera = vcmMis(lightBsdfDirPdfA) * 
-        ( misVmWeightFactor + aCameraPrd.dVCM + aCameraPrd.dVC * vcmMis(cameraBsdfRevPdfW) );
+        ( misVmWeightFactor * invVertPickPdf + aCameraPrd.dVCM + aCameraPrd_dVC * vcmMis(cameraBsdfRevPdfW) );
 
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - Camera      dVC % 14e            dVM % 14e           dVCM % 14e\n",
-        aCameraPrd.dVC, aCameraPrd.dVM, aCameraPrd.dVCM);
+        aCameraPrd_dVC, aCameraPrd.dVM, aCameraPrd.dVCM);
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - lgtBsdfDirPdfA  % 14e lgtBsdfRevPdfW % 14f       distance % 14f  lightCosTheta % 14f\n",
         lightBsdfDirPdfA, lightBsdfRevPdfW, distance, lightCosTheta);
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  -          wLight % 14f camBsdfDirPdfA % 14f lgtBsdfRevPdfW % 14f\n",
@@ -363,7 +381,7 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - Vert througput  % 14f % 14f % 14f\n",
         alightVertex.throughput.x, alightVertex.throughput.z, alightVertex.throughput.y);
 
-    float3 contrib = (geometryTerm * cameraBsdfFactor * lightBsdfFactor); 
+    float3 contrib = (geometryTerm * cameraBsdfFactor * lightBsdfFactor) * invVertPickPdf; 
     contrib *= misWeight * aCameraPrd.throughput * alightVertex.throughput;
 
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - CONNECT contrib % 14e % 14e % 14e \n\n", contrib.x , contrib.y, contrib.z);
@@ -388,6 +406,7 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
 
 
 rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
+rtDeclareVariable(float, averageLightSubpathLength, , );
 
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
@@ -427,13 +446,23 @@ RT_PROGRAM void vcmClosestHitCamera()
     // Connect to ligth vertices // TODO move to func
 #if VCM_UNIFORM_VERTEX_SAMPLING
     uint numLightVertices = lightVertexBufferIndexBuffer[0];
-    float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices; // TODO scale by pick prob
-    for (int i = 0; i < vcmNumlightVertexConnections; i++)
+    //float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices; // TODO scale by pick prob
+    uint numlightVertexConnections = ceilf(averageLightSubpathLength);
+    float lastVertConnectProb = averageLightSubpathLength - (uint)averageLightSubpathLength;
+    //for (int i = 0; i < vcmNumlightVertexConnections; i++)
+    for (int i = 0; i < numlightVertexConnections; i++)
     {
+        // For last vertex do russian roulette
+        if (i == numlightVertexConnections - 1)
+        {
+            float sampleConnect = getRandomUniformFloat(&subpathPrd.randomState);
+            if (lastVertConnectProb < sampleConnect)
+                break;
+        }
+
         uint vertIdx = numLightVertices * getRandomUniformFloat(&subpathPrd.randomState);
         LightVertex lightVertex = lightVertexBuffer[vertIdx];
-        float3 contrib = connectVertices(lightVertex, cameraBsdf, subpathPrd, hitPoint);
-        subpathPrd.color += contrib / vertexPickPdf;
+        subpathPrd.color += connectVertices(lightVertex, cameraBsdf, subpathPrd, hitPoint, &vertexPickPdf);
     }
 #else
     uint lightSubpathLen = lightSubpathLengthBuffer[launchIndex];
@@ -469,7 +498,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     float bsdfRevPdfW = cosThetaIn * M_1_PIf;
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;
-    updateMisTermsOnScatter(subpathPrd, cosThetaOut, bsdfDirPdfW, bsdfRevPdfW, misVcWeightFactor, misVmWeightFactor);
+    updateMisTermsOnScatter(subpathPrd, cosThetaOut, bsdfDirPdfW, bsdfRevPdfW, misVcWeightFactor, misVmWeightFactor, &vertexPickPdf);
 
     // f * cosTheta / f_pdf
     subpathPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);

@@ -9,11 +9,12 @@
 #include "renderer/Camera.h"
 #include "renderer/helpers/helpers.h"
 #include "renderer/vcm/SubpathPRD.h"
+#include "renderer/vcm/config_vcm.h"
 
 
 // Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
 __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
-                                          const float & misVcWeightFactor)
+                                          const float & misVcWeightFactor, const float const * vertexPickPdf = NULL)
 {
     using namespace optix;
 
@@ -57,6 +58,8 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
 
     // dVM_1 = dVC_1 / etaVCM
     aLightPrd.dVM = aLightPrd.dVC * misVcWeightFactor;
+    if (vertexPickPdf)
+        aLightPrd.dVM *= *vertexPickPdf; // should divide etaVCM, bust since it is divider, we just multiply
 }
 
 
@@ -110,23 +113,43 @@ __inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float
     aLightPrd.dVCM /= vcmMis(aCosThetaIn);
     aLightPrd.dVC  /= vcmMis(aCosThetaIn);
     aLightPrd.dVM  /= vcmMis(aCosThetaIn);
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    aLightPrd.dVC_unif_vert  /= vcmMis(aCosThetaIn);
+#endif
 }
 
 
+// Initializes MIS terms for next event, partial implementation of [tech. rep. (34)-(36)], completed on hit
 __inline __device__ void updateMisTermsOnScatter(SubpathPRD & aLightPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
-                                                          const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor)
+                                                 const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
+                                                 const float const * aVertexPickPdf = NULL)
 {
-    aLightPrd.dVC = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( // dVC = (g_i-1 / pi) * (etaVCM + dVCM_i-1 + _p_ro_i-2 * dVC_i-1)
-        aLightPrd.dVC * vcmMis(aBsdfRevPdfW) +              // cosThetaOut part of g_i-1  [ _g reverse pdf conversion!, uses outgoing cosTheta]
-        aLightPrd.dVCM + aMisVmWeightFactor);               //   !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
-                                                            // pi = bsdfDirPdfW * g1
-    aLightPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( // bsdfDirPdfW = _p_ro_i    [part of pi]
-        aLightPrd.dVM * vcmMis(aBsdfRevPdfW) +              // bsdfRevPdfW = _p_ro_i-2
-        aLightPrd.dVCM * aMisVcWeightFactor + 1.f);         // 
-                                                            // dVM = (g_i-1 / pi) * (1 + dVCM_i-1/etaVCM + _p_ro_i-2 * dVM_i-1)
-    aLightPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);            // cosThetaOut part of g_i-1 [_g reverse pdf conversion!, uses outgoing cosTheta]
-                                                            //    !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
-                                                            //
-                                                            // dVCM = 1 / pi
-                                                            // pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
+    float vertPickPdf = aVertexPickPdf ? (1.f / *aVertexPickPdf) : 1.f;
+    
+    // dVC = (g_i-1 / pi) * (etaVCM + dVCM_i-1 + _p_ro_i-2 * dVC_i-1)
+    // cosThetaOut part of g_i-1  [ _g reverse pdf conversion!, uses outgoing cosTheta]
+    //   !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
+    // pi = bsdfDirPdfW * g1
+    // bsdfDirPdfW = _p_ro_i    [part of pi]
+    // bsdfRevPdfW = _p_ro_i-2
+    aLightPrd.dVC = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
+        aLightPrd.dVC * vcmMis(aBsdfRevPdfW) +              
+        aLightPrd.dVCM + aMisVmWeightFactor);               
+
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    aLightPrd.dVC_unif_vert = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
+        aLightPrd.dVC_unif_vert * vcmMis(aBsdfRevPdfW) +              
+        aLightPrd.dVCM + aMisVmWeightFactor / vertPickPdf);    
+#endif
+
+    // dVM = (g_i-1 / pi) * (1 + dVCM_i-1/etaVCM + _p_ro_i-2 * dVM_i-1)
+    // cosThetaOut part of g_i-1 [_g reverse pdf conversion!, uses outgoing cosTheta]
+    //    !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
+    aLightPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
+        aLightPrd.dVM * vcmMis(aBsdfRevPdfW) +              
+        aLightPrd.dVCM * aMisVcWeightFactor * vertPickPdf + 1.f ); // vertPickPdf should divide etaVCM which is inverse in aMisVcWeightFactor
+
+    // dVCM = 1 / pi
+    // pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
+    aLightPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
 }

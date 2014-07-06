@@ -24,6 +24,7 @@
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/vcm.h"
+#include "renderer/vcm/config_vcm.h"
 
 
 using namespace optix;
@@ -46,6 +47,7 @@ rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtBuffer<uint, 2> lightSubpathLengthBuffer;
 rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 rtBuffer<LightVertex> lightVertexBuffer;
+rtDeclareVariable(float, vertexPickPdf, , );
 
 RT_PROGRAM void lightPass()
 {
@@ -79,8 +81,13 @@ RT_PROGRAM void lightPass()
     const float inverseLightPickPdf = lights.size();
     const float lightPickPdf = 1.f / lights.size();
 
+    float *vertPickPdfPtr = NULL;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    vertPickPdfPtr = &vertexPickPdf;
+#endif
+
     // Initialize payload and ray
-    initLightPayload(lightPrd, light, lightPickPdf, misVcWeightFactor);
+    initLightPayload(lightPrd, light, lightPickPdf, misVcWeightFactor, vertPickPdfPtr);
     Ray lightRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
     for (int i=0;;i++)

@@ -14,4 +14,7 @@ struct LightVertex
     float   dVCM;
     float   dVC;
     float   dVM;
+//#if VCM_UNIFORM_VERTEX_SAMPLING
+//    float   dVC_unif_vert;
+//#endif
 };
