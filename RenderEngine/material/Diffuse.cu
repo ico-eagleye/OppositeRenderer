@@ -4,8 +4,8 @@
  * file that was distributed with this source code.
  */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
 #define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
@@ -24,6 +24,7 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/vcm.h"
+#include "renderer/vcm/config_vcm.h"
 #include "material/BxDF.h"
 #include "material/BSDF.h"
 
@@ -128,9 +129,14 @@ RT_PROGRAM void closestHitPhoton()
 
 rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
-rtBuffer<uint, 2> lightVertexCountBuffer;
+rtBuffer<uint, 2> lightSubpathLengthBuffer;
 rtBuffer<LightVertex> lightVertexBuffer;
 rtBuffer<uint> lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
+
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
+rtDeclareVariable(uint, lightSubpathMaxLen, , );
+#endif
 
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
@@ -151,7 +157,7 @@ __device__ __inline__ void setVcmBSDF(VcmBSDF &bsdf, float3 & aWorldNormal, floa
  // Light subpath program
 RT_PROGRAM void closestHitLight()
 {
-    subpathPrd.depth++;	
+    subpathPrd.depth++;
 
     // vmarz TODO make sure shading normals used correctly
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -190,16 +196,25 @@ RT_PROGRAM void closestHitLight()
     OPTIX_PRINTFI(subpathPrd.depth, "Hit L - dir fix local   % 14f % 14f % 14f\n", dirFix.x, dirFix.y, dirFix.z);
 
     // store path vertex
-    if (lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
+    if (!lightVertexCountEstimatePass) // vmarz: store flag in PRD ?
     {
-        lightVertexCountBuffer[launchIndex] = subpathPrd.depth;
-    }
-    else
-    {
-        uint idx = atomicAdd(&lightVertexBufferIndexBuffer[0], 1u);
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+        if (subpathPrd.depth == lightSubpathMaxLen)
+        {
+            OPTIX_PRINTFIALL(subpathPrd.depth, "Hit L - Light path reached MAX LENGTH \n");
+            subpathPrd.done = 1;
+            return;
+        }
+#endif
+        uint vertIdx = atomicAdd(&lightVertexBufferIndexBuffer[0], 1u);
         OPTIX_PRINTFI(subpathPrd.depth, "Hit L - Vert.throuhput  % 14f % 14f % 14f\n", 
-          lightVertex.throughput.x, lightVertex.throughput.y, lightVertex.throughput.z);
-        lightVertexBuffer[idx] = lightVertex;
+            lightVertex.throughput.x, lightVertex.throughput.y, lightVertex.throughput.z);
+        lightVertexBuffer[vertIdx] = lightVertex;
+
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+        uint3 pathVertIdx = make_uint3(launchIndex, subpathPrd.depth-1);
+        lightSubpathVertexIndexBuffer[pathVertIdx] = vertIdx;
+#endif
     }
 
     // vmarz TODO connect to camera
@@ -254,11 +269,11 @@ __device__ int isOccluded(optix::float3 point, optix::float3 direction, float tM
     return shadowPrd.attenuation == 0.f;
 }
 
-#define OPTIX_PRINTF_FUN printf
 
-//               //
-// Connects vertices and accumulates path contribution in aCameraPrd.color
-__device__ void connectVertices(LightVertex & alightVertex, float alightVertexPickPdf, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd,
+
+
+// Connects vertices and return contribution
+__device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd,
                                 optix::float3 & aCameraHitpoint)
 {
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - cameraHitPoint  % 14f % 14f % 14f\n",
@@ -348,14 +363,15 @@ __device__ void connectVertices(LightVertex & alightVertex, float alightVertexPi
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - Vert througput  % 14f % 14f % 14f\n",
         alightVertex.throughput.x, alightVertex.throughput.z, alightVertex.throughput.y);
 
-    float3 contrib = (geometryTerm * cameraBsdfFactor * lightBsdfFactor) / alightVertexPickPdf; 
+    float3 contrib = (geometryTerm * cameraBsdfFactor * lightBsdfFactor); 
     contrib *= misWeight * aCameraPrd.throughput * alightVertex.throughput;
 
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - CONNECT contrib % 14e % 14e % 14e \n\n", contrib.x , contrib.y, contrib.z);
     if (isOccluded(aCameraHitpoint, direction, distance))
         return;
     
-    aCameraPrd.color += contrib;
+    return contrib;
+    //aCameraPrd.color += contrib;
     //rtPrintf("%d %d - d %d - Contrib vetext at %f %f %f\n",
     //    aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y, aCameraPrd.depth, contrib.x, contrib.y, contrib.z);
 
@@ -409,14 +425,27 @@ RT_PROGRAM void vcmClosestHitCamera()
     // TODO connect to light source
 
     // Connect to ligth vertices // TODO move to func
+#if VCM_UNIFORM_VERTEX_SAMPLING
     uint numLightVertices = lightVertexBufferIndexBuffer[0];
     float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices; // TODO scale by pick prob
     for (int i = 0; i < vcmNumlightVertexConnections; i++)
     {
         uint vertIdx = numLightVertices * getRandomUniformFloat(&subpathPrd.randomState);
         LightVertex lightVertex = lightVertexBuffer[vertIdx];
-        connectVertices(lightVertex, vertexPickPdf, cameraBsdf, subpathPrd, hitPoint);
+        float3 contrib = connectVertices(lightVertex, cameraBsdf, subpathPrd, hitPoint);
+        subpathPrd.color += contrib / vertexPickPdf;
     }
+#else
+    uint lightSubpathLen = lightSubpathLengthBuffer[launchIndex];
+    uint3 pathVertIdx = make_uint3(launchIndex, 0u);
+    for (int i = 0; i < lightSubpathLen; i++)
+    {
+        uint vertIdx = lightSubpathVertexIndexBuffer[pathVertIdx];
+        LightVertex lightVertex = lightVertexBuffer[vertIdx];
+        subpathPrd.color += connectVertices(lightVertex, cameraBsdf, subpathPrd, hitPoint);
+        pathVertIdx.z++;
+    }
+#endif
     
     // vmarz TODO check max path length
     // Russian Roulette

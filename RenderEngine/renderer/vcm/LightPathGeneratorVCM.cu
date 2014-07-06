@@ -4,8 +4,8 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
 #define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
@@ -43,7 +43,9 @@ rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 //rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
-rtBuffer<uint, 2> lightVertexCountBuffer;
+rtBuffer<uint, 2> lightSubpathLengthBuffer;
+rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
+rtBuffer<LightVertex> lightVertexBuffer;
 
 RT_PROGRAM void lightPass()
 {
@@ -56,14 +58,14 @@ RT_PROGRAM void lightPass()
     lightPrd.dVM = 0.f;
     lightPrd.dVCM = 0.f;
     lightPrd.randomState = randomStates[launchIndex];
+    lightSubpathLengthBuffer[launchIndex] = 0u; // prob here?
+
     if (lightVertexCountEstimatePass)
     {
-        lightVertexCountBuffer[launchIndex] = 0u;
         OPTIX_PRINTFI(lightPrd.depth, "GenCL - LIGHT ESTIMATE PASS\n");
     }
     else
         OPTIX_PRINTFI(lightPrd.depth, "GenCL - LIGHT STORE PASS\n");
-
 
     // vmarz TODO: pick based on light power
     int lightIndex = 0;
@@ -89,7 +91,7 @@ RT_PROGRAM void lightPass()
 
         if (lightPrd.done)
         {
-            OPTIX_PRINTFI(lightPrd.depth, "GenCL - DONE LIGHT RAY \n\n");
+            OPTIX_PRINTFI(lightPrd.depth, "GenCL - DONE LIGHT RAY\n\n");
             break;
         }
 
@@ -101,6 +103,7 @@ RT_PROGRAM void lightPass()
     }
 
     randomStates[launchIndex] = lightPrd.randomState;
+    lightSubpathLengthBuffer[launchIndex] = lightPrd.depth;
 }
 
 
