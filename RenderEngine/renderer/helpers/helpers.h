@@ -14,13 +14,12 @@
 // printf():
 //		- not officially supported, sometimes causes crashes
 //		- doesn't print spaces in a loop based on depth value (SOMETIMES ?) if depth variable used in the print call before loop
-//
-// print functions most likely are not the cause it self, some people point to to memory
-// corruption issues. It does complicate debugging process, hence the mulptiple switches for the macro below
+//      - sometimes fails printing values of size_t2.y and size_t3.y correctly
+// The issues does complicate debugging process, hence the multiple switches for the macro below for quick switching
 
 
 #define OPTIX_DEBUG_STD_PRINTF 1
-#define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems ramdom - doesn't always work
+#define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 #define OPTIX_DEBUG_ID_X 0
 #define OPTIX_DEBUG_ID_Y 0
 
@@ -73,14 +72,34 @@
 #define OPTIX_PRINTFIALL(depth, str, ...) 
 #endif
 
-// original
-//#define OPTIX_PRINTFI(depth, str, ...) \
-//	if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
-//	{  \
-//	OPTIX_PRINTF("%d %d: ", launchIndex.x, launchIndex.y); \
-//	for(int i = 0; i < depth; i++) { OPTIX_PRINTF(" "); } \
-//	OPTIX_PRINTF(str, __VA_ARGS__); \
-//	}
+// Added explicit macros for rtPrintf since printf fails to print fields of size_t2, size_t3 correctly
+#ifndef OPTIX_RTPRINTFI_DISABLE
+#define OPTIX_RTPRINTFI(depth, str, ...) \
+    if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
+    {  \
+        if (OPTIX_PRINTFI_IDX) \
+        { \
+            rtPrintf("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
+        } \
+        rtPrintf(str, __VA_ARGS__); \
+    }
+#else
+#define OPTIX_RTPRINTFI(depth, str, ...) 
+#endif
+
+#ifndef OPTIX_RTPRINTFID_DISABLE
+#define OPTIX_RTPRINTFID(depth, str, ...) \
+    if (launchId.x == OPTIX_DEBUG_ID_X && launchId.y == OPTIX_DEBUG_ID_Y) \
+    {  \
+        if (OPTIX_PRINTFI_IDX) \
+        { \
+            rtPrintf("%d, %d - d X - ", launchId.x, launchId.y); \
+        } \
+        rtPrintf(str, __VA_ARGS__); \
+    }
+#else
+#define OPTIX_RTPRINTFID(depth, str, ...) 
+#endif
 
 #ifdef __CUDACC__
 #ifndef OPTIX_PRINTF_DISABLE
@@ -93,8 +112,12 @@
 
 #else // !ENABLE_RENDER_DEBUG_OUTPUT
 
-#define OPTIX_PRINTFI(depth, str, ...) // nothing
 #define OPTIX_PRINTF(str, ...)
+#define OPTIX_PRINTFI(depth, str, ...)
+#define OPTIX_PRINTFID(depth, str, ...)
+#define OPTIX_PRINTFIALL(depth, str, ...)
+#define OPTIX_RTPRINTFI(depth, str, ...)
+#define OPTIX_RTPRINTFID(depth, str, ...)
 
 #endif
 
@@ -155,3 +178,15 @@ static __device__ __forceinline__ bool isZero(const optix::float3 & v )
     return v.x == 0.f && v.y == 0.f && v.z == 0.f;
 }
 
+
+__host__ __device__ __inline__ unsigned int getBufIndex1D(
+    const optix::uint3 & index3D, const optix::uint3& bufSize )
+{
+    return index3D.x + index3D.y * bufSize.x + index3D.z * bufSize.x * bufSize.y;
+}
+
+__host__ __device__ __inline__ unsigned int getBufIndex1D(
+    const optix::uint2 & index2D, const optix::uint2& bufSize )
+{
+    return index2D.x + index2D.y * bufSize.x;
+}
