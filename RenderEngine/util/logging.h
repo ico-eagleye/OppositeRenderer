@@ -11,6 +11,7 @@ void dbgPrintf(const char * format, ... )
     va_list args;
     va_start(args, format);
     vfprintf(stdout, format, args);
+    fflush(stdout);
 };
 #else
 inline void dbgPrintf(const char * format, ... ) {};
