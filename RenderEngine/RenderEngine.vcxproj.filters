@@ -184,6 +184,7 @@
     <ClInclude Include="renderer\helpers\reflection.h" />
     <ClInclude Include="math\DifferentialGeometry.h" />
     <ClInclude Include="scene\CornellSmall.h" />
+    <ClInclude Include="renderer\vcm\config_vcm.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sutil">
