@@ -95,8 +95,10 @@ optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & 
     {
         if (launchIdx)
         {
-            OPTIX_PRINTFID((*launchIdx), "GenLi - light Lemit     % 14f % 14f % 14f\n",
+            OPTIX_PRINTFID((*launchIdx), "GenLi -     light Lemit % 14f % 14f % 14f\n",
                 aLight.Lemit.x, aLight.Lemit.y, aLight.Lemit.z);
+            OPTIX_PRINTFID((*launchIdx), "GenLi -        sample x % 14f       sample y % 14f\n",
+                dirRnd.x, dirRnd.y);
         }
         float2 posRnd = getRandomUniformFloat2(&aRandomState);
         oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
