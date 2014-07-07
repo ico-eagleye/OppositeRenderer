@@ -725,20 +725,20 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 // get average path length / vertex count
                 optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathLengthBuffer->map());
                 const unsigned int subpathEstimateCount = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
-                unsigned long long sumLen = 0;
+                unsigned long long sumPathLengths = 0;
                 unsigned int maxLen = 0;
 
                 for(int i = 0; i < subpathEstimateCount ; i++)
                 {
                     unsigned int count = buffer_Host[i];
                     if (maxLen < count) maxLen = count;
-                    if (0 < count) sumLen += count;
+                    if (0 < count) sumPathLengths += count;
                 }
                 m_lightSubpathLengthBuffer->unmap();
 
-                float avgSubpathLength = float(sumLen) / subpathEstimateCount;
+                float avgSubpathLength = float(sumPathLengths) / subpathEstimateCount;
                 dbgPrintf("LVC estimate. paths: %u  vertices: %u  avgLen: %.4f  maxLen: %u\n",
-                    subpathEstimateCount, sumLen, avgSubpathLength, maxLen);
+                    subpathEstimateCount, sumPathLengths, avgSubpathLength, maxLen);
 
                 // init light vertex buffer based on average length + ~10% extra
                 const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength) / 0.3f;
@@ -754,7 +754,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_context["lightSubpathMaxLen"]->setUint(m_lightSubpathMaxLength);
 #else
                 // vertex pick pdf
-                const float vertexPickPdf = avgSubpathLength / subpathEstimateCount;
+                const float vertexPickPdf = avgSubpathLength / sumPathLengths;
                 dbgPrintf("VCM: Vertex pick pdf        %f \n", vertexPickPdf);
                 m_context["vertexPickPdf"]->setFloat(vertexPickPdf);
                 m_context["averageLightSubpathLength"]->setFloat(avgSubpathLength);
