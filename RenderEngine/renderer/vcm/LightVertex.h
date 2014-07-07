@@ -10,7 +10,7 @@ struct LightVertex
     float3  throughput;
     VcmBSDF bsdf;
     uint2   launchIndex;    // for debug TODO remove
-    float   pathDepth;
+    float   pathLen;
     float   dVCM;
     float   dVC;
     float   dVM;

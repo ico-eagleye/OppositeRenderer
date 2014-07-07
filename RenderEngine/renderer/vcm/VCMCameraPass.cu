@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -56,7 +56,7 @@ static __device__ __inline__ float3 averageInNewRadiance(const float3 newRadianc
 
 RT_PROGRAM void cameraPass()
 {
-    //if (launchIndex.x != 0 || launchIndex.y != 0) return;
+    OPTIX_PRINTFI(0, "Gen C - CAMERA PASS -------------------------------------------------------------------------\n");
     SubpathPRD cameraPrd;
     cameraPrd.launchIndex = launchIndex;
     cameraPrd.randomState = randomStates[launchIndex];

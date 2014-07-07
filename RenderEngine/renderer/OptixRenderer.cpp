@@ -693,7 +693,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             const float etaVCM = (float(lightSubpathsMerged) / lightSubpathsConnected) * M_PIf * ppmRadiusSquared; // vmarz TODO check initial radius, seems big
             const float misVmWeightFactor = m_vcmUseVM ? vcmMis(etaVCM)       : 0.f;
             const float misVcWeightFactor = m_vcmUseVC ? vcmMis(1.f / etaVCM) : 0.f;
-                
+
             m_context["vmNormalizationFactor"]->setFloat(vmNormalizationFactor);
             m_context["misVmWeightFactor"]->setFloat(misVmWeightFactor);
             m_context["misVcWeightFactor"]->setFloat(misVcWeightFactor);
@@ -755,12 +755,20 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 #else
                 // vertex pick pdf
                 const float vertexPickPdf = avgSubpathLength / subpathEstimateCount;
-                dbgPrintf("Vertex pick pdf: %f \n", vertexPickPdf);
+                dbgPrintf("VCM: Vertex pick pdf        %f \n", vertexPickPdf);
                 m_context["vertexPickPdf"]->setFloat(vertexPickPdf);
                 m_context["averageLightSubpathLength"]->setFloat(avgSubpathLength);
-#endif
-
+#endif                
                 m_lightVertexCountEstimated = true;
+
+                dbgPrintf("VCM: cameraSubPathCount     %u \n", cameraSubPathCount);
+                dbgPrintf("VCM: lightSubpathsMerged    %u \n", lightSubpathsMerged);
+                dbgPrintf("VCM: lightSubpathsConnected %u \n", lightSubpathsConnected);
+                dbgPrintf("VCM: ppmRadius              %.10f \n", PPMRadius);
+                dbgPrintf("VCM: etaVCM                 %.10f \n", etaVCM);
+                dbgPrintf("VCM: misVmWeightFactor      %.10f \n", misVmWeightFactor);
+                dbgPrintf("VCM: misVcWeightFactor      %.10f \n", misVcWeightFactor);
+                dbgPrintf("VCM: vmNormalizationFactor  %.10f \n", vmNormalizationFactor);
             }
 
             // Reset buffer index counter (not used it length estimate pass)

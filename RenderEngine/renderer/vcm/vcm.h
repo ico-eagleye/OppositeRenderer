@@ -14,7 +14,7 @@
 
 // Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
 __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
-                                          const float & misVcWeightFactor, const float const * vertexPickPdf = NULL)
+                                          const float & misVcWeightFactor, const float const * aVertexPickPdf = NULL)
 {
     using namespace optix;
 
@@ -58,8 +58,9 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
 
     // dVM_1 = dVC_1 / etaVCM
     aLightPrd.dVM = aLightPrd.dVC * misVcWeightFactor;
-    if (vertexPickPdf)
-        aLightPrd.dVM *= *vertexPickPdf; // should divide etaVCM, bust since it is divider, we just multiply
+    if (aVertexPickPdf)
+        aLightPrd.dVM *= *aVertexPickPdf; // should divide etaVCM, bust since it is divider, we just multiply
+                                          // aVertexPickPdf pointer passed only when using uniform vertex sampling from buffer
 }
 
 
@@ -119,37 +120,61 @@ __inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float
 }
 
 
+
+
+
 // Initializes MIS terms for next event, partial implementation of [tech. rep. (34)-(36)], completed on hit
-__inline __device__ void updateMisTermsOnScatter(SubpathPRD & aLightPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
+__inline __device__ void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
                                                  const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
                                                  const float const * aVertexPickPdf = NULL)
 {
-    float vertPickPdf = aVertexPickPdf ? (1.f / *aVertexPickPdf) : 1.f;
-    
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "updateMisTermsOnScatter(): \n");
+    float vertPickPdf = aVertexPickPdf ?  (*aVertexPickPdf) : 1.f;
+    const float dVC = aPathPrd.dVC;
+    const float dVM = aPathPrd.dVM;
+    const float dVCM = aPathPrd.dVCM;
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -            dVC % 14f            dVM % 14f           dVCM % 14f \n", dVC, dVM, dVCM);
+
     // dVC = (g_i-1 / pi) * (etaVCM + dVCM_i-1 + _p_ro_i-2 * dVC_i-1)
     // cosThetaOut part of g_i-1  [ _g reverse pdf conversion!, uses outgoing cosTheta]
     //   !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
     // pi = bsdfDirPdfW * g1
     // bsdfDirPdfW = _p_ro_i    [part of pi]
     // bsdfRevPdfW = _p_ro_i-2
-    aLightPrd.dVC = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
-        aLightPrd.dVC * vcmMis(aBsdfRevPdfW) +              
-        aLightPrd.dVCM + aMisVmWeightFactor);               
+    aPathPrd.dVC = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
+        aPathPrd.dVC * vcmMis(aBsdfRevPdfW) +              
+        aPathPrd.dVCM + aMisVmWeightFactor);               
+
+    OPTIX_PRINTFID(aPathPrd.launchIndex,
+        "MIS   -          U dVC = (   cosThetaOut /    bsdfDirPdfW) * (           dVC *    bsdfRevPdfW +           dVCM + VmWeightFactor) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f) \n", 
+        aPathPrd.dVC, aCosThetaOut, aBsdfDirPdfW, dVC, aBsdfRevPdfW, dVCM, aMisVmWeightFactor);
 
 #if VCM_UNIFORM_VERTEX_SAMPLING
-    aLightPrd.dVC_unif_vert = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
-        aLightPrd.dVC_unif_vert * vcmMis(aBsdfRevPdfW) +              
-        aLightPrd.dVCM + aMisVmWeightFactor / vertPickPdf);    
+    const float dVC_unif_vert = aPathPrd.dVC_unif_vert;
+    aPathPrd.dVC_unif_vert = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
+        aPathPrd.dVC_unif_vert * vcmMis(aBsdfRevPdfW) +              
+        aPathPrd.dVCM + aMisVmWeightFactor / vertPickPdf);
+    OPTIX_PRINTFID(aPathPrd.launchIndex,
+        "MIS   - U dVC_unifvert = (   cosThetaOut /    bsdfDirPdfW) * ( dVC_unif_vert *    bsdfRevPdfW +           dVCM + VmWeightFactor /    vertPickPdf) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f / % 14e) \n", 
+        aPathPrd.dVC_unif_vert, aCosThetaOut, aBsdfDirPdfW, dVC_unif_vert, aBsdfRevPdfW, dVCM, aMisVmWeightFactor, vertPickPdf);
 #endif
 
     // dVM = (g_i-1 / pi) * (1 + dVCM_i-1/etaVCM + _p_ro_i-2 * dVM_i-1)
     // cosThetaOut part of g_i-1 [_g reverse pdf conversion!, uses outgoing cosTheta]
     //    !! sqr(dist) terms for _g_i-1 and gi of pi are the same and cancel out, hence NOT scaled after tracing]
-    aLightPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
-        aLightPrd.dVM * vcmMis(aBsdfRevPdfW) +              
-        aLightPrd.dVCM * aMisVcWeightFactor * vertPickPdf + 1.f ); // vertPickPdf should divide etaVCM which is inverse in aMisVcWeightFactor
+    aPathPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
+        aPathPrd.dVM * vcmMis(aBsdfRevPdfW) +              
+        aPathPrd.dVCM * aMisVcWeightFactor * vertPickPdf + 1.f ); // vertPickPdf should divide etaVCM which is inverse in aMisVcWeightFactor
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -          U dVM = (   cosThetaOut /    bsdfDirPdfW) * (           dVM *    bsdfRevPdfW +           dVCM + VcWeightFactor *    vertPickPdf + 1) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f * % 14f + 1) \n", 
+        aPathPrd.dVM, aCosThetaOut, aBsdfDirPdfW, dVM, aBsdfRevPdfW, dVCM, aMisVcWeightFactor, vertPickPdf);
 
     // dVCM = 1 / pi
     // pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
-    aLightPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
+    aPathPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -          U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
 }

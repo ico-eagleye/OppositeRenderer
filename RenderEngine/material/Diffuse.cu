@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
  */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -184,7 +184,7 @@ RT_PROGRAM void closestHitLight()
     lightVertex.launchIndex = subpathPrd.launchIndex;
     lightVertex.hitPoint = hitPoint;
     lightVertex.throughput = subpathPrd.throughput;
-    lightVertex.pathDepth = subpathPrd.depth;
+    lightVertex.pathLen = subpathPrd.depth;
     lightVertex.dVCM = subpathPrd.dVCM;
     lightVertex.dVC = subpathPrd.dVC;
     lightVertex.dVM = subpathPrd.dVM;
@@ -231,7 +231,7 @@ RT_PROGRAM void closestHitLight()
     // Russian Roulette
     float contProb =  lightVertex.bsdf.continuationProb(); //luminanceCIE(Kd); // vmarz TODO precompute
     float rrSample = getRandomUniformFloat(&subpathPrd.randomState);    
-    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - continue sample % 14f             RR % 14f \n", contProb, rrSample);
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit L - continue sample % 14f             RR % 14f \n", contProb, rrSample);
     if (contProb < rrSample)
     {
         subpathPrd.done = 1;
@@ -246,28 +246,32 @@ RT_PROGRAM void closestHitLight()
     float2 bsdfSample = getRandomUniformFloat2(&subpathPrd.randomState);
     subpathPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
     OPTIX_PRINTFI(subpathPrd.depth, "Hit L - new dir World   % 14f % 14f % 14f\n",
-      subpathPrd.direction.x, subpathPrd.direction.y, subpathPrd.direction.z);
+        subpathPrd.direction.x, subpathPrd.direction.y, subpathPrd.direction.z);
 
     float bsdfRevPdfW = cosThetaIn * M_1_PIf;
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;
     updateMisTermsOnScatter(subpathPrd, cosThetaOut, bsdfDirPdfW, bsdfRevPdfW, misVcWeightFactor, misVmWeightFactor, &vertexPickPdf);
 
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit L -      bsdfFactor % 14f % 14f % 14f \n", bsdfFactor.x, bsdfFactor.y, bsdfFactor.z);
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit L - prd.througput1  % 14f % 14f % 14f \n", 
+        subpathPrd.throughput.x, subpathPrd.throughput.y, subpathPrd.throughput.z);
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit L - th=(cosThetaOut % 14f /  bsdfDirPdfW % 14f ) * througput * bsdfactor \n",
+        cosThetaOut, bsdfDirPdfW);
+    
     // f * cosTheta / f_pdf
-    subpathPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW);
-    OPTIX_PRINTFI(subpathPrd.depth, "Hit L - cosThetaOut     % 14f    bsdfDirPdfW % 14f\n", 
-      cosThetaOut, bsdfDirPdfW);
-    OPTIX_PRINTFI(subpathPrd.depth, "Hit L - prd.througput   % 14f % 14f % 14f\n", 
-      subpathPrd.throughput.x, subpathPrd.throughput.y, subpathPrd.throughput.z);
+    subpathPrd.throughput *= bsdfFactor * (cosThetaOut / bsdfDirPdfW); 
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit L - prd.througput2  % 14f % 14f % 14f \n", 
+        subpathPrd.throughput.x, subpathPrd.throughput.y, subpathPrd.throughput.z);
 
     subpathPrd.origin = hitPoint;
     OPTIX_PRINTFI(subpathPrd.depth, "Hit L - new origin      % 14f % 14f % 14f\n\n", 
-      subpathPrd.origin.x, subpathPrd.origin.y, subpathPrd.origin.z);
+        subpathPrd.origin.x, subpathPrd.origin.y, subpathPrd.origin.z);
 }
 
 
 
-__inline
+__inline__
 __device__ int isOccluded(optix::float3 point, optix::float3 direction, float tMax)
 {
     ShadowPRD shadowPrd;
@@ -281,29 +285,30 @@ __device__ int isOccluded(optix::float3 point, optix::float3 direction, float tM
 
 
 // Connects vertices and return contribution
-__device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd,
+__device__ float3 connectVertices(LightVertex & aLightVertex, VcmBSDF & aCameraBsdf, SubpathPRD & aCameraPrd,
                                   optix::float3 & aCameraHitpoint, const float const * aVertexPickPdf = NULL)
 {
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - cameraHitPoint  % 14f % 14f % 14f\n",
+    OPTIX_PRINTFI(aCameraPrd.depth, "connectVertices(): \n");
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -  cameraHitPoint % 14f % 14f % 14f\n",
         aCameraHitpoint.x, aCameraHitpoint.y, aCameraHitpoint.z);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - --> vertex      % 14f % 14f % 14f             id %3d %3d \n",
-        alightVertex.hitPoint.x, alightVertex.hitPoint.y, alightVertex.hitPoint.z, 
-        alightVertex.launchIndex.x, alightVertex.launchIndex.y);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - --> vertex      % 14f % 14f % 14f        pathLen % 14d            id %3d %3d \n",
+        aLightVertex.hitPoint.x, aLightVertex.hitPoint.y, aLightVertex.hitPoint.z, 
+        aLightVertex.pathLen, aLightVertex.launchIndex.x, aLightVertex.launchIndex.y);
 
     // Get connection
-    float3 direction = alightVertex.hitPoint - aCameraHitpoint;
+    float3 direction = aLightVertex.hitPoint - aCameraHitpoint;
     float dist2      = dot(direction, direction);
     float distance   = sqrt(dist2);
     direction       /= distance;
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -            dir  % 14f % 14f % 14f           dist % 14f\n",
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -             dir % 14f % 14f % 14f           dist % 14f\n",
       direction.x, direction.y, direction.z, distance);
 
     // Evaluate BSDF at camera vertex
     float cameraCosTheta, cameraBsdfDirPdfW, cameraBsdfRevPdfW;
     const float3 cameraBsdfFactor = aCameraBsdf.vcmF(direction, cameraCosTheta, &cameraBsdfDirPdfW, &cameraBsdfRevPdfW, 
         &aCameraPrd.launchIndex);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - cameraCosTheta  % 14f \n", cameraCosTheta);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - cameraBsdfFact  % 14f % 14f % 14f\n", 
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -  cameraCosTheta 14f \n", cameraCosTheta);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -  cameraBsdfFact % 14f % 14f % 14f\n", 
         cameraBsdfFactor.x, cameraBsdfFactor.y, cameraBsdfFactor.z);
 
     if (isZero(cameraBsdfFactor))
@@ -319,16 +324,14 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
 
     // Evaluate BSDF at light vertex
     float lightCosTheta, lightBsdfDirPdfW, lightBsdfRevPdfW;
-    const float3 lightBsdfFactor = alightVertex.bsdf.vcmF(-direction, lightCosTheta, &lightBsdfDirPdfW, &lightBsdfRevPdfW,
+    const float3 lightBsdfFactor = aLightVertex.bsdf.vcmF(-direction, lightCosTheta, &lightBsdfDirPdfW, &lightBsdfRevPdfW,
         &aCameraPrd.launchIndex);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - lightCosTheta   % 14f \n", lightCosTheta);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - lightBsdfFact   % 14f % 14f % 14f\n", lightBsdfFactor.x, lightBsdfFactor.y, lightBsdfFactor.z);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -   lightCosTheta % 14f \n", lightCosTheta);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -   lightBsdfFact % 14f % 14f % 14f\n", lightBsdfFactor.x, lightBsdfFactor.y, lightBsdfFactor.z);
 
     // Geometry term
     const float geometryTerm = lightCosTheta * cameraCosTheta / dist2;
-    const double dGeometryTerm = lightCosTheta * cameraCosTheta / double(dist2);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - gemoetryTerm    % 14e dGemometryTerm % 14e dist2         % 14f\n",
-        geometryTerm, dGeometryTerm, dist2);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -    geometryTerm % 14f         dist2 % 14f\n", geometryTerm, dist2);
 
     if (geometryTerm < 0.f)
         return;
@@ -336,6 +339,13 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
     // Convert solid angle pdfs to area pdfs
     const float cameraBsdfDirPdfA = PdfWtoA(cameraBsdfDirPdfW, distance, cameraCosTheta);
     const float lightBsdfDirPdfA = PdfWtoA(lightBsdfDirPdfW, distance, lightCosTheta);
+
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - camBsdfDirPdfA = (camBsdfDirPdfW *       cosLight) / sqr (      distance) \n");
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - % 14f = (% 14f * % 14f) / sqr (% 14f) \n",
+        cameraBsdfDirPdfA, cameraBsdfDirPdfW, cameraCosTheta, distance);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - lgtBsdfDirPdfA = (lgtBsdfDirPdfW *      cosCamera) / sqr (      distance) \n");
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - % 14f = (% 14f * % 14f) / sqr (% 14f) \n",
+        lightBsdfDirPdfA, lightBsdfDirPdfW, lightCosTheta, distance);
 
     // aVertPickPdf is set only when unform vertex sampling used (connecting to all paths)
     float invVertPickPdf = aVertexPickPdf ? (1.f / *aVertexPickPdf) : 1.f;
@@ -345,61 +355,55 @@ __device__ float3 connectVertices(LightVertex & alightVertex, VcmBSDF & aCameraB
     // There is no dVC_unif_vert in LightVertex since vertices are used only for connection between each other,
     // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
     // equations in [tech. rep. (38-47)]
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -  invVertPickPdf % 14f \n", invVertPickPdf);
 #endif
 
     // Partial light sub-path MIS weight [tech. rep. (40)]
     const float wLight = vcmMis(cameraBsdfDirPdfA) * 
-        ( misVmWeightFactor * invVertPickPdf + alightVertex.dVCM + alightVertex.dVC * vcmMis(lightBsdfRevPdfW) );
+        ( misVmWeightFactor * invVertPickPdf + aLightVertex.dVCM + aLightVertex.dVC * vcmMis(lightBsdfRevPdfW) );
     // lightBsdfRevPdfW is Reverse with respect to light path, e.g. in eye path progression 
     // dirrection (note same arrow dirs in formula)
-    // note (40) and (41) uses light subpath Y and camera subpath z
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - misVmFactor     % 14f\n", misVmWeightFactor);
+    // note (40) and (41) uses light subpath Y and camera subpath z;
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - LightVertex dVC % 14e            dVM % 14e           dVCM % 14e\n",
-        alightVertex.dVC, alightVertex.dVM, alightVertex.dVCM);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - camBsdfDirPdfA  % 14e camBsdfDirPdfW % 14f       distance % 14f cameraCosTheta % 14f\n",
-        cameraBsdfDirPdfA, cameraBsdfDirPdfW, distance, cameraCosTheta);
-    //OPTIX_PRINTFI(aCameraPrd.depth, "conn  -          wLight % 14f camBsdfDirPdfA % 14f lgtBsdfRevPdfW % 14f\n",
-    //    wLight, cameraBsdfDirPdfA, lightBsdfRevPdfW);
+        aLightVertex.dVC, aLightVertex.dVM, aLightVertex.dVCM);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -         wLight = camBsdfDirPdfA * (VmWeightFactor +     light.dVCM +      light.dVC * lgtBsdfRevPdfW) \n");
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - % 14f = % 14f * (% 14f + % 14e + % 14f * % 14f) \n", 
+            wLight, cameraBsdfDirPdfA, misVmWeightFactor, aLightVertex.dVCM, aLightVertex.dVC, lightBsdfRevPdfW);
 
     // Partial eye sub-path MIS weight [tech. rep. (41)]
     const float wCamera = vcmMis(lightBsdfDirPdfA) * 
         ( misVmWeightFactor * invVertPickPdf + aCameraPrd.dVCM + aCameraPrd_dVC * vcmMis(cameraBsdfRevPdfW) );
-
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - Camera      dVC % 14e            dVM % 14e           dVCM % 14e\n",
-        aCameraPrd_dVC, aCameraPrd.dVM, aCameraPrd.dVCM);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - lgtBsdfDirPdfA  % 14e lgtBsdfRevPdfW % 14f       distance % 14f  lightCosTheta % 14f\n",
-        lightBsdfDirPdfA, lightBsdfRevPdfW, distance, lightCosTheta);
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -          wLight % 14f camBsdfDirPdfA % 14f lgtBsdfRevPdfW % 14f\n",
-        wLight, cameraBsdfDirPdfA, lightBsdfRevPdfW);
+        aCameraPrd_dVC, aCameraPrd.dVM, aCameraPrd.dVCM);    
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -        wCamera = lgtBsdfDirPdfA * (VmWeightFactor +    camera.dVCM +     camera.dVC * camBsdfRevPdfW) \n");
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - % 14f = % 14f * (% 14f + % 14e + % 14f * % 14f) \n", 
+            wLight, lightBsdfDirPdfA, misVmWeightFactor, aCameraPrd.dVCM, aCameraPrd.dVC, cameraBsdfRevPdfW);
 
     // Full path MIS weight [tech. rep. (37)]
     const float misWeight = 1.f / (wLight + 1.f + wCamera);
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  -       misWeight % 14f         wLight % 14f        wCamera % 14f\n",
-        wLight, wCamera, misWeight);
+        misWeight, wLight, wCamera);
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  -  Cam througput  % 14f % 14f % 14f\n",
         aCameraPrd.throughput.x, aCameraPrd.throughput.z, aCameraPrd.throughput.y);
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - Vert througput  % 14f % 14f % 14f\n",
-        alightVertex.throughput.x, alightVertex.throughput.z, alightVertex.throughput.y);
+        aLightVertex.throughput.x, aLightVertex.throughput.z, aLightVertex.throughput.y);
 
-    float3 contrib = (geometryTerm * cameraBsdfFactor * lightBsdfFactor) * invVertPickPdf; 
-    contrib *= misWeight * aCameraPrd.throughput * alightVertex.throughput;
+    float3 contrib = geometryTerm * cameraBsdfFactor * lightBsdfFactor;// * invVertPickPdf;
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - noThp unw cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - noThp wei cntrb = geometryTerm * cameraBsdfFactor * lightBsdfFactor * invVertPickPdf \n");
+    contrib *= misWeight;
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - noThp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
+    contrib *= aCameraPrd.throughput * aLightVertex.throughput;
+    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -   Thp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
 
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  - CONNECT contrib % 14e % 14e % 14e \n\n", contrib.x , contrib.y, contrib.z);
     if (isOccluded(aCameraHitpoint, direction, distance))
+    {
+        OPTIX_PRINTFI(aCameraPrd.depth, "conn  - OCCLUDED\n");
         return;
-    
-    return contrib;
-    //aCameraPrd.color += contrib;
-    //rtPrintf("%d %d - d %d - Contrib vetext at %f %f %f\n",
-    //    aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y, aCameraPrd.depth, contrib.x, contrib.y, contrib.z);
+    }
+    OPTIX_PRINTFI(aCameraPrd.depth, "\n");
 
-    //Lambertian * lambertian = reinterpret_cast<Lambertian *>(aVertex.bsdf.bxdfAt(0));
-    //float3 kd = lambertian->rho(1, NULL, NULL);
-    //rtPrintf("%d %d Unoccluded vetext at %f %f %f dirFix %f %f %f Kd %f %f %f\n",
-    //    aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y,
-    //    aVertex.hitPoint.x, aVertex.hitPoint.y, aVertex.hitPoint.z,
-    //    aVertex.bsdf.localDirFix().x, aVertex.bsdf.localDirFix().y, aVertex.bsdf.localDirFix().z,
-    //    kd.x, kd.y, kd.z);
+    return contrib;
 }
 
 
@@ -449,11 +453,13 @@ RT_PROGRAM void vcmClosestHitCamera()
     //float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices; // TODO scale by pick prob
     uint numlightVertexConnections = ceilf(averageLightSubpathLength);
     float lastVertConnectProb = averageLightSubpathLength - (uint)averageLightSubpathLength;
+    OPTIX_PRINTFI(subpathPrd.depth, "Hit C - CONNECT     num % 14u   lastVertProb % 14f \n", 
+        numlightVertexConnections, lastVertConnectProb);
     //for (int i = 0; i < vcmNumlightVertexConnections; i++)
     for (int i = 0; i < numlightVertexConnections; i++)
     {
         // For last vertex do russian roulette
-        if (i == numlightVertexConnections - 1)
+        if (i == (numlightVertexConnections - 1))
         {
             float sampleConnect = getRandomUniformFloat(&subpathPrd.randomState);
             if (lastVertConnectProb < sampleConnect)

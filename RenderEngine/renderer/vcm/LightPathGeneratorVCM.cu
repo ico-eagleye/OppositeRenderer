@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -64,10 +64,10 @@ RT_PROGRAM void lightPass()
 
     if (lightVertexCountEstimatePass)
     {
-        OPTIX_PRINTFI(lightPrd.depth, "GenCL - LIGHT ESTIMATE PASS\n");
+        OPTIX_PRINTFI(0, "GenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n");
     }
     else
-        OPTIX_PRINTFI(lightPrd.depth, "GenCL - LIGHT STORE PASS\n");
+        OPTIX_PRINTFI(0, "GenCL - LIGHT STORE PASS --------------------------------------------------------------------\n");
 
     // vmarz TODO: pick based on light power
     int lightIndex = 0;
