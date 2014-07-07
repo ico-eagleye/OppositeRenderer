@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project InitialTargets ="OppositeLogSDKs" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER>
-    <CUDA_USE_VER>6.0</CUDA_USE_VER>
+    <!-- <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER>
+    <CUDA_USE_VER>6.0</CUDA_USE_VER> -->
+    <OPTIX_USE_VER>3.5.1</OPTIX_USE_VER>
+    <CUDA_USE_VER>5.5</CUDA_USE_VER>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_V3_0_1)</OptixDir>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_V3_5_1)</OptixDir>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.6.0'">$(OPTIX_PATH_V3_6_0)</OptixDir>
@@ -17,7 +19,7 @@
     <OptixIncludeDir Condition="'$(OptixIncludeDir)' != '' AND !HasTrailingSlash('$(OptixIncludeDir)')">$(OptixIncludeDir)\</OptixIncludeDir>
     -->
     <!-- 
-    OptixIncludeDir somehow gets another slash at the and if above uncommented, so removed that trying to solve errer where nvcc could find optixu/optixu_math_namespace.h header included in random.h (didn't help)
+    OptixIncludeDir somehow gets another slash at the and if above uncommented, so removed that trying to solve error where nvcc could find optixu/optixu_math_namespace.h header included in random.h (didn't help)
     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\BuildCustomizations\CUDA 6.0.targets(597,9): error MSB3721: The command ""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\bin\nvcc.exe" .....  -I"C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0\include\\"
     -->
   </PropertyGroup>

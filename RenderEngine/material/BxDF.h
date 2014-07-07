@@ -151,6 +151,12 @@ public:
                                                       const optix::float2 & aSample,
                                                       float               * oPdfW ) const
     {
+        if (aWo.z < EPS_COSINE)
+        {
+            *oPdfW = 0.f;
+            return make_float3(0.f);
+        }
+
         optix::cosine_sample_hemisphere(aSample.x, aSample.y, *oWi);
         *oPdfW = pdf(aWo, *oWi);
         return f(aWo, *oWi);

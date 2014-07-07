@@ -241,14 +241,11 @@ RT_PROGRAM void closestHitLight()
 
     //TODO use BSDF class
     //next event
-    float3 bsdfFactor = Kd * M_1_PIf;
     float bsdfDirPdfW;
     float cosThetaOut;
-    float2 bsdfSample = getRandomUniformFloat2(&subpathPrd.randomState);
-    subpathPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
 
-    //float3 bsdfSample = getRandomUniformFloat3(&subpathPrd.randomState);
-    //float3 bsdfFactor = lightVertex.bsdf.vcmSampleF(&subpathPrd.direction, bsdfSample, &bsdfDirPdfW);
+    float3 bsdfSample = getRandomUniformFloat3(&subpathPrd.randomState);
+    float3 bsdfFactor = lightVertex.bsdf.vcmSampleF(&subpathPrd.direction, bsdfSample, &bsdfDirPdfW);
     OPTIX_PRINTFI(subpathPrd.depth, "Hit L - new dir World   % 14f % 14f % 14f\n",
         subpathPrd.direction.x, subpathPrd.direction.y, subpathPrd.direction.z);
 
@@ -486,11 +483,10 @@ RT_PROGRAM void vcmClosestHitCamera()
     }
 
     // next event
-    float3 bsdfFactor = Kd * M_1_PIf;
     float bsdfDirPdfW;
     float cosThetaOut;
-    float2 bsdfSample = getRandomUniformFloat2(&subpathPrd.randomState);
-    subpathPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
+    float3 bsdfSample = getRandomUniformFloat3(&subpathPrd.randomState);
+    float3 bsdfFactor = cameraBsdf.vcmSampleF(&subpathPrd.direction, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
     //OPTIX_PRINTFI(subpathPrd.depth, "Hit - new dir %f %f %f\n", subpathPrd.direction.x, subpathPrd.direction.y, subpathPrd.direction.z);
 
     float bsdfRevPdfW = cosThetaIn * M_1_PIf;

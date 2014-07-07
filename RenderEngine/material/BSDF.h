@@ -181,10 +181,11 @@ public:
                                       optix::float3       * oWorldWi, 
                                       const optix::float3 & aSample,
                                       float               * oPdfW,
+                                      float               * oCosThetaWi = NULL,
                                       BxDF::Type            aSampleType = BxDF::All,
                                       BxDF::Type          * oSampledType = NULL ) const
     {
-        // Count matched componets.
+        // Count matched components.
         //unsigned int nMatched = nBxDFs(aSampleType);
         //if (nMatched == 0)
         //{
@@ -229,6 +230,7 @@ public:
         // Otherwise.
         if (oSampledType) *oSampledType = bxdf->type();
         *oWorldWi = _diffGemetry.ToWorld(wi);
+        if (oCosThetaWi) *oCosThetaWi = wi.z;
 
         // If not specular, sum all non-specular BxDF's probability.
         if (!(bxdf->type() & BxDF::Specular) && nMatched > 1) 
@@ -313,12 +315,12 @@ protected:
 
 
 
-//               //
+
 class VcmBSDF : public BSDF
 {
 private:
-    optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to incident dir at hit point
-                                   // opposed to "gen" for generated
+    optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to fixed incident dir stored 
+                                   // at hit point opposed to "gen" for generated
 public:
     __device__ __forceinline__ VcmBSDF() : BSDF() { }
 
@@ -330,7 +332,7 @@ public:
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
 
-    // For simple case when not differentiating between gemoetric and shading normal,
+    // For simple case when not differentiating between geometric and shading normal,
     // generates tangent and bitangent
     __device__ __forceinline__ VcmBSDF( const optix::float3 & aWorldNormal,
                                         const optix::float3 & aIncidentDir ) : BSDF(aWorldNormal)
@@ -342,11 +344,24 @@ public:
 
     __device__ __forceinline__ optix::float3 localDirFix() const { return _localDirFix; }
 
+    // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
+    // Following typical conventions Wo corresponds to light outgoing direction, 
+    // Wi is sampled incident direction
+    __device__ __forceinline__ optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
+                                                         const optix::float3 & aSample,
+                                                         float               * oPdfW,
+                                                         float               * oCosThetaOut = NULL,
+                                                         BxDF::Type            aSampleType = BxDF::All,
+                                                         BxDF::Type          * oSampledType = NULL ) const
+    {
+        return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, oPdfW, oCosThetaOut, aSampleType, oSampledType);
+    }
 
     // Estimates bsdf factor for directions oWorldWi and aWorldWi and pdfs.
-    // In typical conventions Wo corresponds to light outgoing direction, Wi to generated incident direction.
+    // In typical conventions as when tracing from camera Wo corresponds to light outgoing direction, Wi to 
+    // generated incident direction.
     // For VCM evaluation the stored direction localDirFix is used as Wo, generated direction aWorldDirGen as Wi,
-    // either when tracing from light or camera. Similary directPdf corresponds sampling from Wo->Wi, reverse to Wi->Wo
+    // either when tracing from light or camera. Similarly directPdf corresponds sampling from Wo->Wi, reverse to Wi->Wo
     __device__ optix::float3 vcmF( const optix::float3 & aWorldDirGen,
                                    float               & oCosThetaGen,
                                    float               * oDirectPdfW = NULL,

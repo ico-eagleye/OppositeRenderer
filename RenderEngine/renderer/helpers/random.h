@@ -76,6 +76,16 @@ static __device__ __inline__ optix::float2 getRandomUniformFloat2( RandomState* 
     return sample;
 }
 
+// Return a float in range [0,1)
+static __device__ __inline__ optix::float3 getRandomUniformFloat3( RandomState* state )
+{
+    // Currand generates values in range (0,1]
+    optix::float3 sample;
+    sample.x = getRandomUniformFloat(state);
+    sample.y = getRandomUniformFloat(state);
+    sample.z = getRandomUniformFloat(state);
+    return sample;
+}
 
 // <Random number generation used in Optix SDK>
 // Generate random unsigned int in [0, 2^24)
