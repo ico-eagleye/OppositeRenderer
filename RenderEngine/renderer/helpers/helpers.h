@@ -25,6 +25,7 @@
 
 
 #if OPTIX_DEBUG_STD_PRINTF || !defined(__CUDACC__)
+#include <stdio.h>
 #define OPTIX_PRINTF_FUN printf
 #else
 #define OPTIX_PRINTF_FUN rtPrintf

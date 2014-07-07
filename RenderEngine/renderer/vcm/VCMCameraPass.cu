@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-//#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -22,11 +22,13 @@
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/vcm.h"
+#include "renderer/vcm/mis.h"
+
+void initCameraPayload(SubpathPRD & aCameraPrd);
 
 using namespace optix;
 
 rtDeclareVariable(rtObject, sceneRootObject, , );
-rtDeclareVariable(Camera, camera, , );
 rtBuffer<Light, 1> lights;
 rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 rtDeclareVariable(uint, localIterationNumber, , );
@@ -35,22 +37,12 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 //rtDeclareVariable(Sphere, sceneBoundingSphere, , );
 
-// VCM
-rtDeclareVariable(float2, pixelSizeFactor, , );
-rtDeclareVariable(float, vcmMisVcWeightFactor, , ); // vmarz TODO set
-rtDeclareVariable(float, vcmMisVmWeightFactor, , ); // vmarz TODO set
-rtDeclareVariable(uint, vcmLightSubpathCount, , ); // vmarz TODO set
-
 static __device__ __inline__ float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
 {
-    if(localIterationNumber >= 1)
-    {
+    if (1 <= localIterationNumber)
         return oldRadiance + (newRadiance-oldRadiance)/(localIterationNumber+1);
-    }
     else
-    {
         return newRadiance;
-    }
 }
 
 
@@ -71,16 +63,9 @@ RT_PROGRAM void cameraPass()
     cameraPrd.dVC_unif_vert = 0;
 #endif
 
-    float2 screen = make_float2( outputBuffer.size() );
-    float2 sample = getRandomUniformFloat2(&cameraPrd.randomState);             // jitter pixel pos
-    float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f;    // vmarz: map pixel pos to [-1,1]
-    
-    cameraPrd.origin = camera.eye;
-    cameraPrd.direction = normalize(d.x*camera.camera_u + d.y*camera.camera_v + camera.lookdir);
-    //modifyRayForDepthOfField(camera, rayOrigin, rayDirection, radiancePrd.randomState);     // vmarz TODO add ?
+    initCameraPayload(cameraPrd);
     Ray cameraRay = Ray(cameraPrd.origin, cameraPrd.direction, RayType::CAMERA_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
-    initCameraPayload(cameraPrd, camera, pixelSizeFactor, vcmLightSubpathCount);
     OPTIX_PRINTFI(0, "Gen C - start - dVCM %f\n", cameraPrd.dVCM);
 
     // Trace    
@@ -89,20 +74,12 @@ RT_PROGRAM void cameraPass()
         //OPTIX_PRINTFI(cameraPrd.depth, "G %d - tra dir %f %f %f\n",
         //    i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
         rtTrace( sceneRootObject, cameraRay, cameraPrd );
-        
-        // sample direct lightning
-
-        // vertext connection
-
-        // vertex merging
 
         if (cameraPrd.done)
         {
             //OPTIX_PRINTFI(cameraPrd.depth, "Stop trace \n");
             break;
         }
-
-        // sample new dir
 
         cameraRay.origin = cameraPrd.origin;
         cameraRay.direction = cameraPrd.direction;
@@ -142,4 +119,41 @@ RT_PROGRAM void exception()
     rtPrintf("Exception VCM Camera ray! d: %d\n", cameraPrd.depth);
     rtPrintExceptionDetails();
     cameraPrd.throughput = make_float3(1,0,0);
+}
+
+
+rtDeclareVariable(Camera, camera, , );
+rtDeclareVariable(float2, pixelSizeFactor, , );
+rtDeclareVariable(float, vcmMisVcWeightFactor, , );
+rtDeclareVariable(float, vcmMisVmWeightFactor, , );
+rtDeclareVariable(uint, vcmLightSubpathCount, , );
+
+// Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
+__inline__ __device__ void initCameraPayload(SubpathPRD & aCameraPrd)
+{
+    float2 screen = make_float2( outputBuffer.size() );
+    float2 sample = getRandomUniformFloat2(&aCameraPrd.randomState);             // jitter pixel pos
+    float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f;    // vmarz: map pixel pos to [-1,1]
+    
+    aCameraPrd.origin = camera.eye;
+    aCameraPrd.direction = normalize(d.x*camera.camera_u + d.y*camera.camera_v + camera.lookdir);
+    //modifyRayForDepthOfField(camera, rayOrigin, rayDirection, radiancePrd.randomState);     // vmarz TODO add ?
+
+    // pdf conversion factor from area on image plane to solid angle on ray
+    float cosAtCamera = dot(normalize(camera.lookdir), aCameraPrd.direction);
+    float distToImgPlane = length(camera.lookdir);
+    float imagePointToCameraDist = length(camera.lookdir) / cosAtCamera;
+    float imageToSolidAngleFactor = sqr(imagePointToCameraDist) / cosAtCamera;
+
+    float pixelArea = pixelSizeFactor.x * camera.imagePlaneSize.x * pixelSizeFactor.x * camera.imagePlaneSize.y;
+    float areaSamplePdf = 1.f / pixelArea;
+
+    // Needed if use different image point sampling techniques, see p0connect/p0trace in dVCM comment below
+    //float p0connect = areaSamplePdf;      // cancel out
+    //float p0trace = areaSamplePdf;        // cancel out
+    float cameraPdf = areaSamplePdf * imageToSolidAngleFactor;
+    //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - cosC %f planeDist %f pixA solidAngleFact %f camPdf %f\n", 
+    //    cosAtCamera, distToImgPlane, imageToSolidAngleFactor, pixelArea);
+
+    initCameraMisTerms(aCameraPrd, cameraPdf, vcmLightSubpathCount);
 }

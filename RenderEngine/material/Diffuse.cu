@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
  */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-//#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -24,6 +24,7 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/vcm.h"
+#include "renderer/vcm/mis.h"
 #include "renderer/vcm/config_vcm.h"
 #include "material/BxDF.h"
 #include "material/BSDF.h"
@@ -238,13 +239,16 @@ RT_PROGRAM void closestHitLight()
         return;
     }
 
-    // TODO use BSDF class
-    // next event
+    //TODO use BSDF class
+    //next event
     float3 bsdfFactor = Kd * M_1_PIf;
     float bsdfDirPdfW;
     float cosThetaOut;
     float2 bsdfSample = getRandomUniformFloat2(&subpathPrd.randomState);
     subpathPrd.direction = sampleUnitHemisphereCos(worldShadingNormal, bsdfSample, &bsdfDirPdfW, &cosThetaOut);
+
+    //float3 bsdfSample = getRandomUniformFloat3(&subpathPrd.randomState);
+    //float3 bsdfFactor = lightVertex.bsdf.vcmSampleF(&subpathPrd.direction, bsdfSample, &bsdfDirPdfW);
     OPTIX_PRINTFI(subpathPrd.depth, "Hit L - new dir World   % 14f % 14f % 14f\n",
         subpathPrd.direction.x, subpathPrd.direction.y, subpathPrd.direction.z);
 
@@ -267,18 +271,6 @@ RT_PROGRAM void closestHitLight()
     subpathPrd.origin = hitPoint;
     OPTIX_PRINTFI(subpathPrd.depth, "Hit L - new origin      % 14f % 14f % 14f\n\n", 
         subpathPrd.origin.x, subpathPrd.origin.y, subpathPrd.origin.z);
-}
-
-
-
-__inline__
-__device__ int isOccluded(optix::float3 point, optix::float3 direction, float tMax)
-{
-    ShadowPRD shadowPrd;
-    shadowPrd.attenuation = 1.0f;
-    Ray occlusionRay(point, direction, RayType::SHADOW, EPS_RAY, tMax - 2.f*EPS_RAY);
-    rtTrace(sceneRootObject, occlusionRay, shadowPrd);
-    return shadowPrd.attenuation == 0.f;
 }
 
 
@@ -396,7 +388,7 @@ __device__ float3 connectVertices(LightVertex & aLightVertex, VcmBSDF & aCameraB
     contrib *= aCameraPrd.throughput * aLightVertex.throughput;
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  -   Thp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
 
-    if (isOccluded(aCameraHitpoint, direction, distance))
+    if (isOccluded(sceneRootObject, aCameraHitpoint, direction, distance))
     {
         OPTIX_PRINTFI(aCameraPrd.depth, "conn  - OCCLUDED\n");
         return;

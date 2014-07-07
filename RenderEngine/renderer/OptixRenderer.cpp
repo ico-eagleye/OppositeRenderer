@@ -29,6 +29,7 @@
 #include "renderer/helpers/samplers.h"
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/config_vcm.h"
+#include "renderer/vcm/vcm_shared.h"
 #include "util/logging.h"
 
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_UNIFORM_GRID

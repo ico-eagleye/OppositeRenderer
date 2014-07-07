@@ -79,25 +79,19 @@ static __device__ float3 sampleDisc(const float2 & sample, const float3 & center
     return center + radius * ( U*unitDisc.x + V*unitDisc.y );
 }
 
-// Applies MIS power
-static __host__ __device__ __inline__ float vcmMis(const float & aPdf)
-{
-    // balance heuristic for now
-    return aPdf;
-}
 
 //////////////////////////////////////////////////////////////////////////
 // Utilities for converting PDF between Area (A) and Solid angle (W)
 // WtoA = PdfW * cosine / distance_squared
 // AtoW = PdfA * distance_squared / cosine
-__host__ __device__ __inline__ float PdfWtoA( const float aPdfW,
+__device__ __inline__ float PdfWtoA( const float aPdfW,
                                               const float aDist,
                                               const float aCosThere )
 {
     return aPdfW * std::abs(aCosThere) / sqr(aDist);
 }
 
-__host__ __device__ __inline__ float PdfAtoW( const float aPdfA,
+__device__ __inline__ float PdfAtoW( const float aPdfA,
                                               const float aDist,
                                               const float aCosThere )
 {

@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-//#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -20,12 +20,13 @@
 #include "renderer/helpers/random.h"
 #include "renderer/helpers/light.h"
 #include "math/Sphere.h"
-
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/vcm.h"
+#include "renderer/vcm/mis.h"
 #include "renderer/vcm/config_vcm.h"
 
+void initLightPayload(SubpathPRD & aLightPrd);
 
 using namespace optix;
 
@@ -34,23 +35,19 @@ rtBuffer<RandomState, 2> randomStates;
 rtBuffer<Light, 1> lights;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
-rtDeclareVariable(Sphere, sceneBoundingSphere, , );
-
-#if ENABLE_RENDER_DEBUG_OUTPUT
-rtBuffer<unsigned int, 2> debugPhotonPathLengthBuffer;
-#endif
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
-rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
-//rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
-
 rtBuffer<uint, 2> lightSubpathLengthBuffer;
-rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
-rtBuffer<LightVertex> lightVertexBuffer;
-rtDeclareVariable(float, vertexPickPdf, , );
+//rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
+//rtBuffer<LightVertex> lightVertexBuffer;
 
 RT_PROGRAM void lightPass()
 {
+    if (lightVertexCountEstimatePass)
+        { OPTIX_PRINTFI(0, "GenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
+    else
+        { OPTIX_PRINTFI(0, "GenCL - LIGHT STORE PASS --------------------------------------------------------------------\n"); }
+
     SubpathPRD lightPrd;
     lightPrd.launchIndex = launchIndex;
     lightPrd.throughput = make_float3(1.f);
@@ -60,34 +57,13 @@ RT_PROGRAM void lightPass()
     lightPrd.dVM = 0.f;
     lightPrd.dVCM = 0.f;
     lightPrd.randomState = randomStates[launchIndex];
-    lightSubpathLengthBuffer[launchIndex] = 0u; // prob here?
-
-    if (lightVertexCountEstimatePass)
-    {
-        OPTIX_PRINTFI(0, "GenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n");
-    }
-    else
-        OPTIX_PRINTFI(0, "GenCL - LIGHT STORE PASS --------------------------------------------------------------------\n");
-
-    // vmarz TODO: pick based on light power
-    int lightIndex = 0;
-    if (1 < lights.size())
-    {
-        float sample = getRandomUniformFloat(&lightPrd.randomState);
-        lightIndex = intmin((int)(sample*lights.size()), int(lights.size()-1));
-    }
-
-    const Light light = lights[lightIndex];
-    const float inverseLightPickPdf = lights.size();
-    const float lightPickPdf = 1.f / lights.size();
-
-    float *vertPickPdfPtr = NULL;
+    lightSubpathLengthBuffer[launchIndex] = 0u;
 #if VCM_UNIFORM_VERTEX_SAMPLING
-    vertPickPdfPtr = &vertexPickPdf;
+    lightPrd.dVC_unif_vert = 0.f;
 #endif
 
     // Initialize payload and ray
-    initLightPayload(lightPrd, light, lightPickPdf, misVcWeightFactor, vertPickPdfPtr);
+    initLightPayload(lightPrd);
     Ray lightRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
     for (int i=0;;i++)
@@ -115,6 +91,8 @@ RT_PROGRAM void lightPass()
 
 
 
+
+
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
@@ -133,4 +111,50 @@ RT_PROGRAM void exception()
     rtPrintf("Exception Light ray! d: %d\n", lightPrd.depth);
     rtPrintExceptionDetails();
     lightPrd.throughput = make_float3(0,0,0);
+}
+
+
+
+rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
+rtDeclareVariable(float, vertexPickPdf, , );
+
+// Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
+__inline__ __device__ void initLightPayload(SubpathPRD & aLightPrd)
+{
+    using namespace optix;
+
+    float *vertPickPdfPtr = NULL;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    vertPickPdfPtr = &vertexPickPdf;
+#endif
+
+    // vmarz TODO: pick based on light power
+    int lightIndex = 0;
+    if (1 < lights.size())
+    {
+        float sample = getRandomUniformFloat(&aLightPrd.randomState);
+        lightIndex = intmin((int)(sample*lights.size()), int(lights.size()-1));
+    }
+
+    const Light light = lights[lightIndex];
+    const float inverseLightPickPdf = lights.size();
+    const float lightPickPdf = 1.f / lights.size();
+
+    float emissionPdfW;
+    float directPdfW;
+    float cosAtLight;
+    aLightPrd.throughput = lightEmit(light, aLightPrd.randomState, aLightPrd.origin, aLightPrd.direction,
+        emissionPdfW, directPdfW, cosAtLight, &aLightPrd.launchIndex);
+    // vmarz?: do something similar as done for photon emission, emit towards scene when light far from scene?
+
+    emissionPdfW *= lightPickPdf;
+    directPdfW *= lightPickPdf;
+    aLightPrd.throughput /= emissionPdfW;
+    //lightPrd.isFinite = isDelta.isFinite ... vmarz?
+    OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - emission Pdf    % 14f     directPdfW % 14f\n", 
+        emissionPdfW, directPdfW);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
+        aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
+
+    initLightMisTerms(aLightPrd, light, cosAtLight, directPdfW, emissionPdfW, misVcWeightFactor, vertPickPdfPtr);
 }
