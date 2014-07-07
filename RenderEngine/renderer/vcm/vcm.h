@@ -13,7 +13,7 @@
 
 
 // Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
-__inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
+__inline__ __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & aLight, const float & aLightPickPdf,
                                           const float & misVcWeightFactor, const float const * aVertexPickPdf = NULL)
 {
     using namespace optix;
@@ -69,7 +69,7 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
 
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
-__inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera & aCamera, 
+__inline__ __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera & aCamera, 
                                            const optix::float2 & aPixelSizeFactor, const optix::uint & aVcmLightSubpathCount)
 {
     using namespace optix;
@@ -114,7 +114,7 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
 
 // Update MIS quantities before storing at the vertex, follows initialization on light [tech. rep. (31)-(33)]
 // or scatter from surface [tech. rep. (34)-(36)]
-__inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
+__inline__ __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
 {
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
     aLightPrd.dVCM *= vcmMis(sqr(aRayLen));
@@ -131,7 +131,7 @@ __inline __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float
 
 
 // Initializes MIS terms for next event, partial implementation of [tech. rep. (34)-(36)], completed on hit
-__inline __device__ void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
+__inline__ __device__ void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
                                                  const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
                                                  const float const * aVertexPickPdf = NULL)
 {
