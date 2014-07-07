@@ -388,7 +388,7 @@ __device__ float3 connectVertices(LightVertex & aLightVertex, VcmBSDF & aCameraB
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - Vert througput  % 14f % 14f % 14f\n",
         aLightVertex.throughput.x, aLightVertex.throughput.z, aLightVertex.throughput.y);
 
-    float3 contrib = geometryTerm * cameraBsdfFactor * lightBsdfFactor;// * invVertPickPdf;
+    float3 contrib = geometryTerm * cameraBsdfFactor * lightBsdfFactor * invVertPickPdf;
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - noThp unw cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
     OPTIX_PRINTFI(aCameraPrd.depth, "conn  - noThp wei cntrb = geometryTerm * cameraBsdfFactor * lightBsdfFactor * invVertPickPdf \n");
     contrib *= misWeight;
