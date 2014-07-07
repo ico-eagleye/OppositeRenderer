@@ -54,6 +54,10 @@ __inline __device__ void initLightPayload(SubpathPRD & aLightPrd, const Light & 
         // usedCosLight is part of _g0 - reverse pdf conversion factor!, uses outgoing cos not incident at next vertex,
         //    sqr(dist) from _g0 added after tracing
         // emissionPdfW = p0_trace * p1
+
+#if VCM_UNIFORM_VERTEX_SAMPLING
+        aLightPrd.dVC_unif_vert = aLightPrd.dVC;
+#endif
     }
 
     // dVM_1 = dVC_1 / etaVCM
@@ -89,6 +93,9 @@ __inline __device__ void initCameraPayload(SubpathPRD & aCameraPrd, const Camera
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
     aCameraPrd.dVC = .0f;
     aCameraPrd.dVM = .0f;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    aCameraPrd.dVC_unif_vert = aCameraPrd.dVC;
+#endif
 
     // dVCM = ( p0connect / p0trace ) * ( nLightSamples / p1 )
     // p0connect/p0trace - potentially different sampling techniques 
