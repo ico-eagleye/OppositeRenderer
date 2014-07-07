@@ -245,7 +245,6 @@
     <CudaCompile Include="renderer\ppm\VolumetricPhotonSphere.cu" />
     <CudaCompile Include="geometry_instance\TriangleMesh.cu" />
     <CudaCompile Include="renderer\ppm\UniformGridPhotonInitialize.cu" />
-    <CudaCompile Include="renderer\vcm\LightPathGeneratorVCM.cu" />
     <CudaCompile Include="geometry_instance\AAB.cu">
       <Filter>geometry</Filter>
     </CudaCompile>
@@ -262,5 +261,6 @@
       <Filter>material</Filter>
     </CudaCompile>
     <CudaCompile Include="renderer\vcm\VCMCameraPass.cu" />
+    <CudaCompile Include="renderer\vcm\VCMLightPass.cu" />
   </ItemGroup>
 </Project>

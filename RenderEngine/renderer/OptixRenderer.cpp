@@ -362,9 +362,9 @@ void OptixRenderer::initialize(const ComputeDevice & device)
 
     // VCM programs
     {
-        Program generatorProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "lightPass" );
-        Program exceptionProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "exception" );
-        Program missProgram = m_context->createProgramFromPTXFile( "LightPathGeneratorVCM.cu.ptx", "miss");
+        Program generatorProgram = m_context->createProgramFromPTXFile( "VCMLightPass.cu.ptx", "lightPass" );
+        Program exceptionProgram = m_context->createProgramFromPTXFile( "VCMLightPass.cu.ptx", "exception" );
+        Program missProgram = m_context->createProgramFromPTXFile( "VCMLightPass.cu.ptx", "miss");
         m_context->setRayGenerationProgram(OptixEntryPoint::VCM_LIGHT_PASS, generatorProgram);
         m_context->setExceptionProgram(OptixEntryPoint::VCM_LIGHT_PASS, exceptionProgram);
         m_context->setMissProgram(RayType::LIGHT_VCM, missProgram);
