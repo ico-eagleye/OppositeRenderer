@@ -41,6 +41,11 @@ rtBuffer<uint, 2> lightSubpathLengthBuffer;
 //rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 //rtBuffer<LightVertex> lightVertexBuffer;
 
+rtDeclareVariable(int, lightSubpathLengthBufferId, , ); // <uint, 2>
+rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
+rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
+
+
 RT_PROGRAM void lightPass()
 {
     if (lightVertexCountEstimatePass)
@@ -58,6 +63,7 @@ RT_PROGRAM void lightPass()
     lightPrd.dVCM = 0.f;
     lightPrd.randomState = randomStates[launchIndex];
     lightSubpathLengthBuffer[launchIndex] = 0u;
+
 #if VCM_UNIFORM_VERTEX_SAMPLING
     lightPrd.dVC_unif_vert = 0.f;
 #endif
@@ -92,7 +98,6 @@ RT_PROGRAM void lightPass()
 
 
 
-
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
@@ -119,13 +124,13 @@ rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, vertexPickPdf, , );
 
 // Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
-__inline__ __device__ void initLightPayload(SubpathPRD & aLightPrd)
+RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
 {
     using namespace optix;
 
-    float *vertPickPdfPtr = NULL;
+    float *pVertPickPdf = NULL;
 #if VCM_UNIFORM_VERTEX_SAMPLING
-    vertPickPdfPtr = &vertexPickPdf;
+    pVertPickPdf = &vertexPickPdf;
 #endif
 
     // vmarz TODO: pick based on light power
@@ -156,5 +161,5 @@ __inline__ __device__ void initLightPayload(SubpathPRD & aLightPrd)
     OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
         aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
 
-    initLightMisTerms(aLightPrd, light, cosAtLight, directPdfW, emissionPdfW, misVcWeightFactor, vertPickPdfPtr);
+    initLightMisTerms(aLightPrd, light, cosAtLight, directPdfW, emissionPdfW, misVcWeightFactor, pVertPickPdf);
 }

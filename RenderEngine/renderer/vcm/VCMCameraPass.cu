@@ -37,7 +37,7 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 //rtDeclareVariable(Sphere, sceneBoundingSphere, , );
 
-static __device__ __inline__ float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
+RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
 {
     if (1 <= localIterationNumber)
         return oldRadiance + (newRadiance-oldRadiance)/(localIterationNumber+1);
@@ -129,7 +129,7 @@ rtDeclareVariable(float, vcmMisVmWeightFactor, , );
 rtDeclareVariable(uint, vcmLightSubpathCount, , );
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
-__inline__ __device__ void initCameraPayload(SubpathPRD & aCameraPrd)
+RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
 {
     float2 screen = make_float2( outputBuffer.size() );
     float2 sample = getRandomUniformFloat2(&aCameraPrd.randomState);             // jitter pixel pos

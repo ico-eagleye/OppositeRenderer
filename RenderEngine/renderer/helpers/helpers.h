@@ -7,6 +7,10 @@
 #pragma once
 #include "config.h"
 
+// Optix inlines all functions, Cuda compiles fails to inline functions with hit __inline__
+// so this is precaution macro
+#define RT_FUNCTION __forceinline__ __device__
+
 // Printf issues
 //rtPrintf()
 //		- doesn't print spaces in a loop
