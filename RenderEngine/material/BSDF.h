@@ -47,7 +47,7 @@ public:
         _continuationProb = 0.f;
     }
 
-    // For simple case when not differentiating between gemoetric and shading normal,
+    // For simple case when not differentiating between geometric and shading normal,
     // generates tangent and bitangent
     __device__ __forceinline__ BSDF( const optix::float3 & aWorldNormal )
     {
@@ -177,7 +177,8 @@ public:
     // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
-    __device__ optix::float3 sampleF( const optix::float3 & aWorldWo,
+    __forceinline__
+        __device__ optix::float3 sampleF( const optix::float3 & aWorldWo,
                                       optix::float3       * oWorldWi, 
                                       const optix::float3 & aSample,
                                       float               * oPdfW,
@@ -347,7 +348,8 @@ public:
     // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
-    __device__ __forceinline__ optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
+    //__forceinline__
+        __device__ optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
                                                          const optix::float3 & aSample,
                                                          float               * oPdfW,
                                                          float               * oCosThetaOut = NULL,

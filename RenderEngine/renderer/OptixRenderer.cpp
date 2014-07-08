@@ -338,11 +338,13 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBuffer->setElementSize( sizeof( LightVertex ) );
     m_lightVertexBuffer->setSize( 1u );
     m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
+    m_context["lightVertexBufferId"]->setInt(m_lightVertexBuffer->getId());
     m_context["vcmLightSubpathCount"]->setUint(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT);
 
     // VCM light vertex buffer index counter buffer
     m_lightVertexBufferIndexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u);
     m_context["lightVertexBufferIndexBuffer"]->set(m_lightVertexBufferIndexBuffer);
+    m_context["lightVertexBufferIndexBufferId"]->setInt(m_lightVertexBufferIndexBuffer->getId());
 
     optix::uint* bufferHost = static_cast<optix::uint*>(m_lightVertexBufferIndexBuffer->map());
     memset(bufferHost, 0, sizeof(optix::uint));
@@ -351,6 +353,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     // Size is set in light pass length estimate pass \\ TODO use same dimensions for estimate?
     m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u, 1u );
     m_context["lightSubpathLengthBuffer"]->set(m_lightSubpathLengthBuffer);
+    m_context["lightSubpathLengthBufferId"]->setInt(m_lightSubpathLengthBuffer->getId());
+
     m_context["lightVertexCountEstimatePass"]->setUint(1u);
     m_context["vcmNumlightVertexConnections"]->setUint(VCM_NUM_LIGHT_PATH_CONNECTIONS);
 
@@ -359,6 +363,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightSubpathVertexIndexBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT,
         m_width, m_height, m_lightSubpathMaxLength );
     m_context["lightSubpathVertexIndexBuffer"]->set(m_lightSubpathVertexIndexBuffer);
+    m_context["lightSubpathVertexIndexBufferId"]->setInt(m_lightSubpathVertexIndexBuffer->getId());
 #endif
 
     // VCM programs

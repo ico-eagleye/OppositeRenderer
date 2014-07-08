@@ -16,7 +16,7 @@
 
 
 // Initialize light payload partial MIS terms  [tech. rep. (31)-(33)]
-__inline__ __device__ void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight, const float & aCostAtLight,
+RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight, const float & aCostAtLight,
                                             const float & aDirectPdfW, const float & aEmissionPdfW,
                                             const float & misVcWeightFactor, const float const * aVertexPickPdf = NULL)
 {
@@ -57,7 +57,7 @@ __inline__ __device__ void initLightMisTerms(SubpathPRD & aLightPrd, const Light
 
 
 // Initialize camera payload partial MIS terms [tech. rep. (31)-(33)]
-__inline__ __device__ void initCameraMisTerms(SubpathPRD & aCameraPrd, const float & aCameraPdf,
+RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float & aCameraPdf,
                                               const optix::uint & aVcmLightSubpathCount)
 {
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
@@ -84,7 +84,7 @@ __inline__ __device__ void initCameraMisTerms(SubpathPRD & aCameraPrd, const flo
 
 // Update MIS quantities before storing at the vertex, follows initialization on light [tech. rep. (31)-(33)]
 // or scatter from surface [tech. rep. (34)-(36)]
-__inline__ __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
+RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
 {
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
     aLightPrd.dVCM *= vcmMis(sqr(aRayLen));
@@ -104,7 +104,7 @@ __inline__ __device__ void updateMisTermsOnHit(SubpathPRD & aLightPrd, const flo
 //%__cuda_local_var_528573_11_non_const_bsdfDirPdfW.4 = phi float [ %__cuda_local_var_528573_11_non_const_bsdfDirPdfW.1609, %568 ], [ %580, %578 ], [ %__cuda_local_var_528573_11_non_const_bsdfDirPdfW.1609, %568 ], !dbg !515”
 
 // Initializes MIS terms for next event, partial implementation of [tech. rep. (34)-(36)], completed on hit
-__inline__ __device__ void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
+RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
                                                    const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
                                                    const float const * aVertexPickPdf = NULL)
 {
@@ -156,5 +156,5 @@ __inline__ __device__ void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const 
     aPathPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
     OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
     OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -          U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
+    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
 }
