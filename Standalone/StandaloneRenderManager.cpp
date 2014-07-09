@@ -4,6 +4,7 @@
  * file that was distributed with this source code.
 */
 
+#include "config.h"
 #include "StandaloneRenderManager.hxx"
 #include "renderer/OptixRenderer.h"
 #include <QThread>
@@ -19,13 +20,16 @@
 StandaloneRenderManager::StandaloneRenderManager(QApplication & qApplication, Application & application, const ComputeDevice& device) :
     m_device(device),
     m_renderer(OptixRenderer()), 
+    m_outputBufferIndex(0),
     m_nextIterationNumber(0),
-    m_outputBuffer(NULL),
     m_currentScene(NULL),
     m_compileScene(false),
     m_application(application),
     m_noEmittedSignals(true)
 {
+    for(int i=0; i < OUTPUT_BUF_COUNT; i++)
+        m_outputBuffers[i] = NULL;
+
     connect(&application, SIGNAL(sequenceNumberIncremented()), this, SLOT(onSequenceNumberIncremented()));
     connect(&application, SIGNAL(runningStatusChanged()), this, SLOT(onRunningStatusChanged()));
     connect(&application.getSceneManager(), SIGNAL(sceneLoadingNew()), this, SLOT(onSceneLoadingNew()));
@@ -40,10 +44,13 @@ StandaloneRenderManager::StandaloneRenderManager(QApplication & qApplication, Ap
 
 StandaloneRenderManager::~StandaloneRenderManager()
 {
-    if(m_outputBuffer != NULL)
+    for (int i=0; i<OUTPUT_BUF_COUNT; i++)
     {
-        delete[] m_outputBuffer;
-        m_outputBuffer = NULL;
+        if(m_outputBuffers[i] != NULL)
+        {
+            delete[] m_outputBuffers[i];
+            m_outputBuffers[i] = NULL;
+        }
     }
 }
 
@@ -83,8 +90,9 @@ void StandaloneRenderManager::renderNextIteration()
                 m_application.setRendererStatus(RendererStatus::STARTING_RENDERING);
             }
 
-            // We only diplay one every X frames on screen (to make fair comparison with distributed renderer)
-            bool shouldOutputIteration = m_nextIterationNumber % 5 == 0;
+            // We only display one every X frames on screen (to make fair comparison with distributed renderer)
+            //bool shouldOutputIteration = m_nextIterationNumber % 5 == 0;
+            bool shouldOutputIteration = m_nextIterationNumber % 1 == 0;
 
             const double PPMAlpha = 2.0/3.0;
             QVector<unsigned long long> iterationNumbers;
@@ -107,12 +115,13 @@ void StandaloneRenderManager::renderNextIteration()
             // Transfer the output buffer to CPU and signal ready for display
             if(shouldOutputIteration)
             {
-                if(m_outputBuffer == NULL)
+                m_outputBufferIndex = (m_outputBufferIndex+1) % OUTPUT_BUF_COUNT;
+                if(m_outputBuffers[m_outputBufferIndex] == NULL)
                 {
-                    m_outputBuffer = new float[2000*2000*3];
+                    m_outputBuffers[m_outputBufferIndex] = new float[MAX_OUTPUT_X*MAX_OUTPUT_Y*3];
                 }
-                m_renderer.getOutputBuffer(m_outputBuffer);
-                emit newFrameReadyForDisplay(m_outputBuffer, m_nextIterationNumber);
+                m_renderer.getOutputBuffer(m_outputBuffers[m_outputBufferIndex]);
+                emit newFrameReadyForDisplay(m_outputBuffers[m_outputBufferIndex], m_nextIterationNumber);
             }
 
             fillRenderStatistics();
@@ -147,9 +156,7 @@ void StandaloneRenderManager::fillRenderStatistics()
     {
         m_application.getRenderStatisticsModel().setNumEmittedPhotonsPerIteration(0);
         m_application.getRenderStatisticsModel().setNumEmittedPhotons(0);
-
     }
-
 }
 
 // TODO this may be called very often for rapid camera changes.

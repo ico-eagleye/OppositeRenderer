@@ -17,6 +17,8 @@ class Application;
 class QApplication;
 class ComputeDevice;
 
+#define OUTPUT_BUF_COUNT 5
+
 class StandaloneRenderManager : public QObject
 {
     Q_OBJECT;
@@ -48,13 +50,14 @@ private:
     Application & m_application;
     unsigned long long m_nextIterationNumber;
 
-    OptixRenderer m_renderer;
-    Camera m_camera;
-    QTime renderTime;
-    float* m_outputBuffer;
-    IScene* m_currentScene;
+    OptixRenderer         m_renderer;
+    Camera                m_camera;
+    QTime                 renderTime;
+    float               * m_outputBuffers[OUTPUT_BUF_COUNT];
+    int                   m_outputBufferIndex;
+    IScene              * m_currentScene;
     const ComputeDevice & m_device;
-    double m_PPMRadius;
-    bool m_compileScene;
-    bool m_noEmittedSignals;
+    double                m_PPMRadius;
+    bool                  m_compileScene;
+    bool                  m_noEmittedSignals;
 };

@@ -11,6 +11,7 @@ Takes mouse events and delegate them to the Mouse class
 */
 
 #define GL_GLEXT_PROTOTYPES
+#include "config.h"
 #include "GL/glew.h"
 #include "RenderWidget.hxx"
 #include <QTimer>
@@ -33,7 +34,8 @@ RenderWidget::RenderWidget( QWidget *parent, Camera & camera, const OutputSettin
 {
     this->resize(outputSettings.getWidth(), outputSettings.getHeight());
     setMouseTracking(false);
-    m_displayBufferCpu = new float[2000*2000*3];
+    m_displayBufferCpu = new float[MAX_OUTPUT_X*MAX_OUTPUT_Y*3];
+    memset(m_displayBufferCpu, 0.f, MAX_OUTPUT_X*MAX_OUTPUT_Y*3*sizeof(float));
 
     m_iterationNumberLabel = new QLabel(this);
     m_iterationNumberLabel->setStyleSheet("background:rgb(51,51,51); font-size:20pt; color:rgb(170,170,170);");
@@ -69,8 +71,8 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneI
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Draw the resulting image
-    //assert(cpuBuffer);
-    //memcpy(m_displayBufferCpu, cpuBuffer, getDisplayBufferSizeBytes());
+    assert(cpuBuffer);
+    memcpy(m_displayBufferCpu, cpuBuffer, getDisplayBufferSizeBytes());
 
     int offsetX = ((int)size().width() - (int)m_outputSettingsModel.getWidth())/2;
     int offsetY = ((int)size().height() - (int)m_outputSettingsModel.getHeight())/2;
@@ -91,7 +93,7 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneI
 
     glBindTexture(GL_TEXTURE_2D, m_GLOutputBufferTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, m_outputSettingsModel.getWidth(), 
-        m_outputSettingsModel.getHeight(), 0, GL_RGB, GL_FLOAT, (GLvoid*)cpuBuffer);
+        m_outputSettingsModel.getHeight(), 0, GL_RGB, GL_FLOAT, (GLvoid*)m_displayBufferCpu);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
