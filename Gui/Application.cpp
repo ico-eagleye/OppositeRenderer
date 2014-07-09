@@ -22,6 +22,7 @@ Application::Application(QApplication & qApplication) :
 
     // Move scene manager to a thread
     m_sceneManagerThread = new QThread(&qApplication);
+    m_sceneManagerThread->setObjectName("QThread::SceneManager");
     m_sceneManager.moveToThread(m_sceneManagerThread);
     m_sceneManagerThread->start();
 

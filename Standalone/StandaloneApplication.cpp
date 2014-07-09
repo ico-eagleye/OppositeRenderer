@@ -18,6 +18,7 @@ StandaloneApplication::StandaloneApplication(QApplication & qApplication, const 
 
     // Run render manager in thread
     m_thread = new QThread(&qApplication);
+    m_thread->setObjectName("QThread::StandaloneRenderRenderManager");
     m_renderManager.moveToThread(m_thread);
     QObject::connect(m_thread, SIGNAL(started()), &m_renderManager, SLOT(start()));
 

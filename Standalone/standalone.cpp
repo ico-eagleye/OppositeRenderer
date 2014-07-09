@@ -104,6 +104,7 @@ int main( int argc, char** argv )
 
         // Run application
         QThread* applicationThread = new QThread(&qApplication);
+        applicationThread->setObjectName("QThread::Application");
         application.moveToThread(applicationThread);
         applicationThread->start();
 
