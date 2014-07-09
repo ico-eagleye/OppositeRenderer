@@ -151,7 +151,7 @@
       <EntryPointSymbol>
       </EntryPointSymbol>
       <NoEntryPoint>false</NoEntryPoint>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR)\lib;$(ASSIMP_PATH)\lib\x64;$(OptixLibDir);$(FREEGLUT_PATH)\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -232,7 +232,7 @@
       <EntryPointSymbol>
       </EntryPointSymbol>
       <NoEntryPoint>false</NoEntryPoint>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(NVTOOLSEXT_PATH)\lib\$(Platform);$(QTDIR32)\lib;$(ASSIMP_PATH)\lib\x86;$(OptixLibDir);$(FREEGLUT_PATH)\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
