@@ -117,6 +117,7 @@ void StandaloneRenderManager::renderNextIteration()
                     m_outputBuffer = new float[MAX_OUTPUT_X*MAX_OUTPUT_Y*3];
                 }
                 m_renderer.getOutputBuffer(m_outputBuffer);
+                // FIXME
                 // vmarz: m_lastRendererIterationNumber shouldn't be exposed like that, but passed next iteration number
                 // can be invalid (already incremented) when render widget is updating and accumulated values get scaled incorrectly
                 emit newFrameReadyForDisplay(m_outputBuffer, &m_lastRendererIterationNumber, &m_outputBufferMutex);
