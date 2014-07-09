@@ -37,13 +37,15 @@ signals:
     void cameraUpdated();
 
 public slots:
-    void onNewFrameReadyForDisplay(const float* cpuBuffer, unsigned long long iterationNumber);
+    void onNewFrameReadyForDisplay(const float *cpuBuffer, const unsigned long long *lastRendererIterationNumber,
+                                   QMutex *outputBufferMutex = NULL);
 
 protected:
     virtual void initializeGL();
     virtual void resizeGL(int w, int h);
     virtual void paintGL();
-    void displayFrame(const float* cpuBuffer, unsigned long long iterationNumber);
+    void displayFrame(const float *cpuBuffer, const unsigned long long *lastRendererIterationNumber,
+                      QMutex *outputBufferMutex = NULL);
     QPair<int, int> getDisplayBufferSize();
     virtual void mousePressEvent(QMouseEvent* event);
     virtual void mouseMoveEvent( QMouseEvent* event );
@@ -60,4 +62,5 @@ private:
     GLuint m_GLTextureSampler;
     GLuint m_GLOutputBufferTexture;
     QLabel* m_iterationNumberLabel;
+    unsigned long long m_previewedIterations;
 };

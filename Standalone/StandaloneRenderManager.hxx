@@ -32,7 +32,7 @@ public slots:
     void start();
 
 signals:
-    void newFrameReadyForDisplay(const float* cpuBuffer, unsigned long long iterationNumber);
+    void newFrameReadyForDisplay(const float* cpuBuffer, const unsigned long long *iterationNumber, QMutex * outputBufferMutex = NULL);
     void continueRayTracing();
     void renderManagerError(QString);
 
@@ -47,14 +47,15 @@ private:
     void fillRenderStatistics();
     void continueRayTracingIfRunningAsync();
 
-    Application & m_application;
-    unsigned long long m_nextIterationNumber;
+    Application         & m_application;
+    unsigned long long    m_nextIterationNumber;
+    unsigned long long    m_lastRendererIterationNumber;
 
     OptixRenderer         m_renderer;
     Camera                m_camera;
     QTime                 renderTime;
-    float               * m_outputBuffers[OUTPUT_BUF_COUNT];
-    int                   m_outputBufferIndex;
+    float               * m_outputBuffer;
+    QMutex                m_outputBufferMutex;
     IScene              * m_currentScene;
     const ComputeDevice & m_device;
     double                m_PPMRadius;

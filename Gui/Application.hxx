@@ -70,14 +70,14 @@ private slots:
     void onSceneLoadingNew();
     void onSceneUpdated();
     void onSceneLoadError(QString);
-    void onNewFrameReadyForDisplay(const float*, unsigned long long);
+    void onNewFrameReadyForDisplay(const float*, const unsigned long long*, QMutex* = NULL);
 
 signals:
     void runningStatusChanged();
     void rendererStatusChanged();
     void renderMethodChanged();
     void cameraUpdated();
-    void newFrameReadyForDisplay(const float*, unsigned long long);
+    void newFrameReadyForDisplay(const float*, const unsigned long long*, QMutex* = NULL);
     void sequenceNumberIncremented();
     void applicationError(QString);
 

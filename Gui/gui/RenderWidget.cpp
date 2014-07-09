@@ -17,6 +17,7 @@ Takes mouse events and delegate them to the Mouse class
 #include <QTimer>
 #include "renderer/Camera.h"
 #include <QThread>
+#include <QMutex>
 #include <QMouseEvent>
 #include "RenderWidget.hxx"
 #include "models/OutputSettingsModel.hxx"
@@ -66,13 +67,18 @@ void RenderWidget::initializeGL()
     }
 }
 
-void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneIterations)
+void RenderWidget::displayFrame(const float *cpuBuffer, const unsigned long long const *lastRendererIterationNumber, 
+                                QMutex * outputBufferMutex)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Draw the resulting image
     assert(cpuBuffer);
+
+    if (outputBufferMutex) (*outputBufferMutex).lock();
+    unsigned long long doneIterations = *lastRendererIterationNumber + 1; // iteration numbers 0-based
     memcpy(m_displayBufferCpu, cpuBuffer, getDisplayBufferSizeBytes());
+    if (outputBufferMutex) (*outputBufferMutex).unlock();
 
     int offsetX = ((int)size().width() - (int)m_outputSettingsModel.getWidth())/2;
     int offsetY = ((int)size().height() - (int)m_outputSettingsModel.getHeight())/2;
@@ -80,7 +86,7 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneI
     if(offsetY > 20)
     {
         m_iterationNumberLabel->show();
-        m_iterationNumberLabel->setText(QString::number(doneIterations));
+        m_iterationNumberLabel->setText(QString::number(*lastRendererIterationNumber));
         m_iterationNumberLabel->setGeometry(offsetX+m_outputSettingsModel.getWidth() - 250,
                                             offsetY+m_outputSettingsModel.getHeight() + 5, 250, 30);
     }
@@ -107,7 +113,7 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneI
     loc = glGetUniformLocation(m_GLProgram, "invIterations");
     if (loc != -1)
     {
-        glUniform1f(loc, doneIterations == 0 ? 1.f : 1.0f/doneIterations);
+        glUniform1f(loc, 1.0f/doneIterations);
     }
 
     glEnable(GL_TEXTURE_2D);
@@ -129,12 +135,12 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneI
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
-
 }
 
-void RenderWidget::onNewFrameReadyForDisplay(const float* cpuBuffer, unsigned long long iterationNumber)
+void RenderWidget::onNewFrameReadyForDisplay(const float* cpuBuffer, const unsigned long long *lastRendererIterationNumber,
+                                             QMutex * outputBufMutex)
 {
-    displayFrame(cpuBuffer, iterationNumber);
+    displayFrame(cpuBuffer, lastRendererIterationNumber, outputBufMutex);
     updateGL();
 }
 

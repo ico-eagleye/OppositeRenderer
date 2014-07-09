@@ -222,7 +222,7 @@ void Application::onSceneLoadError(QString error)
     emit applicationError(error);
 }
 
-void Application::onNewFrameReadyForDisplay(const float*, unsigned long long )
+void Application::onNewFrameReadyForDisplay(const float*, const unsigned long long *, QMutex*)
 {
     m_renderStatisticsModel.incrementNumPreviewedIterations();
 }

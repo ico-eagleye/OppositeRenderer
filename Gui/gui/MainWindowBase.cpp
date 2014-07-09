@@ -97,8 +97,8 @@ MainWindowBase::MainWindowBase(Application& application)
     m_renderWidget = new RenderWidget(centralwidget, application.getCamera(), application.getOutputSettingsModel());
     gridLayout->addWidget(m_renderWidget, 0, 0, 1, 1);
     connect(m_renderWidget, SIGNAL(cameraUpdated()), &application, SLOT(onCameraUpdated()));
-    connect(&application, SIGNAL(newFrameReadyForDisplay(const float*, unsigned long long)), 
-            m_renderWidget, SLOT(onNewFrameReadyForDisplay(const float*, unsigned long long)),
+    connect(&application, SIGNAL(newFrameReadyForDisplay(const float*, const unsigned long long*, QMutex*)), 
+            m_renderWidget, SLOT(onNewFrameReadyForDisplay(const float*, const unsigned long long*, QMutex*)),
             Qt::QueuedConnection);
 
     connect(&application, SIGNAL(runningStatusChanged()), this, SLOT(onRunningStatusChanged()));

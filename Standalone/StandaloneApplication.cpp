@@ -13,8 +13,8 @@ StandaloneApplication::StandaloneApplication(QApplication & qApplication, const 
     : Application(qApplication),
       m_renderManager(StandaloneRenderManager(qApplication, *this, device))
 {
-    connect(&m_renderManager, SIGNAL(newFrameReadyForDisplay(const float*, unsigned long long)), 
-            this, SIGNAL(newFrameReadyForDisplay(const float*, unsigned long long)));
+    connect(&m_renderManager, SIGNAL(newFrameReadyForDisplay(const float*, const unsigned long long*, QMutex*)), 
+            this,             SIGNAL(newFrameReadyForDisplay(const float*, const unsigned long long*, QMutex*)));
 
     // Run render manager in thread
     m_thread = new QThread(&qApplication);
@@ -35,9 +35,9 @@ StandaloneApplication::~StandaloneApplication(void)
 
 void StandaloneApplication::startRenderManager()
 {
-	// vmarz: start renderer manager after rest of the initialization done and all 
-	// signals/slots hooked up so it has chance to report initialization errors
-	m_thread->start();
+    // vmarz: start renderer manager after rest of the initialization done and all 
+    // signals/slots hooked up so it has chance to report initialization errors
+    m_thread->start();
 }
 
 void StandaloneApplication::wait()

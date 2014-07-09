@@ -20,16 +20,14 @@
 StandaloneRenderManager::StandaloneRenderManager(QApplication & qApplication, Application & application, const ComputeDevice& device) :
     m_device(device),
     m_renderer(OptixRenderer()), 
-    m_outputBufferIndex(0),
+    m_outputBuffer(NULL),
     m_nextIterationNumber(0),
+    m_lastRendererIterationNumber(0),
     m_currentScene(NULL),
     m_compileScene(false),
     m_application(application),
     m_noEmittedSignals(true)
 {
-    for(int i=0; i < OUTPUT_BUF_COUNT; i++)
-        m_outputBuffers[i] = NULL;
-
     connect(&application, SIGNAL(sequenceNumberIncremented()), this, SLOT(onSequenceNumberIncremented()));
     connect(&application, SIGNAL(runningStatusChanged()), this, SLOT(onRunningStatusChanged()));
     connect(&application.getSceneManager(), SIGNAL(sceneLoadingNew()), this, SLOT(onSceneLoadingNew()));
@@ -44,13 +42,10 @@ StandaloneRenderManager::StandaloneRenderManager(QApplication & qApplication, Ap
 
 StandaloneRenderManager::~StandaloneRenderManager()
 {
-    for (int i=0; i<OUTPUT_BUF_COUNT; i++)
+    if(m_outputBuffer != NULL)
     {
-        if(m_outputBuffers[i] != NULL)
-        {
-            delete[] m_outputBuffers[i];
-            m_outputBuffers[i] = NULL;
-        }
+        delete[] m_outputBuffer;
+        m_outputBuffer = NULL;
     }
 }
 
@@ -113,16 +108,20 @@ void StandaloneRenderManager::renderNextIteration()
                 m_application.setRendererStatus(RendererStatus::RENDERING);
 
             // Transfer the output buffer to CPU and signal ready for display
+            m_outputBufferMutex.lock();
+            m_lastRendererIterationNumber = m_nextIterationNumber;
             if(shouldOutputIteration)
             {
-                m_outputBufferIndex = (m_outputBufferIndex+1) % OUTPUT_BUF_COUNT;
-                if(m_outputBuffers[m_outputBufferIndex] == NULL)
+                if(m_outputBuffer == NULL)
                 {
-                    m_outputBuffers[m_outputBufferIndex] = new float[MAX_OUTPUT_X*MAX_OUTPUT_Y*3];
+                    m_outputBuffer = new float[MAX_OUTPUT_X*MAX_OUTPUT_Y*3];
                 }
-                m_renderer.getOutputBuffer(m_outputBuffers[m_outputBufferIndex]);
-                emit newFrameReadyForDisplay(m_outputBuffers[m_outputBufferIndex], m_nextIterationNumber);
+                m_renderer.getOutputBuffer(m_outputBuffer);
+                // vmarz: m_lastRendererIterationNumber shouldn't be exposed like that, but passed next iteration number
+                // can be invalid (already incremented) when render widget is updating and accumulated values get scaled incorrectly
+                emit newFrameReadyForDisplay(m_outputBuffer, &m_lastRendererIterationNumber, &m_outputBufferMutex);
             }
+            m_outputBufferMutex.unlock();
 
             fillRenderStatistics();
             m_nextIterationNumber++;

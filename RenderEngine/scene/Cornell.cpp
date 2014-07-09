@@ -105,49 +105,49 @@ optix::Group Cornell::getSceneRootGroup(optix::Context & context)
 		optix::make_float3( 0.0f, 548.8f, 0.0f ),
 		diffuseRed ) );
 
-	// Short block
-	gis.push_back( createParallelogram(5, context, optix::make_float3( 130.0f, 165.0f, 65.0f),
-		optix::make_float3( -48.0f, 0.0f, 160.0f),
-		optix::make_float3( 160.0f, 0.0f, 49.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(6, context, optix::make_float3( 290.0f, 0.0f, 114.0f),
-		optix::make_float3( 0.0f, 165.0f, 0.0f),
-		optix::make_float3( -50.0f, 0.0f, 158.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(7, context, optix::make_float3( 130.0f, 0.0f, 65.0f),
-		optix::make_float3( 0.0f, 165.0f, 0.0f),
-		optix::make_float3( 160.0f, 0.0f, 49.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(8, context, optix::make_float3( 82.0f, 0.0f, 225.0f),
-		optix::make_float3( 0.0f, 165.0f, 0.0f),
-		optix::make_float3( 48.0f, 0.0f, -160.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(9, context, optix::make_float3( 240.0f, 0.0f, 272.0f),
-		optix::make_float3( 0.0f, 165.0f, 0.0f),
-		optix::make_float3( -158.0f, 0.0f, -47.0f),
-		diffuseWhite));
-		
-	// Tall block
-	gis.push_back( createParallelogram(10, context, optix::make_float3( 423.0f, 340.0f, 247.0f),
-		optix::make_float3( -158.0f, 0.0f, 49.0f),
-		optix::make_float3( 49.0f, 0.0f, 159.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(11, context, optix::make_float3( 423.0f, 0.0f, 247.0f),
-		optix::make_float3( 0.0f, 340.0f, 0.0f),
-		optix::make_float3( 49.0f, 0.0f, 159.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(12, context, optix::make_float3( 472.0f, 0.0f, 406.0f),
-		optix::make_float3( 0.0f, 340.0f, 0.0f),
-		optix::make_float3( -158.0f, 0.0f, 50.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(13, context, optix::make_float3( 314.0f, 0.0f, 456.0f),
-		optix::make_float3( 0.0f, 340.0f, 0.0f),
-		optix::make_float3( -49.0f, 0.0f, -160.0f),
-		diffuseWhite ) );
-	gis.push_back( createParallelogram(14, context, optix::make_float3( 265.0f, 0.0f, 296.0f),
-		optix::make_float3( 0.0f, 340.1f, 0.0f),
-		optix::make_float3( 158.0f, 0.0f, -49.0f),
-		diffuseWhite ) );
+	//// Short block
+	//gis.push_back( createParallelogram(5, context, optix::make_float3( 130.0f, 165.0f, 65.0f),
+	//	optix::make_float3( -48.0f, 0.0f, 160.0f),
+	//	optix::make_float3( 160.0f, 0.0f, 49.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(6, context, optix::make_float3( 290.0f, 0.0f, 114.0f),
+	//	optix::make_float3( 0.0f, 165.0f, 0.0f),
+	//	optix::make_float3( -50.0f, 0.0f, 158.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(7, context, optix::make_float3( 130.0f, 0.0f, 65.0f),
+	//	optix::make_float3( 0.0f, 165.0f, 0.0f),
+	//	optix::make_float3( 160.0f, 0.0f, 49.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(8, context, optix::make_float3( 82.0f, 0.0f, 225.0f),
+	//	optix::make_float3( 0.0f, 165.0f, 0.0f),
+	//	optix::make_float3( 48.0f, 0.0f, -160.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(9, context, optix::make_float3( 240.0f, 0.0f, 272.0f),
+	//	optix::make_float3( 0.0f, 165.0f, 0.0f),
+	//	optix::make_float3( -158.0f, 0.0f, -47.0f),
+	//	diffuseWhite));
+	//	
+	//// Tall block
+	//gis.push_back( createParallelogram(10, context, optix::make_float3( 423.0f, 340.0f, 247.0f),
+	//	optix::make_float3( -158.0f, 0.0f, 49.0f),
+	//	optix::make_float3( 49.0f, 0.0f, 159.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(11, context, optix::make_float3( 423.0f, 0.0f, 247.0f),
+	//	optix::make_float3( 0.0f, 340.0f, 0.0f),
+	//	optix::make_float3( 49.0f, 0.0f, 159.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(12, context, optix::make_float3( 472.0f, 0.0f, 406.0f),
+	//	optix::make_float3( 0.0f, 340.0f, 0.0f),
+	//	optix::make_float3( -158.0f, 0.0f, 50.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(13, context, optix::make_float3( 314.0f, 0.0f, 456.0f),
+	//	optix::make_float3( 0.0f, 340.0f, 0.0f),
+	//	optix::make_float3( -49.0f, 0.0f, -160.0f),
+	//	diffuseWhite ) );
+	//gis.push_back( createParallelogram(14, context, optix::make_float3( 265.0f, 0.0f, 296.0f),
+	//	optix::make_float3( 0.0f, 340.1f, 0.0f),
+	//	optix::make_float3( 158.0f, 0.0f, -49.0f),
+	//	diffuseWhite ) );
 		
 	// Light
 
@@ -182,12 +182,12 @@ optix::Group Cornell::getSceneRootGroup(optix::Context & context)
 
 	// vmarz: Changed to Trbvh. Sbvh can cause weird hangs 
 	// https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
-	geometry_group->setAcceleration(context->createAcceleration("Trbvh", "Bvh")); // Bvh Sbvh Trbvh
+	geometry_group->setAcceleration(context->createAcceleration("NoAccel", "NoAccel")); // Bvh Sbvh Trbvh NoAccel
 
 	optix::Group gro = context->createGroup();
 	gro->setChildCount(1);
 	gro->setChild(0, geometry_group);
-	optix::Acceleration acceleration = context->createAcceleration("Trbvh", "Bvh"); // BvhCompact
+	optix::Acceleration acceleration = context->createAcceleration("NoAccel", "NoAccel"); // Bvh BvhCompact NoAccel
 	gro->setAcceleration(acceleration);
 
 	return gro;
