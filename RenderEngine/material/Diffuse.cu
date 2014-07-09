@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
  */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -130,20 +130,20 @@ RT_PROGRAM void closestHitPhoton()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vertex Connection and Merging
 rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
-rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
+rtDeclareVariable(uint,       lightVertexCountEstimatePass, , );
 
-rtBuffer<LightVertex> lightVertexBuffer;
-rtBuffer<uint>        lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
-rtBuffer<uint, 2>     lightSubpathLengthBuffer;
+rtBuffer<LightVertex>  lightVertexBuffer;
+rtBuffer<uint>         lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
+rtBuffer<uint, 2>      lightSubpathLengthBuffer;
 
-rtDeclareVariable(int, lightVertexBufferId, , );            // <LightVertex>
-rtDeclareVariable(int, lightVertexBufferIndexBufferId, , ); // <uint>
-rtDeclareVariable(int, lightSubpathLengthBufferId, , );     // <uint, 2>
+rtDeclareVariable(int, lightVertexBufferId, , );            // rtBufferId<LightVertex>
+rtDeclareVariable(int, lightVertexBufferIndexBufferId, , ); // rtBufferId<uint>
+rtDeclareVariable(int, lightSubpathLengthBufferId, , );     // rtBufferId<uint, 2>
 
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
-rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
+rtBuffer<uint, 3>       lightSubpathVertexIndexBuffer;
+rtDeclareVariable(int,  lightSubpathVertexIndexBufferId, , ); // rtBufferId<uint, 3>
 rtDeclareVariable(uint, lightSubpathMaxLen, , );
 #else
 rtDeclareVariable(float, vertexPickPdf, , );                // used for uniform vertex sampling
@@ -183,6 +183,7 @@ RT_PROGRAM void closestHitLight()
 
 //rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
 rtDeclareVariable(float, averageLightSubpathLength, , );
+rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint, 1>
 
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
@@ -191,6 +192,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
     Lambertian lambertian = Lambertian(Kd);
+    rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
     rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);
     rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
     rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
@@ -200,7 +202,7 @@ RT_PROGRAM void vcmClosestHitCamera()
 
     cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, ray.direction, tHit,
          misVcWeightFactor, misVmWeightFactor, 
-        _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+        _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING
         _lightSubpathVertexIndexBufferId,
 #else

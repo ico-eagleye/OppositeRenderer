@@ -13,7 +13,7 @@
 #include "renderer/TransmissionPRD.h"
 #include "renderer/helpers/samplers.h"
 
-optix::float3 __inline __device__ getLightContribution(const Light & light, const optix::float3 & rec_position, 
+RT_FUNCTION optix::float3 getLightContribution(const Light & light, const optix::float3 & rec_position, 
     const optix::float3 & rec_normal, const rtObject & rootObject, RandomState & randomState)
 {
     float lightFactor = 1;
@@ -78,10 +78,12 @@ optix::float3 __inline __device__ getLightContribution(const Light & light, cons
 };
 
 
-optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & aRandomState,
-                                            float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
-                                            float & oDirectPdfA, float & oCosThetaLight,
-                                            optix::uint2 *launchIdx = NULL)
+// Samples emission point and direction, returns particle energy/weight. Fills
+// emission and direct hit pdf, cosine at light source
+RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomState,
+                                    float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
+                                    float & oDirectPdfA, float & oCosThetaLight,
+                                    optix::uint2 *launchIdx = NULL)
 {
     float3 radiance = optix::make_float3(0);
     float2 dirRnd = getRandomUniformFloat2(&aRandomState);
@@ -106,7 +108,7 @@ optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & 
         oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
         oEmissionPdfW *= aLight.inverseArea;
         oDirectPdfA = aLight.inverseArea;
-        radiance = aLight.Lemit * oCosThetaLight;
+        radiance = aLight.Lemit;// * oCosThetaLight;
     }
     else if(aLight.lightType == Light::POINT)
     {
@@ -122,3 +124,73 @@ optix::float3 __inline __device__ lightEmit(const Light & aLight, RandomState & 
     
     return radiance;
 };
+
+
+// Samples emission point on light source, returns radiance towards receiving point. Fills
+// emission and direct hit pdf, cosine at light source
+RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aRandomState, const float3 & aReceivePosition,
+                                          float3 & oDirectionToLight, float & oDistance,
+                                          float & oDirectPdfW, float * oEmissionPdfW = NULL,
+                                          float * oCosThetaLight = NULL, optix::uint2 *launchIdx = NULL)
+{
+    using namespace optix;    
+    float3 radiance = optix::make_float3(0);
+
+    //if (launchIdx)
+    //{
+    //    OPTIX_PRINTFID((*launchIdx), "illum - light type      %d \n", aLight.lightType);
+    //}
+
+    if (aLight.lightType == Light::AREA)
+    {
+        float2 posRnd = getRandomUniformFloat2(&aRandomState);
+        float3 pointOnLight = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
+        oDirectionToLight = pointOnLight - aReceivePosition;
+        oDistance = length(oDirectionToLight);
+        oDirectionToLight /= oDistance;
+
+        float cosThetaLight = dot(aLight.normal, -oDirectionToLight);
+        //if (launchIdx)
+        //{
+        //    OPTIX_PRINTFID((*launchIdx), "illum-    light normal % 14f % 14f % 14f \n", 
+        //        aLight.normal.x, aLight.normal.y, aLight.normal.z);
+        //    OPTIX_PRINTFID((*launchIdx), "illum-    dir to point % 14f % 14f % 14f \n",
+        //        -oDirectionToLight.x,-oDirectionToLight.y, -oDirectionToLight.z);
+        //    OPTIX_PRINTFID((*launchIdx), "illum-   cosThetaLight % 14f \n", cosThetaLight);
+        //}
+
+        if (cosThetaLight < EPS_COSINE)
+            return radiance;
+
+        //convert area sampling pdf mInvArea to pdf w.r.t solid angle 
+        // (mult with inverse of W to A conversion factor cos/distSqr)
+        oDirectPdfW = aLight.inverseArea * sqr(oDistance) / cosThetaLight;
+        if(oCosThetaLight)
+            *oCosThetaLight = cosThetaLight;
+
+        if(oEmissionPdfW)
+            *oEmissionPdfW = aLight.inverseArea * cosThetaLight * M_1_PIf;
+
+        radiance = aLight.Lemit * cosThetaLight;
+        //if (launchIdx)
+        //    OPTIX_PRINTFID((*launchIdx), "illum -       radiance % 14f % 14f % 14f \n", radiance.x, radiance.y, radiance.z);
+        return radiance;
+    }
+    else if(aLight.lightType == Light::POINT)
+    {
+        oDirectionToLight = aLight.position - aReceivePosition;
+        oDistance = length(oDirectionToLight);
+        oDirectPdfW = 1.f;
+        if (oEmissionPdfW)
+            *oEmissionPdfW = 0.25f * M_1_PIf;
+        if (oCosThetaLight)
+            *oCosThetaLight = 1.f;
+        radiance = aLight.intensity;
+    }
+    else if(aLight.lightType == Light::SPOT)
+    {
+        // Todo find correct direct light for spot light
+    }
+
+    return radiance;
+}

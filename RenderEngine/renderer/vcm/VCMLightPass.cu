@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -141,8 +141,7 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
         lightIndex = intmin((int)(sample*lights.size()), int(lights.size()-1));
     }
 
-    const Light light = lights[lightIndex];
-    const float inverseLightPickPdf = lights.size();
+    const Light light        = lights[lightIndex];
     const float lightPickPdf = 1.f / lights.size();
 
     float emissionPdfW;
@@ -153,7 +152,7 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     // vmarz?: do something similar as done for photon emission, emit towards scene when light far from scene?
 
     emissionPdfW *= lightPickPdf;
-    directPdfW *= lightPickPdf;
+    directPdfW   *= lightPickPdf;
     aLightPrd.throughput /= emissionPdfW;
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
     OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - emission Pdf    % 14f     directPdfW % 14f\n", 

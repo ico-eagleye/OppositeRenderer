@@ -398,6 +398,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightBuffer->setElementSize(sizeof(Light));
     m_lightBuffer->setSize(1);
     m_context["lights"]->set( m_lightBuffer );
+    m_context["lightsBufferId"]->setInt(m_lightBuffer->getId());
 
     // Debug buffers
     createGpuDebugBuffers();
@@ -755,7 +756,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_lightSubpathLengthBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-                m_lightSubpathMaxLength = maxLen * 1.3; // 30% extra size margin
+                m_lightSubpathMaxLength = maxLen * 2.f; // 30% extra size margin
                 m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, m_lightSubpathMaxLength);
                 m_context["lightSubpathMaxLen"]->setUint(m_lightSubpathMaxLength);
 #else
@@ -781,7 +782,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             optix::uint* bufferHost = static_cast<optix::uint*>(m_lightVertexBufferIndexBuffer->map());
             memset(bufferHost, 0, sizeof(optix::uint));
             m_lightVertexBufferIndexBuffer->unmap();
-            
+
             // Light pass
             { 
                 m_context["lightVertexCountEstimatePass"]->setUint(0u);

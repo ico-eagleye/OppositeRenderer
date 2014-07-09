@@ -100,7 +100,7 @@ __device__ __inline__ float PdfAtoW( const float aPdfA,
 
 
 // <Sampling code from Optix SDK>
-//Create ONB from normalaized vector
+//Create ONB from normalized vector
 static __device__ __inline__ void createONB( 
     const optix::float3& n, optix::float3& U, optix::float3& V)
 {
