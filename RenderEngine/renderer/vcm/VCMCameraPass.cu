@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTFID_DISABLE
+//#define OPTIX_PRINTFI_DISABLE
+//#define OPTIX_PRINTFIALL_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -88,15 +88,22 @@ RT_PROGRAM void cameraPass()
         //OPTIX_PRINTFI(cameraPrd.depth, "G %d - new dir %f %f %f\n", i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
     }
 
-    float3 avgColor = averageInNewRadiance(cameraPrd.color, outputBuffer[launchIndex], localIterationNumber);
-    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f\n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
-    OPTIX_PRINTFI(cameraPrd.depth, "             avg  % 14f % 14f % 14f\n", avgColor.x, avgColor.y, avgColor.z);
-
     //OPTIX_PRINTF("%d , %d - d %d - iter %d prd.color %f %f %f avColor %f %f %f\n", 
     //    launchIndex.x, launchIndex.y, cameraPrd.depth, localIterationNumber,
     //    cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
 
-    outputBuffer[launchIndex] = avgColor;
+    //float3 avgColor = averageInNewRadiance(cameraPrd.color,  outputBuffer[launchIndex], localIterationNumber);
+    //outputBuffer[launchIndex] = avgColor;
+
+    float3 bufColor = outputBuffer[launchIndex];
+    if (localIterationNumber == 0) bufColor = make_float3(0.f);
+    bufColor = bufColor + cameraPrd.color;
+    float3 avgColor = bufColor / (localIterationNumber + 1);
+    outputBuffer[launchIndex] = bufColor;
+    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f\n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "             avg  % 14f % 14f % 14f\n", avgColor.x, avgColor.y, avgColor.z);
+    //OPTIX_PRINTFI(cameraPrd.depth, "     buffer color % 14f % 14f % 14f\n", bufColor.x, bufColor.y, bufColor.z);
+
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 

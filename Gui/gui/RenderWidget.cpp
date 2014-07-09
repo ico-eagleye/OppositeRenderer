@@ -64,12 +64,11 @@ void RenderWidget::initializeGL()
     }
 }
 
-void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long iterationNumber)
+void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long doneIterations)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Draw the resulting image
-
     //assert(cpuBuffer);
     //memcpy(m_displayBufferCpu, cpuBuffer, getDisplayBufferSizeBytes());
 
@@ -79,7 +78,7 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long itera
     if(offsetY > 20)
     {
         m_iterationNumberLabel->show();
-        m_iterationNumberLabel->setText(QString::number(iterationNumber));
+        m_iterationNumberLabel->setText(QString::number(doneIterations));
         m_iterationNumberLabel->setGeometry(offsetX+m_outputSettingsModel.getWidth() - 250,
                                             offsetY+m_outputSettingsModel.getHeight() + 5, 250, 30);
     }
@@ -101,6 +100,12 @@ void RenderWidget::displayFrame(const float* cpuBuffer, unsigned long long itera
     if (loc != -1)
     {
         glUniform1f(loc, 1.0/m_outputSettingsModel.getGamma());
+    }
+
+    loc = glGetUniformLocation(m_GLProgram, "invIterations");
+    if (loc != -1)
+    {
+        glUniform1f(loc, doneIterations == 0 ? 1.f : 1.0f/doneIterations);
     }
 
     glEnable(GL_TEXTURE_2D);
@@ -160,7 +165,7 @@ void RenderWidget::mouseMoveEvent( QMouseEvent* event )
     emit cameraUpdated();
 }
 
-// vmarz: FIXME called after all closable docks closed, need to repaind the viewport
+// vmarz: FIXME called after all closable docks closed, need to repaint the viewport
 void RenderWidget::resizeEvent( QResizeEvent* event )
 {
     m_mouse.handleResize(event->size().width(), event->size().height());
@@ -173,10 +178,11 @@ void RenderWidget::initializeOpenGLShaders()
 
     const char* shaderSource = "uniform sampler2D sceneBuffer; "
                                "uniform float invgamma;"
+                               "uniform float invIterations;"
                                "void main(){ "
                                "    vec2 uv = gl_TexCoord[0].xy;"
                                "    vec3 color = texture2D(sceneBuffer, uv).rgb;"
-                               "    gl_FragColor.rgb = pow(color, vec3(invgamma));"
+                               "    gl_FragColor.rgb = pow(color * invIterations, vec3(invgamma));"
                                "    gl_FragColor.a = 1.0;"
                                "}";
 

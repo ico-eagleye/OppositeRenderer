@@ -840,7 +840,6 @@ void OptixRenderer::resizeBuffers(unsigned int width, unsigned int height)
 {
     m_outputBuffer->setSize( width, height );
     m_raytracePassOutputBuffer->setSize( width, height );
-    m_outputBuffer->setSize( width, height );
     m_directRadianceBuffer->setSize( width, height );
     m_indirectRadianceBuffer->setSize( width, height );
     m_randomStatesBuffer->setSize(max(PHOTON_LAUNCH_WIDTH, (unsigned int)1280), max(PHOTON_LAUNCH_HEIGHT,  (unsigned int)768));

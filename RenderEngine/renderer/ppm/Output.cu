@@ -32,5 +32,6 @@ static __device__ __inline float3 averageInNewRadiance(const float3 newRadiance,
 RT_PROGRAM void kernel()
 {
     float3 finalRadiance = directRadianceBuffer[launchIndex] + indirectRadianceBuffer[launchIndex];
-    outputBuffer[launchIndex] = averageInNewRadiance(finalRadiance, outputBuffer[launchIndex], localIterationNumber);
+    //outputBuffer[launchIndex] = averageInNewRadiance(finalRadiance, outputBuffer[launchIndex], localIterationNumber);
+    outputBuffer[launchIndex] = localIterationNumber == 0 ? finalRadiance : outputBuffer[launchIndex] + finalRadiance;
 }
