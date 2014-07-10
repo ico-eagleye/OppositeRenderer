@@ -4,9 +4,9 @@
  * file that was distributed with this source code.
  */
 
-//#define OPTIX_PRINTF_DEF
-//#define OPTIX_PRINTFI_DEF
-//#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
 
 
 #include <optix.h>
@@ -160,7 +160,7 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
 
  // Light subpath program
-RT_PROGRAM void closestHitLight()
+RT_PROGRAM void vcmClosestHitLight()
 {
     // vmarz TODO make sure shading normals used correctly
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );

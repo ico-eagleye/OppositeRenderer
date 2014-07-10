@@ -25,9 +25,10 @@
 
 #define OPTIX_DEBUG_STD_PRINTF 0
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
-#define OPTIX_DEBUG_ID_X 0
-#define OPTIX_DEBUG_ID_Y 0
+#define OPTIX_DEBUG_ID_X 320
+#define OPTIX_DEBUG_ID_Y 550
 
+#define IS_DEBUG_ID(launchIdx) launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y
 
 #if OPTIX_DEBUG_STD_PRINTF || !defined(__CUDACC__)
 #include <stdio.h>
@@ -36,11 +37,11 @@
 #define OPTIX_PRINTF_FUN rtPrintf
 #endif
 
-// OPTIX_XX_DEF     allow to enable disable given printf macro in the file
+// OPTIX_XXX_DEF    allow to enable disable given printf macro in the file
 // OPTIX_XXX_ENABLE may disable printf in some individual part of the file
 #if ENABLE_RENDER_DEBUG_OUTPUT
 
-#ifdef OPTIX_PRINTFID_DEF
+#ifdef defined(OPTIX_PRINTFID_DEF) //&& !defined(OPTIX_PRINTFID)
 #define OPTIX_PRINTFID(launchIdx, depth, str, ...) \
     if (OPTIX_PRINTFID_ENABLED && launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y) \
     {  \
@@ -50,7 +51,7 @@
 #define OPTIX_PRINTFID(depth, str, ...) 
 #endif
 
-#ifdef OPTIX_PRINTFI_DEF
+#ifdef defined(OPTIX_PRINTFI_DEF) //&& !defined(OPTIX_PRINTFI)
 #define OPTIX_PRINTFI(launchIdx, str, ...) \
     if (OPTIX_PRINTFI_ENABLED && launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y) \
     {  \
@@ -60,7 +61,7 @@
 #define OPTIX_PRINTFI(str, launchIdx, ...) 
 #endif
 
-#ifdef OPTIX_PRINTF_DEF
+#ifdef defined(OPTIX_PRINTF_DEF) //&& !defined(OPTIX_PRINTF)
 #define OPTIX_PRINTF(str, ...) \
 if (OPTIX_PRINTF_ENABLED) \
     OPTIX_PRINTF_FUN(str, __VA_ARGS__);

@@ -4,6 +4,10 @@
  * file that was distributed with this source code.
  */
 
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
+
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
@@ -13,6 +17,7 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/vcm.h"
+#include "renderer/helpers/helpers.h"
 
 using namespace optix;
 
@@ -60,7 +65,7 @@ rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
 /*
 // VCM Programs
 */
-RT_PROGRAM void closestHitLight()
+RT_PROGRAM void vcmClosestHitLight()
 {
     subpathPrd.done = 1;
 }
@@ -78,6 +83,10 @@ rtDeclareVariable(int, vcmUseVM, , );
 
 RT_PROGRAM void vcmClosestHitCamera()
 {
+    OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit1     Lemit % 14f % 14f % 14f \n", 
+        Lemit.x, Lemit.y, Lemit.z);
+    if (IS_DEBUG_ID(subpathPrd.launchIndex))
+        rtPrintf("conDE- Emit      Lemit % 14f % 14f % 14f \n", Lemit.x, Lemit.y, Lemit.z);
     subpathPrd.depth++;
     subpathPrd.done = 1;
     if (isZero(Lemit)) 
@@ -89,12 +98,21 @@ RT_PROGRAM void vcmClosestHitCamera()
     float lightPickProb = 1.f / lights.size();
   
     float cosAtLight = maxf(0.f, dot(worldShadingNormal, -ray.direction));
+    if (IS_DEBUG_ID(subpathPrd.launchIndex)) rtPrintf("conDE- Emit   cosLight % 14f \n", cosAtLight);
     if (cosAtLight == 0.f) 
         return;
 
     float directPdfA = inverseArea;
     float emissionPdfW = inverseArea * CosHemispherePdfW(worldShadingNormal, -ray.direction);
 
+    //OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit1   prd.col % 14f % 14f % 14f \n", 
+    //    subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
+    //if (IS_DEBUG_ID(subpathPrd.launchIndex)) 
+    //    rtPrintf( "conDE- Emit1   prd.col % 14f % 14f % 14f \n", subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
     connectLightSourceS0(subpathPrd, Lemit, directPdfA, emissionPdfW, lightPickProb, vcmUseVC, vcmUseVM); 
+    //OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit2   prd.col % 14f % 14f % 14f \n", 
+    //    subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
+    //if (IS_DEBUG_ID(subpathPrd.launchIndex)) 
+    //    rtPrintf( "conDE- Emit2   prd.col % 14f % 14f % 14f \n", subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
 }
 
