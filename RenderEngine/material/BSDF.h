@@ -216,7 +216,7 @@ public:
         optix::float3 wo = _diffGemetry.ToLocal(aWorldWo);
 
         // Sample f.
-        optix::float3 f;
+        optix::float3 f = optix::make_float3(0.0f);
         optix::float3 wi;
         optix::float2 s = optix::make_float2(aSample.y, aSample.z);
         CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, =, bxdf, sampleF, wo, &wi, s, oPdfW);
@@ -352,7 +352,7 @@ public:
         __device__ optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
                                                          const optix::float3 & aSample,
                                                          float               * oPdfW,
-                                                         float               * oCosThetaOut = NULL,
+                                                         float               * oCosThetaOut, //= NULL,
                                                          BxDF::Type            aSampleType = BxDF::All,
                                                          BxDF::Type          * oSampledType = NULL ) const
     {
@@ -366,8 +366,8 @@ public:
     // either when tracing from light or camera. Similarly directPdf corresponds sampling from Wo->Wi, reverse to Wi->Wo
     __device__ optix::float3 vcmF( const optix::float3 & aWorldDirGen,
                                    float               & oCosThetaGen,
-                                   float               * oDirectPdfW = NULL,
-                                   float               * oReversePdfW = NULL,
+                                   float               * oDirectPdfW,// = NULL,
+                                   float               * oReversePdfW,// = NULL,
                                    const optix::uint2  * dbgLaunchIndex = NULL,
                                    BxDF::Type            aSampleType = BxDF::All ) const
     {
@@ -443,7 +443,7 @@ public:
         //OPTIX_PRINTF("vcmF - _nBxDFs %d numMatched %d f %f %f %f \n", _nBxDFs, numMatched, f.x, f.y, f.z);
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14d     numMatched % 14d \n", _nBxDFs, numMatched);            
+            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14u     numMatched % 14d \n", _nBxDFs, numMatched);            
             OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -          bsdf F % 14f % 14f % 14f \n", f.x, f.y, f.z);
         }
 
