@@ -460,12 +460,20 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
 
 // Computes vertex connection contribution for camera path vertex that has been sampled on 
 // light source (traced and randomly hit the light). Light subpath length = 0 [tech. rep 42-43]
-RT_FUNCTION void connectLightSourceS0(SubpathPRD aCameraPrd, const optix::float3 &aRadiance, float & aDirectPdfA, 
+RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::float3 &aRadiance, float & aDirectPdfA, 
                                      float & aEmissionPdfW, float aLightPickProb, int aUseVC, int aUseVM)
 {
+    //if (IS_DEBUG_ID(aCameraPrd.launchIndex)) 
+    //    rtPrintf( "conDE- connS0  prd.thp % 14f % 14f % 14f \n", aCameraPrd.throughput.x, aCameraPrd.throughput.y, aCameraPrd.throughput.z);
+    //if (IS_DEBUG_ID(aCameraPrd.launchIndex)) 
+    //    rtPrintf( "conDE- connS0 radiance % 14f % 14f % 14f \n", aRadiance.x, aRadiance.y, aRadiance.z);
+    //if (IS_DEBUG_ID(aCameraPrd.launchIndex)) 
+    //    rtPrintf( "conDE- connS0    depth % 14u \n", aCameraPrd.depth);
     if (aCameraPrd.depth == 1) // first hit, see directly from camera, no weighting needed
     {
         aCameraPrd.color += aCameraPrd.throughput * aRadiance;
+        //if (IS_DEBUG_ID(aCameraPrd.launchIndex)) 
+        //    rtPrintf( "conDE- connS0 prd.colr % 14f % 14f % 14f \n", aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
         return;
     }
 
@@ -489,6 +497,10 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD aCameraPrd, const optix::float3
     const float misWeight = 1.f / (1.f + wCamera);
 
     aCameraPrd.color += aCameraPrd.throughput * misWeight * aRadiance;
+    //if (IS_DEBUG_ID(aCameraPrd.launchIndex)) 
+    //    rtPrintf( "conDE- connS0  DirPdfA % 14f  aEmissionPdfW % 14f \n", aDirectPdfA, aEmissionPdfW);
+    //if (IS_DEBUG_ID(aCameraPrd.launchIndex)) 
+    //    rtPrintf( "conDE- connS0  wCamera % 14f           dVCM % 14f            dVC % 14f \n", wCamera, aCameraPrd.dVCM , aCameraPrd.dVC);
 }
 
 
