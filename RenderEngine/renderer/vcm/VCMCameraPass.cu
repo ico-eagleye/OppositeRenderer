@@ -4,9 +4,11 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-//#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTF_DISABLE
+#define OPTIX_RTPRINTFID_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -48,7 +50,7 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
 
 RT_PROGRAM void cameraPass()
 {
-    OPTIX_PRINTFI(0, "Gen C - CAMERA PASS -------------------------------------------------------------------------\n");
+    OPTIX_PRINTFI(0, "\n\nGen C - CAMERA PASS -------------------------------------------------------------------------\n");
     SubpathPRD cameraPrd;
     cameraPrd.launchIndex = launchIndex;
     cameraPrd.randomState = randomStates[launchIndex];
@@ -100,12 +102,15 @@ RT_PROGRAM void cameraPass()
     bufColor = bufColor + cameraPrd.color;
     float3 avgColor = bufColor / (localIterationNumber + 1);
     outputBuffer[launchIndex] = bufColor;
-    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f\n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
-    OPTIX_PRINTFI(cameraPrd.depth, "             avg  % 14f % 14f % 14f\n", avgColor.x, avgColor.y, avgColor.z);
-    //OPTIX_PRINTFI(cameraPrd.depth, "     buffer color % 14f % 14f % 14f\n", bufColor.x, bufColor.y, bufColor.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
+    OPTIX_PRINTFI(cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
 
     randomStates[launchIndex] = cameraPrd.randomState;
 }
+
+
+
 
 
 rtDeclareVariable(SubpathPRD, cameraPrd, rtPayload, );

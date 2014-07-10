@@ -23,7 +23,7 @@
 
 
 #define OPTIX_DEBUG_STD_PRINTF 1
-#define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
+#define OPTIX_PRINTFI_IDX 0         // printing multiple consecutive spaces seems random - doesn't always work
 #define OPTIX_DEBUG_ID_X 0
 #define OPTIX_DEBUG_ID_Y 0
 
@@ -93,7 +93,7 @@
 #endif
 
 #ifndef OPTIX_RTPRINTFID_DISABLE
-#define OPTIX_RTPRINTFID(depth, str, ...) \
+#define OPTIX_RTPRINTFID(launchId, str, ...) \
     if (launchId.x == OPTIX_DEBUG_ID_X && launchId.y == OPTIX_DEBUG_ID_Y) \
     {  \
         if (OPTIX_PRINTFI_IDX) \
@@ -103,15 +103,13 @@
         rtPrintf(str, __VA_ARGS__); \
     }
 #else
-#define OPTIX_RTPRINTFID(depth, str, ...) 
+#define OPTIX_RTPRINTFID(launchId, str, ...)
 #endif
 
-#ifdef __CUDACC__
-#ifndef OPTIX_PRINTF_DISABLE
+#if defined(__CUDACC__) && !defined(OPTIX_PRINTF_DISABLE)
 #define OPTIX_PRINTF(str, ...) OPTIX_PRINTF_FUN(str, __VA_ARGS__);
-#endif
 #else
-#define OPTIX_PRINTF(str, ...)
+#define OPTIX_PRINTF(str, ...) 
 #endif
 
 
@@ -194,4 +192,19 @@ __host__ __device__ __inline__ unsigned int getBufIndex1D(
     const optix::uint2 & index2D, const optix::uint2& bufSize )
 {
     return index2D.x + index2D.y * bufSize.x;
+}
+
+RT_FUNCTION bool isNAN(float f)
+{
+    return f != f;
+}
+
+RT_FUNCTION bool isNAN(optix::float2 f)
+{
+    return f.x != f.x || f.y != f.y;
+}
+
+RT_FUNCTION bool isNAN(optix::float3 f)
+{
+    return f.x != f.x || f.y != f.y || f.z != f.z;
 }

@@ -811,6 +811,10 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         sutilCurrentTime( &end );
         double traceTime = end-traceStartTime;
 
+        // Debug REMOVE
+        float3* buffer = reinterpret_cast<float3*>( m_outputBuffer->map() );
+        m_outputBuffer->unmap();
+
 #if ENABLE_MESH_HITS_COUNTING
         // print scene meshes count
         int sceneNMeshes = m_context["sceneNMeshes"]->getInt();

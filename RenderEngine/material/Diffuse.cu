@@ -4,9 +4,11 @@
  * file that was distributed with this source code.
  */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-//#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTF_DISABLE
+#define OPTIX_RTPRINTFID_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>

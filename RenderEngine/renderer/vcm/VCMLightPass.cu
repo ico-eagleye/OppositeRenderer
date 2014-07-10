@@ -4,9 +4,11 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-//#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTFID_DISABLE
+#define OPTIX_PRINTFI_DISABLE
+#define OPTIX_PRINTFIALL_DISABLE
+#define OPTIX_PRINTF_DISABLE
+#define OPTIX_RTPRINTFID_DISABLE
 
 #include <optix.h>
 #include <optix_device.h>
@@ -49,9 +51,9 @@ rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
 RT_PROGRAM void lightPass()
 {
     if (lightVertexCountEstimatePass)
-        { OPTIX_PRINTFI(0, "GenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
+        { OPTIX_PRINTFI(0, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
     else
-        { OPTIX_PRINTFI(0, "GenCL - LIGHT STORE PASS --------------------------------------------------------------------\n"); }
+        { OPTIX_PRINTFI(0, "\n\nGenCL - LIGHT STORE PASS --------------------------------------------------------------------\n"); }
 
     SubpathPRD lightPrd;
     lightPrd.launchIndex = launchIndex;
