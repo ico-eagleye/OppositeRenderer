@@ -5,6 +5,9 @@
 */
 
 #pragma once
+//#define OPTIX_PRINTF_DEF
+//#define OPTIX_PRINTFI_DEF
+//#define OPTIX_PRINTFID_DEF
 
 #include "renderer/Light.h"
 #include "random.h"
@@ -12,6 +15,9 @@
 #include "renderer/ShadowPRD.h"
 #include "renderer/TransmissionPRD.h"
 #include "renderer/helpers/samplers.h"
+
+#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
 
 RT_FUNCTION optix::float3 getLightContribution(const Light & light, const optix::float3 & rec_position, 
     const optix::float3 & rec_normal, const rtObject & rootObject, RandomState & randomState)
@@ -77,7 +83,7 @@ RT_FUNCTION optix::float3 getLightContribution(const Light & light, const optix:
     return optix::make_float3(0);
 };
 
-
+#define OPTIX_PRINTFI_ENABLED 0
 // Samples emission point and direction, returns particle energy/weight. Fills
 // emission and direct hit pdf, cosine at light source
 RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomState,
@@ -90,14 +96,14 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
 
     if (launchIdx)
     {
-        OPTIX_PRINTFID((*launchIdx), "GenLi - light type      %d \n", aLight.lightType);
+        OPTIX_PRINTFI((*launchIdx), "GenLi -      light type %d \n", aLight.lightType);
     }
 
     if(aLight.lightType == Light::AREA)
     {
         if (launchIdx)
         {
-            OPTIX_PRINTFID((*launchIdx), "GenLi -     light Lemit % 14f % 14f % 14f\n",
+            OPTIX_PRINTFI((*launchIdx), "GenLi -     light Lemit % 14f % 14f % 14f\n",
                 aLight.Lemit.x, aLight.Lemit.y, aLight.Lemit.z);
             //OPTIX_PRINTFID((*launchIdx), "GenLi -        sample x % 14f       sample y % 14f\n",
             //    dirRnd.x, dirRnd.y);

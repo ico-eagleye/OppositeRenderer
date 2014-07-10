@@ -4,11 +4,9 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
-#define OPTIX_PRINTF_DISABLE
-#define OPTIX_RTPRINTFID_DISABLE
+//#define OPTIX_PRINTF_DEF
+//#define OPTIX_PRINTFI_DEF
+//#define OPTIX_PRINTFID_DEF
 
 #include <optix.h>
 #include <optix_device.h>
@@ -47,13 +45,14 @@ rtDeclareVariable(int, lightSubpathLengthBufferId, , ); // <uint, 2>
 rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
 rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
 
+#define OPTIX_PRINTFID_ENABLED 1
 
 RT_PROGRAM void lightPass()
 {
     if (lightVertexCountEstimatePass)
-        { OPTIX_PRINTFI(0, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
+        { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
     else
-        { OPTIX_PRINTFI(0, "\n\nGenCL - LIGHT STORE PASS --------------------------------------------------------------------\n"); }
+        { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT STORE PASS --------------------------------------------------------------------\n"); }
 
     SubpathPRD lightPrd;
     lightPrd.launchIndex = launchIndex;
@@ -82,7 +81,7 @@ RT_PROGRAM void lightPass()
 
         if (lightPrd.done)
         {
-            OPTIX_PRINTFI(lightPrd.depth, "GenCL - DONE LIGHT RAY\n\n");
+            OPTIX_PRINTFID(launchIndex, lightPrd.depth, "GenCL - DONE LIGHT RAY\n\n");
             break;
         }
 
@@ -105,7 +104,7 @@ RT_PROGRAM void miss()
 {
     lightPrd.done = 1;
     //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
-    OPTIX_PRINTFI(lightPrd.depth, "GenCL -       MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
+    OPTIX_PRINTFID(launchIndex, lightPrd.depth, "GenCL -       MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
                       lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z,
                       lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
 }
@@ -124,6 +123,8 @@ RT_PROGRAM void exception()
 
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, vertexPickPdf, , );
+
+#define OPTIX_PRINTFID_ENABLED 0
 
 // Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
 RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
@@ -157,9 +158,9 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     directPdfW   *= lightPickPdf;
     aLightPrd.throughput /= emissionPdfW;
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
-    OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - emission Pdf    % 14f     directPdfW % 14f\n", 
+    OPTIX_PRINTFID(aLightPrd.launchIndex, 0u, "GenLi - emission Pdf    % 14f     directPdfW % 14f\n", 
         emissionPdfW, directPdfW);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
+    OPTIX_PRINTFID(aLightPrd.launchIndex, 0u, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
         aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
 
     initLightMisTerms(aLightPrd, light, cosAtLight, directPdfW, emissionPdfW, misVcWeightFactor, pVertPickPdf);

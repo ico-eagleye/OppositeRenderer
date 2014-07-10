@@ -7,7 +7,7 @@
 #pragma once
 #include "config.h"
 
-// Optix inlines all functions, Cuda compiles fails to inline functions with hit __inline__
+// Optix inlines all functions, Cuda compiles sometimes fails to inline many parameter functions with __inline__ hint
 // so this is precaution macro
 #define RT_FUNCTION __forceinline__ __device__
 
@@ -15,15 +15,16 @@
 //rtPrintf()
 //		- doesn't print spaces in a loop
 //		- consecutive calls sometimes cause format exception - http://celarek.at/2014/05/why-you-should-never-use-nvidia-optix/
+//      - many rtPrintf calls can cause slow context compilation (maybe due many launchIndex conditions?)
 // printf():
-//		- not officially supported, sometimes causes crashes
+//		- not officially supported, sometimes causes crashes, weird behavior (buffer indices corrupt and out of bounds etc)
 //		- doesn't print spaces in a loop based on depth value (SOMETIMES ?) if depth variable used in the print call before loop
 //      - sometimes fails printing values of size_t2.y and size_t3.y correctly
 // The issues does complicate debugging process, hence the multiple switches for the macro below for quick switching
 
 
-#define OPTIX_DEBUG_STD_PRINTF 1
-#define OPTIX_PRINTFI_IDX 0         // printing multiple consecutive spaces seems random - doesn't always work
+#define OPTIX_DEBUG_STD_PRINTF 0
+#define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 #define OPTIX_DEBUG_ID_X 0
 #define OPTIX_DEBUG_ID_Y 0
 
@@ -35,92 +36,43 @@
 #define OPTIX_PRINTF_FUN rtPrintf
 #endif
 
+// OPTIX_XX_DEF     allow to enable disable given printf macro in the file
+// OPTIX_XXX_ENABLE may disable printf in some individual part of the file
 #if ENABLE_RENDER_DEBUG_OUTPUT
 
-// OPTIX_XXX_DISABLE may disable printf in some individual file to avoid recompilation of everything
-#ifndef OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFI(depth, str, ...) \
-    if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
+#ifdef OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTFID(launchIdx, depth, str, ...) \
+    if (OPTIX_PRINTFID_ENABLED && launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y) \
     {  \
-        if (OPTIX_PRINTFI_IDX) \
-        { \
-            OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
-        } \
-        OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
+        OPTIX_PRINTF_FUN("%u, %u - d %u - " str, launchIdx.x, launchIdx.y, depth, __VA_ARGS__); \
     }
 #else
-#define OPTIX_PRINTFI(depth, str, ...)
+#define OPTIX_PRINTFID(depth, str, ...) 
 #endif
 
-#ifndef OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFID(launchId, str, ...) \
-    if (launchId.x == OPTIX_DEBUG_ID_X && launchId.y == OPTIX_DEBUG_ID_Y) \
+#ifdef OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFI(launchIdx, str, ...) \
+    if (OPTIX_PRINTFI_ENABLED && launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y) \
     {  \
-        if (OPTIX_PRINTFI_IDX) \
-        { \
-            OPTIX_PRINTF_FUN("%d, %d - d X - ", launchId.x, launchId.y); \
-        } \
-        OPTIX_PRINTF_FUN(str, __VA_ARGS__); \
+        OPTIX_PRINTF_FUN("%u, %u - d X - " str, launchIdx.x, launchIdx.y, __VA_ARGS__); \
     }
 #else
-#define OPTIX_PRINTFID(depth, str, ...)
+#define OPTIX_PRINTFI(str, launchIdx, ...) 
 #endif
 
-#ifndef OPTIX_PRINTFIALL_DISABLE
-#define OPTIX_PRINTFIALL(depth, str, ...) \
-    if (OPTIX_PRINTFI_IDX) \
-    { \
-        OPTIX_PRINTF_FUN("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
-    } \
+#ifdef OPTIX_PRINTF_DEF
+#define OPTIX_PRINTF(str, ...) \
+if (OPTIX_PRINTF_ENABLED) \
     OPTIX_PRINTF_FUN(str, __VA_ARGS__);
 #else
-#define OPTIX_PRINTFIALL(depth, str, ...) 
+#define OPTIX_PRINTF(depth, str, ...) 
 #endif
-
-// Added explicit macros for rtPrintf since printf fails to print fields of size_t2, size_t3 correctly
-#ifndef OPTIX_RTPRINTFI_DISABLE
-#define OPTIX_RTPRINTFI(depth, str, ...) \
-    if (launchIndex.x == OPTIX_DEBUG_ID_X && launchIndex.y == OPTIX_DEBUG_ID_Y) \
-    {  \
-        if (OPTIX_PRINTFI_IDX) \
-        { \
-            rtPrintf("%d, %d - d %d - ", launchIndex.x, launchIndex.y, depth); \
-        } \
-        rtPrintf(str, __VA_ARGS__); \
-    }
-#else
-#define OPTIX_RTPRINTFI(depth, str, ...) 
-#endif
-
-#ifndef OPTIX_RTPRINTFID_DISABLE
-#define OPTIX_RTPRINTFID(launchId, str, ...) \
-    if (launchId.x == OPTIX_DEBUG_ID_X && launchId.y == OPTIX_DEBUG_ID_Y) \
-    {  \
-        if (OPTIX_PRINTFI_IDX) \
-        { \
-            rtPrintf("%d, %d - d X - ", launchId.x, launchId.y); \
-        } \
-        rtPrintf(str, __VA_ARGS__); \
-    }
-#else
-#define OPTIX_RTPRINTFID(launchId, str, ...)
-#endif
-
-#if defined(__CUDACC__) && !defined(OPTIX_PRINTF_DISABLE)
-#define OPTIX_PRINTF(str, ...) OPTIX_PRINTF_FUN(str, __VA_ARGS__);
-#else
-#define OPTIX_PRINTF(str, ...) 
-#endif
-
 
 #else // !ENABLE_RENDER_DEBUG_OUTPUT
 
 #define OPTIX_PRINTF(str, ...)
 #define OPTIX_PRINTFI(depth, str, ...)
 #define OPTIX_PRINTFID(depth, str, ...)
-#define OPTIX_PRINTFIALL(depth, str, ...)
-#define OPTIX_RTPRINTFI(depth, str, ...)
-#define OPTIX_RTPRINTFID(depth, str, ...)
 
 #endif
 

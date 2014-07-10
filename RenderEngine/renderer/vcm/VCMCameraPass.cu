@@ -4,11 +4,9 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
-#define OPTIX_PRINTF_DISABLE
-#define OPTIX_RTPRINTFID_DISABLE
+//#define OPTIX_PRINTF_DEF
+//#define OPTIX_PRINTFI_DEF
+//#define OPTIX_PRINTFID_DEF
 
 #include <optix.h>
 #include <optix_device.h>
@@ -48,9 +46,11 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
 }
 
 
+#define OPTIX_PRINTFID_ENABLED 1
+
 RT_PROGRAM void cameraPass()
 {
-    OPTIX_PRINTFI(0, "\n\nGen C - CAMERA PASS -------------------------------------------------------------------------\n");
+    OPTIX_PRINTFID(launchIndex, 0u, "\n\nGen C - CAMERA PASS -------------------------------------------------------------------------\n");
     SubpathPRD cameraPrd;
     cameraPrd.launchIndex = launchIndex;
     cameraPrd.randomState = randomStates[launchIndex];
@@ -68,7 +68,7 @@ RT_PROGRAM void cameraPass()
     initCameraPayload(cameraPrd);
     Ray cameraRay = Ray(cameraPrd.origin, cameraPrd.direction, RayType::CAMERA_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
-    OPTIX_PRINTFI(0, "Gen C - start - dVCM %f\n", cameraPrd.dVCM);
+    OPTIX_PRINTFID(launchIndex, 0u, "Gen C - start - dVCM %f\n", cameraPrd.dVCM);
 
     // Trace    
     for (int i=0;;i++)
@@ -102,9 +102,9 @@ RT_PROGRAM void cameraPass()
     bufColor = bufColor + cameraPrd.color;
     float3 avgColor = bufColor / (localIterationNumber + 1);
     outputBuffer[launchIndex] = bufColor;
-    OPTIX_PRINTFI(cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
-    OPTIX_PRINTFI(cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
-    OPTIX_PRINTFI(cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
+    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
+    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
+    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
 
     randomStates[launchIndex] = cameraPrd.randomState;
 }
@@ -118,7 +118,7 @@ RT_PROGRAM void miss()
 {
     cameraPrd.done = 1;
     //OPTIX_PRINTFI(cameraPrd.depth, "Miss\n");
-    OPTIX_PRINTFI(cameraPrd.depth, "Gen C -      MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
+    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C -      MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
                       cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z,
                       cameraPrd.origin.x, cameraPrd.origin.y, cameraPrd.origin.z);
 }
@@ -134,11 +134,11 @@ RT_PROGRAM void exception()
 }
 
 
-rtDeclareVariable(Camera, camera, , );
-rtDeclareVariable(float2, pixelSizeFactor, , );
-rtDeclareVariable(float, vcmMisVcWeightFactor, , );
-rtDeclareVariable(float, vcmMisVmWeightFactor, , );
-rtDeclareVariable(uint, vcmLightSubpathCount, , );
+rtDeclareVariable(Camera,   camera, , );
+rtDeclareVariable(float2,   pixelSizeFactor, , );
+rtDeclareVariable(float,    vcmMisVcWeightFactor, , );
+rtDeclareVariable(float,    vcmMisVmWeightFactor, , );
+rtDeclareVariable(uint,     vcmLightSubpathCount, , );
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
 RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)

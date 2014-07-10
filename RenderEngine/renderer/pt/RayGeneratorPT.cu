@@ -45,6 +45,11 @@ static __device__ __inline float3 averageInNewRadiance(const float3 newRadiance,
 
 RT_PROGRAM void generateRay()
 {
+    if (launchIndex.x == 0 && launchIndex.y == 0)
+    {
+        rtPrintf("rtPrintf works? \n");
+        printf("printf works? \n");
+    }
     RadiancePRD radiancePrd;
     radiancePrd.attenuation = make_float3( 1.0f );
     radiancePrd.radiance = make_float3(0.f);

@@ -4,11 +4,10 @@
  * file that was distributed with this source code.
  */
 
-#define OPTIX_PRINTFID_DISABLE
-#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
-#define OPTIX_PRINTF_DISABLE
-#define OPTIX_RTPRINTFID_DISABLE
+//#define OPTIX_PRINTF_DEF
+//#define OPTIX_PRINTFI_DEF
+//#define OPTIX_PRINTFID_DEF
+
 
 #include <optix.h>
 #include <optix_device.h>
@@ -95,7 +94,7 @@ RT_PROGRAM void closestHitPhoton()
     }
 
     photonPrd.power *= Kd;
-    OPTIX_PRINTFI(photonPrd.depth, "Hit Diffuse P(%.2f %.2f %.2f) RT=%d\n", hitPoint.x, hitPoint.y, hitPoint.z, ray.ray_type);
+    OPTIX_PRINTFID(launchIndex, photonPrd.depth, "Hit Diffuse P(%.2f %.2f %.2f) RT=%d\n", hitPoint.x, hitPoint.y, hitPoint.z, ray.ray_type);
     photonPrd.weight *= fmaxf(Kd);
 
     // Use russian roulette sampling from depth X to limit the length of the path
@@ -131,6 +130,10 @@ RT_PROGRAM void closestHitPhoton()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vertex Connection and Merging
+#define OPTIX_PRINTF_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
+
 rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
 rtDeclareVariable(uint,       lightVertexCountEstimatePass, , );
 

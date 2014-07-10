@@ -1,4 +1,9 @@
 #pragma once
+
+//#define OPTIX_PRINTF_DEF
+//#define OPTIX_PRINTFI_DEF
+//#define OPTIX_PRINTFID_DEF
+
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
@@ -13,6 +18,7 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/vcm_shared.h"
+
 
 
 // Initialize light payload partial MIS terms  [tech. rep. (31)-(33)]
@@ -98,22 +104,24 @@ RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosT
 
 
 
-
+#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 1
 // nvcc of Cuda 6 gives error below if updateMisTermsOnScatter() is inlined after call to lightVertex.bsdf.sampleF or vcmSampleF
 //“PHINode should have one entry for each predecessor of its parent basic block! 
 //%__cuda_local_var_528573_11_non_const_bsdfDirPdfW.4 = phi float [ %__cuda_local_var_528573_11_non_const_bsdfDirPdfW.1609, %568 ], [ %580, %578 ], [ %__cuda_local_var_528573_11_non_const_bsdfDirPdfW.1609, %568 ], !dbg !515”
 
 // Initializes MIS terms for next event, partial implementation of [tech. rep. (34)-(36)], completed on hit
 RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
-                                                   const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
-                                                   const float const * aVertexPickPdf = NULL)
+                                         const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
+                                         const float const * aVertexPickPdf = NULL)
 {
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "updateMisTermsOnScatter(): \n");
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "updateMisTermsOnScatter(): \n");
     float vertPickPdf = aVertexPickPdf ?  (*aVertexPickPdf) : 1.f;
     const float dVC = aPathPrd.dVC;
     const float dVM = aPathPrd.dVM;
     const float dVCM = aPathPrd.dVCM;
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -            dVC % 14f            dVM % 14f           dVCM % 14f \n", dVC, dVM, dVCM);
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -            dVC % 14f            dVM % 14f           dVCM % 14f \n",
+        dVC, dVM, dVCM);
 
     //float cosDivBsfPdf = aCosThetaOut / aBsdfDirPdfW;
     //double cosDivBsfPdfD = double(aCosThetaOut) / aBsdfDirPdfW;
@@ -136,9 +144,8 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
         aPathPrd.dVC * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM + aMisVmWeightFactor);               
 
-    OPTIX_PRINTFID(aPathPrd.launchIndex,
-        "MIS   -          U dVC = (   cosThetaOut /    bsdfDirPdfW) * (           dVC *    bsdfRevPdfW +           dVCM + VmWeightFactor) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f) \n", 
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -          U dVC = (   cosThetaOut /    bsdfDirPdfW) * (           dVC *    bsdfRevPdfW +           dVCM + VmWeightFactor) \n");
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f) \n", 
         aPathPrd.dVC, aCosThetaOut, aBsdfDirPdfW, dVC, aBsdfRevPdfW, dVCM, aMisVmWeightFactor);
 
 #if VCM_UNIFORM_VERTEX_SAMPLING
@@ -158,14 +165,14 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
     aPathPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
         aPathPrd.dVM * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM * aMisVcWeightFactor * vertPickPdf + 1.f ); // vertPickPdf should divide etaVCM which is inverse in aMisVcWeightFactor
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -          U dVM = (   cosThetaOut /    bsdfDirPdfW) * (           dVM *    bsdfRevPdfW +           dVCM + VcWeightFactor *    vertPickPdf + 1) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f * % 14f + 1) \n", 
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -          U dVM = (   cosThetaOut /    bsdfDirPdfW) * (           dVM *    bsdfRevPdfW +           dVCM + VcWeightFactor *    vertPickPdf + 1) \n");
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f * % 14f + 1) \n", 
         aPathPrd.dVM, aCosThetaOut, aBsdfDirPdfW, dVM, aBsdfRevPdfW, dVCM, aMisVcWeightFactor, vertPickPdf);
 
     // dVCM = 1 / pi
     // pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
     aPathPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
+    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
 }

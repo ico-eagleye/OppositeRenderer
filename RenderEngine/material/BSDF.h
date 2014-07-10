@@ -1,8 +1,8 @@
 #pragma once
 
-//#define OPTIX_PRINTFID_DISABLE
-//#define OPTIX_PRINTFI_DISABLE
-#define OPTIX_PRINTFIALL_DISABLE
+//#define OPTIX_PRINTF_DEF
+//#define OPTIX_PRINTFI_DEF
+//#define OPTIX_PRINTFID_DEF
 
 // Partially borrowed from https://github.com/LittleCVR/MaoPPM
 #include <optix_world.h>
@@ -375,7 +375,7 @@ public:
 
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -     WorldDirGen % 14f % 14f % 14f \n",
+            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -     WorldDirGen % 14f % 14f % 14f \n",
                 aWorldDirGen.x, aWorldDirGen.y, aWorldDirGen.z);
             //OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  - dg  b       %f %f %f\n",
             //    _diffGemetry.bitangent.x, _diffGemetry.bitangent.y, _diffGemetry.bitangent.z);
@@ -391,9 +391,9 @@ public:
             _localDirFix.x, _localDirFix.y, _localDirFix.z, localDirGen.x, localDirGen.y, localDirGen.z);*/
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -    _localDirFix % 14f % 14f % 14f \n",
+            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -    _localDirFix % 14f % 14f % 14f \n", 
                 _localDirFix.x, _localDirFix.y, _localDirFix.z);
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -    _localDirGen % 14f % 14f % 14f \n",
+            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -    _localDirGen % 14f % 14f % 14f \n", 
                 localDirGen.x, localDirGen.y, localDirGen.z);
         }
 
@@ -429,7 +429,7 @@ public:
                 numMatched++;
                 if (dbgLaunchIndex)
                 {
-                    OPTIX_PRINTFID( (*dbgLaunchIndex), "vcmF  -           dPdfW % 14f          rPdfW % 14f \n",
+                    OPTIX_PRINTFI( (*dbgLaunchIndex), "vcmF  -           dPdfW % 14f          rPdfW % 14f \n",
                         dPdfW, rPdfW );
                 }
             }
@@ -443,8 +443,8 @@ public:
         //OPTIX_PRINTF("vcmF - _nBxDFs %d numMatched %d f %f %f %f \n", _nBxDFs, numMatched, f.x, f.y, f.z);
         if (dbgLaunchIndex)
         {
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14u     numMatched % 14d \n", _nBxDFs, numMatched);            
-            OPTIX_PRINTFID((*dbgLaunchIndex), "vcmF  -          bsdf F % 14f % 14f % 14f \n", f.x, f.y, f.z);
+            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14u     numMatched % 14d \n", _nBxDFs, numMatched);            
+            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -          bsdf F % 14f % 14f % 14f \n", f.x, f.y, f.z);
         }
 
         return f;

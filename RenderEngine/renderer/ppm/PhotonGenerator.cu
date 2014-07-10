@@ -4,6 +4,8 @@
  * file that was distributed with this source code.
 */
 
+#define OPTIX_PRINTFI_ENABLED 1
+
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
 #include <optix_device.h>
