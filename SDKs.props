@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project InitialTargets ="OppositeLogSDKs" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <!-- <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER>
-    <CUDA_USE_VER>6.0</CUDA_USE_VER> -->
+    <!-- <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER> -->
     <OPTIX_USE_VER>3.5.1</OPTIX_USE_VER>
+    <!-- <CUDA_USE_VER>6.0</CUDA_USE_VER> -->
     <CUDA_USE_VER>5.5</CUDA_USE_VER>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_V3_0_1)</OptixDir>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_V3_5_1)</OptixDir>
