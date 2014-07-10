@@ -323,6 +323,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     // VCM initialization
     m_vcmUseVC = true;
     m_vcmUseVM = false;
+    m_context["vcmUseVC"]->setInt(m_vcmUseVC);
+    m_context["vcmUseVM"]->setInt(m_vcmUseVM);
 
 #if VCM_UNIFORM_VERTEX_SAMPLING
     m_lightPassLaunchWidth = VCM_LIGHT_PASS_LAUNCH_WIDTH;

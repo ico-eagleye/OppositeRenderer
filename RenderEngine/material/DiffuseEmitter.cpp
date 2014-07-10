@@ -6,6 +6,7 @@
 
 #include "DiffuseEmitter.h"
 #include "renderer/RayType.h"
+#include "optixu_math_namespace.h"
 
 bool DiffuseEmitter::m_optixMaterialIsCreated = false;
 optix::Material DiffuseEmitter::m_optixMaterial;
@@ -53,6 +54,10 @@ void DiffuseEmitter::registerGeometryInstanceValues(optix::GeometryInstance & in
 
     instance["powerPerArea"]->setFloat(powerPerArea);
     instance["power"]->setFloat(m_power);
+
+    optix::float3 Lemit = m_power * m_inverseArea * M_1_PIf;
+    instance["Lemit"]->setFloat(Lemit);
+    instance["inverseArea"]->setFloat(m_inverseArea);
 }
 
 Vector3 DiffuseEmitter::getPower() const

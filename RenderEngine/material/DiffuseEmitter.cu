@@ -11,6 +11,8 @@
 #include "renderer/ShadowPRD.h"
 #include "renderer/ppm/PhotonPRD.h"
 #include "renderer/vcm/SubpathPRD.h"
+#include "renderer/vcm/config_vcm.h"
+#include "renderer/vcm/vcm.h"
 
 using namespace optix;
 
@@ -56,18 +58,43 @@ RT_PROGRAM void gatherAnyHitOnEmitter()
 rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
 
 /*
-// VCM Light Program
+// VCM Programs
 */
 RT_PROGRAM void closestHitLight()
 {
     subpathPrd.done = 1;
 }
 
+#define OPTIX_PRINTF_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
 
-/*
-// VCM Camera Program
-*/
+rtDeclareVariable(float3, Lemit, , );
+rtDeclareVariable(float, inverseArea, , );
+rtDeclareVariable(rtObject, sceneRootObject, , );
+rtBuffer<Light, 1> lights;
+rtDeclareVariable(int, vcmUseVC, , );
+rtDeclareVariable(int, vcmUseVM, , );
+
 RT_PROGRAM void vcmClosestHitCamera()
 {
+    subpathPrd.depth++;
     subpathPrd.done = 1;
+    if (isZero(Lemit)) 
+        return;
+
+    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;
+
+    float lightPickProb = 1.f / lights.size();
+  
+    float cosAtLight = maxf(0.f, dot(worldShadingNormal, -ray.direction));
+    if (cosAtLight == 0.f) 
+        return;
+
+    float directPdfA = inverseArea;
+    float emissionPdfW = inverseArea * CosHemispherePdfW(worldShadingNormal, -ray.direction);
+
+    connectLightSourceS0(subpathPrd, Lemit, directPdfA, emissionPdfW, lightPickProb, vcmUseVC, vcmUseVM); 
 }
+

@@ -12,8 +12,8 @@
 // Get a random direction from the hemisphere of direction around normalized normal, 
 // sampled with the cosine distribution p(theta, phi) = cos(theta)/PI. In oPdfW returns PDF with 
 // respect to solid angle measure
-static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::float3 & normal, const optix::float2& sample,
-                                                                   float * oPdfW = NULL, float * oCosTheta = NULL)
+RT_FUNCTION static optix::float3 sampleUnitHemisphereCos(const optix::float3 & normal, const optix::float2& sample,
+                                                         float * oPdfW = NULL, float * oCosTheta = NULL)
 {
     using namespace optix;
 
@@ -34,7 +34,7 @@ static __device__ __inline__ optix::float3 sampleUnitHemisphereCos(const optix::
 }
 
 // Sample unit hemisphere around (normalized) normal
-static __device__ __inline__ optix::float3 sampleUnitHemisphere(const optix::float3 & normal, const optix::float2& sample)
+RT_FUNCTION static optix::float3 sampleUnitHemisphere(const optix::float3 & normal, const optix::float2& sample)
 {
     optix::float3 U, V;
     createCoordinateSystem( normal, U, V);
@@ -47,7 +47,7 @@ static __device__ __inline__ optix::float3 sampleUnitHemisphere(const optix::flo
     return optix::normalize(U*x + V*y + normal*z);
 }
 
-static __device__ __inline__ optix::float3 sampleUnitSphere(const optix::float2& sample, float * oPdfW = NULL)
+RT_FUNCTION static optix::float3 sampleUnitSphere(const optix::float2& sample, float * oPdfW = NULL)
 {
     optix::float3 v;
     v.z = sample.x;
@@ -61,7 +61,7 @@ static __device__ __inline__ optix::float3 sampleUnitSphere(const optix::float2&
     return v;
 }
 
-static __device__ __inline__ optix::float2 sampleUnitDisc(const optix::float2& sample)
+RT_FUNCTION static optix::float2 sampleUnitDisc(const optix::float2& sample)
 {
     float r = sqrtf(sample.x);
     float theta = 2.f*M_PIf*sample.y;
@@ -71,7 +71,7 @@ static __device__ __inline__ optix::float2 sampleUnitDisc(const optix::float2& s
 }
 
 // Sample disc (normal must be normalized)
-static __device__ float3 sampleDisc(const float2 & sample, const float3 & center, const float radius, const float3 & normal)
+RT_FUNCTION static float3 sampleDisc(const float2 & sample, const float3 & center, const float radius, const float3 & normal)
 {
     float3 U, V;
     createCoordinateSystem( normal, U, V);
@@ -80,28 +80,34 @@ static __device__ float3 sampleDisc(const float2 & sample, const float3 & center
 }
 
 
+RT_FUNCTION float CosHemispherePdfW(const optix::float3  &aNormal, const optix::float3  &aDirection)
+{
+    return maxf(0.f, optix::dot(aNormal, aDirection)) * M_1_PIf;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // Utilities for converting PDF between Area (A) and Solid angle (W)
 // WtoA = PdfW * cosine / distance_squared
 // AtoW = PdfA * distance_squared / cosine
-__device__ __inline__ float PdfWtoA( const float aPdfW,
+RT_FUNCTION float PdfWtoA( const float aPdfW,
                                               const float aDist,
                                               const float aCosThere )
 {
     return aPdfW * std::abs(aCosThere) / sqr(aDist);
 }
 
-__device__ __inline__ float PdfAtoW( const float aPdfA,
+RT_FUNCTION float PdfAtoW( const float aPdfA,
                                               const float aDist,
                                               const float aCosThere )
 {
     return aPdfA * sqr(aDist) / std::abs(aCosThere);
 }
 
-
+// vmarz REMOVE
 // <Sampling code from Optix SDK>
 //Create ONB from normalized vector
-static __device__ __inline__ void createONB( 
+RT_FUNCTION static void createONB( 
     const optix::float3& n, optix::float3& U, optix::float3& V)
 {
   using namespace optix;

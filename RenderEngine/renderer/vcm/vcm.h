@@ -15,6 +15,8 @@
 #include "renderer/Light.h"
 #include "renderer/Camera.h"
 #include "renderer/helpers/helpers.h"
+#include "material/BSDF.h"
+#include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
@@ -41,6 +43,7 @@ RT_FUNCTION int isOccluded(const rtObject      & aSceneRootObject,
     rtTrace(aSceneRootObject, occlusionRay, shadowPrd);
     return shadowPrd.attenuation == 0.f;
 }
+
 
 
 RT_FUNCTION void lightHit( SubpathPRD                  & aLightPrd,
@@ -360,14 +363,15 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
 
 
 
-// Connects to light source, e.g. direct illumination
-RT_FUNCTION void connectLightSource( const rtObject             & aSceneRootObject,
-                                     const rtBufferId<Light, 1>   alightsBuffer,
-                                     SubpathPRD                 & aCameraPrd,
-                                     const VcmBSDF              & aCameraBsdf,
-                                     const optix::float3        & aCameraHitpoint,
-                                     const float                  aMisVmWeightFactor,
-                                     const float const          * aVertexPickPdf = NULL)
+// Connects camera subpath vertex to light source, e.g. direct illumination, next event estimation.
+// Light subpath length=1 [tech. rep 44-45]
+RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootObject,
+                                       const rtBufferId<Light, 1>   alightsBuffer,
+                                       SubpathPRD                 & aCameraPrd,
+                                       const VcmBSDF              & aCameraBsdf,
+                                       const optix::float3        & aCameraHitpoint,
+                                       const float                  aMisVmWeightFactor,
+                                       const float const          * aVertexPickPdf = NULL)
 {
     using namespace optix;
     uint2 launchIndex = aCameraPrd.launchIndex;
@@ -453,6 +457,39 @@ RT_FUNCTION void connectLightSource( const rtObject             & aSceneRootObje
     aCameraPrd.color += contrib;
 }
 
+
+// Computes vertex connection contribution for camera path vertex that has been sampled on 
+// light source (traced and randomly hit the light). Light subpath length = 0 [tech. rep 42-43]
+RT_FUNCTION void connectLightSourceS0(SubpathPRD aCameraPrd, const optix::float3 &aRadiance, float & aDirectPdfA, 
+                                     float & aEmissionPdfW, float aLightPickProb, int aUseVC, int aUseVM)
+{
+    if (aCameraPrd.depth == 1) // first hit, see directly from camera, no weighting needed
+    {
+        aCameraPrd.color += aCameraPrd.throughput * aRadiance;
+        return;
+    }
+
+    // TODO specular path
+    //if (!vcmUseVC && aUseVM)
+    //{
+    //    if (aCameraPrd.specularPath)
+    //        aCameraPrd.color += aRadiance;
+    //    return;
+    //}
+
+    aDirectPdfA *= aLightPickProb;
+    aEmissionPdfW *= aLightPickProb;
+
+    // Partial eye sub-path MIS weight [tech. rep. (43)].
+    // If the last hit was specular, then dVCM == 0.
+    const float wCamera = vcmMis(aDirectPdfA) * aCameraPrd.dVCM + vcmMis(aEmissionPdfW * aCameraPrd.dVC);
+    // Partial light sub-path weight is 0 [tech. rep. (42)].
+
+    // Full path MIS weight [tech. rep. (37)].
+    const float misWeight = 1.f / (1.f + wCamera);
+
+    aCameraPrd.color += aCameraPrd.throughput * misWeight * aRadiance;
+}
 
 
 
