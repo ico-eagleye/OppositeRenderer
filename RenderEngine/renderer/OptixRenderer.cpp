@@ -689,8 +689,8 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         {
             const unsigned int cameraSubPathCount = m_width * m_height;
             const unsigned int lightSubPathCount = m_lightPassLaunchWidth * m_lightPassLaunchHeight;
-            const unsigned int lightSubpathsConnected = lightSubPathCount; // nVC
-            const unsigned int lightSubpathsMerged = lightSubPathCount;    // nVM
+            const unsigned int lightSubpathsConnected = VCM_UNIFORM_VERTEX_SAMPLING ? lightSubPathCount : 1.f;  // nVC
+            const unsigned int lightSubpathsMerged = lightSubPathCount;                                         // nVM
             const float ppmRadiusSquared = PPMRadius*PPMRadius; // vmarz TODO change radius reduction scheme
                 
             // 1/(PI*r*r) from VM path pdf [tech. rep. (10)], 1/lightSubPathCount from MIS estimator (not weight) [tech. rep. (11)]
