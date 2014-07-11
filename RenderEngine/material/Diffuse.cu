@@ -30,6 +30,10 @@
 #include "material/BxDF.h"
 #include "material/BSDF.h"
 
+#define OPTIX_PRINTF_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
+
 using namespace optix;
 
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );

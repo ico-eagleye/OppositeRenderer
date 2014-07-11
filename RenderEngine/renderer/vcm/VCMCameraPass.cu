@@ -4,18 +4,18 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTF_DEF
-//#define OPTIX_PRINTFI_DEF
-//#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
 
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
+#include "renderer/helpers/helpers.h"
 #include "config.h"
 #include "renderer/Light.h"
 #include "renderer/Camera.h"
 #include "renderer/RayType.h"
-#include "renderer/helpers/helpers.h"
 #include "renderer/helpers/samplers.h"
 #include "renderer/helpers/random.h"
 #include "renderer/helpers/light.h"
@@ -23,6 +23,10 @@
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/vcm.h"
 #include "renderer/vcm/mis.h"
+
+#define OPTIX_PRINTF_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
 
 void initCameraPayload(SubpathPRD & aCameraPrd);
 
@@ -45,8 +49,9 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
         return newRadiance;
 }
 
-
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 RT_PROGRAM void cameraPass()
 {
@@ -105,7 +110,8 @@ RT_PROGRAM void cameraPass()
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
-
+    if (IS_DEBUG_ID(launchIndex))
+        outputBuffer[launchIndex] = make_float3(0.f); 
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 

@@ -70,9 +70,12 @@ RT_PROGRAM void vcmClosestHitLight()
     subpathPrd.done = 1;
 }
 
-#define OPTIX_PRINTF_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+//#define OPTIX_PRINTF_ENABLED 1
+//#define OPTIX_PRINTFI_ENABLED 1
+//#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 rtDeclareVariable(float3, Lemit, , );
 rtDeclareVariable(float, inverseArea, , );
@@ -87,6 +90,7 @@ RT_PROGRAM void vcmClosestHitCamera()
         Lemit.x, Lemit.y, Lemit.z);
     if (IS_DEBUG_ID(subpathPrd.launchIndex))
         rtPrintf("conDE- Emit      Lemit % 14f % 14f % 14f \n", Lemit.x, Lemit.y, Lemit.z);
+
     subpathPrd.depth++;
     subpathPrd.done = 1;
     if (isZero(Lemit)) 

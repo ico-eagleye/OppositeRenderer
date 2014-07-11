@@ -21,9 +21,9 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
 
-#define OPTIX_PRINTF_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 RT_FUNCTION int isOccluded(const rtObject      & aSceneRootObject, 
                            const optix::float3 & aPoint, 
@@ -641,3 +641,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - new origin     % 14f % 14f % 14f\n", 
         aCameraPrd.origin.x, aCameraPrd.origin.y, aCameraPrd.origin.z);
 }
+
+#undef OPTIX_PRINTF_ENABLED
+#undef OPTIX_PRINTFI_ENABLED
+#undef OPTIX_PRINTFID_ENABLED

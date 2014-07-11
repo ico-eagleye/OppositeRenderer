@@ -4,18 +4,18 @@
  * file that was distributed with this source code.
 */
 
-//#define OPTIX_PRINTF_DEF
-//#define OPTIX_PRINTFI_DEF
-//#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
 
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
 #include <cuda_runtime.h>
+#include "renderer/helpers/helpers.h"
 #include "config.h"
 #include "renderer/Light.h"
 #include "renderer/RayType.h"
-#include "renderer/helpers/helpers.h"
 #include "renderer/helpers/samplers.h"
 #include "renderer/helpers/random.h"
 #include "renderer/helpers/light.h"
@@ -25,6 +25,14 @@
 #include "renderer/vcm/vcm.h"
 #include "renderer/vcm/mis.h"
 #include "renderer/vcm/config_vcm.h"
+
+//#define OPTIX_PRINTF_ENABLED 1
+//#define OPTIX_PRINTFI_ENABLED 1
+//#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+
 
 void initLightPayload(SubpathPRD & aLightPrd);
 
@@ -45,7 +53,6 @@ rtDeclareVariable(int, lightSubpathLengthBufferId, , ); // <uint, 2>
 rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
 rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
 
-#define OPTIX_PRINTFID_ENABLED 1
 
 RT_PROGRAM void lightPass()
 {
@@ -124,7 +131,6 @@ RT_PROGRAM void exception()
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, vertexPickPdf, , );
 
-#define OPTIX_PRINTFID_ENABLED 0
 
 // Initialize light payload - throughput premultiplied with light radiance, partial MIS terms  [tech. rep. (31)-(33)]
 RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)

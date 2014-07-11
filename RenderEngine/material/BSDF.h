@@ -12,6 +12,10 @@
 #include "math/DifferentialGeometry.h"
 #include <device_functions.h>
 
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+
 #define CALL_BXDF_CONST_VIRTUAL_FUNCTION(lvalue, op, bxdf, function, ...) \
     if (bxdf->type() & BxDF::Lambertian) \
         lvalue op reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__);
@@ -452,3 +456,6 @@ public:
 
 };
 
+#undef OPTIX_PRINTF_ENABLED
+#undef OPTIX_PRINTFI_ENABLED
+#undef OPTIX_PRINTFID_ENABLED

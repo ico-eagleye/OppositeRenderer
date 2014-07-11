@@ -19,7 +19,9 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/vcm_shared.h"
 
-
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 // Initialize light payload partial MIS terms  [tech. rep. (31)-(33)]
 RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight, const float & aCostAtLight,
@@ -104,8 +106,9 @@ RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosT
 
 
 
-#define OPTIX_PRINTFID_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 // nvcc of Cuda 6 gives error below if updateMisTermsOnScatter() is inlined after call to lightVertex.bsdf.sampleF or vcmSampleF
 //“PHINode should have one entry for each predecessor of its parent basic block! 
 //%__cuda_local_var_528573_11_non_const_bsdfDirPdfW.4 = phi float [ %__cuda_local_var_528573_11_non_const_bsdfDirPdfW.1609, %568 ], [ %580, %578 ], [ %__cuda_local_var_528573_11_non_const_bsdfDirPdfW.1609, %568 ], !dbg !515”
@@ -176,3 +179,8 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
     OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
     OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
 }
+
+
+#undef OPTIX_PRINTF_ENABLED
+#undef OPTIX_PRINTFI_ENABLED
+#undef OPTIX_PRINTFID_ENABLED

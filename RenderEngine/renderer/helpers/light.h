@@ -200,3 +200,7 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
 
     return radiance;
 }
+
+#undef OPTIX_PRINTF_ENABLED
+#undef OPTIX_PRINTFI_ENABLED
+#undef OPTIX_PRINTFID_ENABLED
