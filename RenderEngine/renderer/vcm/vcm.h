@@ -194,7 +194,7 @@ RT_FUNCTION void lightHit( SubpathPRD                  & aLightPrd,
 
 
 
-
+#define OPTIX_PRINTFID_ENABLED 0
 // Connects vertices and return contribution
 RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
                                   const LightVertex     & aLightVertex,
@@ -281,7 +281,7 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
     // There is no dVC_unif_vert in LightVertex since vertices are used only for connection between each other,
     // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
     // equations in [tech. rep. (38-47)]
-    OPTIX_PRINTFI(aCameraPrd.depth, "conn  -  invVertPickPdf % 14f \n", invVertPickPdf);
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  -  invVertPickPdf % 14f \n", invVertPickPdf);
 #endif
 
     // Partial light sub-path MIS weight [tech. rep. (40)]
@@ -362,7 +362,7 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
 }
 
 
-
+#define OPTIX_PRINTFID_ENABLED 0
 // Connects camera subpath vertex to light source, e.g. direct illumination, next event estimation.
 // Light subpath length=1 [tech. rep 44-45]
 RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootObject,
@@ -504,7 +504,7 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
 }
 
 
-
+#define OPTIX_PRINTFID_ENABLED 1
 RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObject,
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
@@ -563,7 +563,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
 
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt1 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
-    //connectLightSource(aSceneRootObject, alightsBuffer, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
+    connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt2 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
 
@@ -573,7 +573,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     //float vertexPickPdf = float(vcmNumlightVertexConnections) / numLightVertices; // TODO scale by pick prob
     uint numlightVertexConnections = ceilf(averageLightSubpathLength);
     float lastVertConnectProb = averageLightSubpathLength - (uint)averageLightSubpathLength;
-    OPTIX_PRINTFI(aCameraPrd.depth, "Hit C - CONNECT     num % 14u   lastVertProb % 14f \n", 
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - CONNECT     num % 14u   lastVertProb % 14f \n", 
         numlightVertexConnections, lastVertConnectProb);
     //for (int i = 0; i < vcmNumlightVertexConnections; i++)
     for (int i = 0; i < numlightVertexConnections; i++)

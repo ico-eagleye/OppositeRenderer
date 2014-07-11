@@ -156,9 +156,9 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
     aPathPrd.dVC_unif_vert = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
         aPathPrd.dVC_unif_vert * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM + aMisVmWeightFactor / vertPickPdf);
-    OPTIX_PRINTFID(aPathPrd.launchIndex,
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth,
         "MIS   - U dVC_unifvert = (   cosThetaOut /    bsdfDirPdfW) * ( dVC_unif_vert *    bsdfRevPdfW +           dVCM + VmWeightFactor /    vertPickPdf) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f / % 14e) \n", 
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f / % 14e) \n", 
         aPathPrd.dVC_unif_vert, aCosThetaOut, aBsdfDirPdfW, dVC_unif_vert, aBsdfRevPdfW, dVCM, aMisVmWeightFactor, vertPickPdf);
 #endif
 
