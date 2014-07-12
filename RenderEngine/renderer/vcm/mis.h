@@ -59,7 +59,7 @@ RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight,
     // dVM_1 = dVC_1 / etaVCM
     aLightPrd.dVM = aLightPrd.dVC * misVcWeightFactor;
     if (aVertexPickPdf)
-        aLightPrd.dVM *= *aVertexPickPdf; // should divide etaVCM, bust since it is divider, we just multiply
+        aLightPrd.dVM *= *aVertexPickPdf; // should divide etaVCM, bust since it is denominator, we just multiply
     // aVertexPickPdf pointer passed only when using uniform vertex sampling from buffer
 }
 
@@ -76,9 +76,9 @@ RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCamera
 
     // dVCM = ( p0connect / p0trace ) * ( nLightSamples / p1 )
     // p0connect/p0trace - potentially different sampling techniques 
-    //      p0connect - pdf for technique used when connecting to camera  during light tracing step
+    //      p0connect - pdf for technique used when connecting to camera during light tracing step
     //      p0trace - pdf for technique used when sampling a ray starting point
-    // p1 = p1_ro * g1 = areaSamplePdf * imageToSolidAngleFactor * g1 [g1 added after tracing]
+    // p1 = aCameraPdfW = p1_ro * g1 = areaSamplePdf * imageToSolidAngleFactor * g1 [g1 added after tracing]
     // p0connect/p0trace cancel out in our case
     aCameraPrd.dVCM = vcmMis( aVcmLightSubpathCount / aCameraPdfW );
     //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - dVCM %f lightSubCount %d camPdf %f\n", aCameraPrd.dVCM, 
