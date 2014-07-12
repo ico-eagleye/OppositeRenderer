@@ -217,11 +217,11 @@ const QVector<Light> & CornellSmall::getSceneLights(void) const
 Camera CornellSmall::getDefaultCamera(void) const
 {
     return Camera(
-        optix::make_float3( 1.25f, 1.25f, -3.9f ),
+        optix::make_float3( 1.25f, 1.25f, -2.85f ),
         optix::make_float3( 1.25f, 1.25f, 0.0f ),
         optix::make_float3( 0.0f, 1.0f,  0.0f ),
-        35.0f, 
-        35.0f,
+        45.0f, 
+        45.0f,
         Camera::KeepVertical );
 }
 
