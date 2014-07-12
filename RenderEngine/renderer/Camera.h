@@ -69,7 +69,7 @@ public:
     float aperture;
     // not normalized lookdir -- implies focal length
     optix::float3 lookdir;
-    optix::float3 camera_u, camera_v; // vmarz: uv vectors on film/projection plane
+    optix::float3 camera_u, camera_v; // vmarz: uv vectors on film/projection plane, length equal to half of x an y dimensions respectively in world space
     optix::float2 imagePlaneSize;
     AspectRatioMode aspectRatioMode;
 };

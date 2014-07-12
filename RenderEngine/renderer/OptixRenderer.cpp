@@ -311,6 +311,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
         // vmarz TODO use RT_FORMAT_FLOAT4 for optimal performance (see performance notes in programming guide)
         m_outputBuffer = m_context->createBuffer( RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_FLOAT3, m_width, m_height );
         m_context["outputBuffer"]->set(m_outputBuffer);
+        m_context["outputBufferId"]->setInt(m_outputBuffer->getId());
     }
 
     // Output Program
@@ -341,7 +342,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBuffer->setSize( 1u );
     m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
     m_context["lightVertexBufferId"]->setInt(m_lightVertexBuffer->getId());
-    m_context["vcmLightSubpathCount"]->setUint(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT);
+    m_context["lightSubpathCount"]->setFloat(float(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT));
 
     // VCM light vertex buffer index counter buffer
     m_lightVertexBufferIndexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u);
@@ -798,12 +799,12 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
             // Camera pass
             { 
-                m_context["lightVertexCountEstimatePass"]->setUint(0u);
-                nvtx::ScopedRange r("OptixEntryPoint::VCM_CAMERA_PASS");
-                sutilCurrentTime( &t0 );
-                m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, m_width, m_height );
-                sutilCurrentTime( &t1 );
-                dbgPrintf("Camera pass launch time: %.4f.\n", t1-t0);
+                //m_context["lightVertexCountEstimatePass"]->setUint(0u);
+                //nvtx::ScopedRange r("OptixEntryPoint::VCM_CAMERA_PASS");
+                //sutilCurrentTime( &t0 );
+                //m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, m_width, m_height );
+                //sutilCurrentTime( &t1 );
+                //dbgPrintf("Camera pass launch time: %.4f.\n", t1-t0);
             }
         }
 
@@ -811,7 +812,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         sutilCurrentTime( &end );
         double traceTime = end-traceStartTime;
 
-        // vmarz DEEBUG REMOVE
+        // vmarz DEBUG REMOVE
         float3* buffer = reinterpret_cast<float3*>( m_outputBuffer->map() );
         m_outputBuffer->unmap();
 

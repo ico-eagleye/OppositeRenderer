@@ -25,8 +25,11 @@
 
 #define OPTIX_DEBUG_STD_PRINTF 0
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
-#define OPTIX_DEBUG_ID_X 245
-#define OPTIX_DEBUG_ID_Y 460
+//#define OPTIX_DEBUG_ID_X 245 // light pt
+//#define OPTIX_DEBUG_ID_Y 460
+#define OPTIX_DEBUG_ID_X 0
+#define OPTIX_DEBUG_ID_Y 0
+
 
 #define IS_DEBUG_ID(launchIdx) (launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y)
 
