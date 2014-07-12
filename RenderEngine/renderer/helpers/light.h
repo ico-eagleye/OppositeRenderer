@@ -112,8 +112,8 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
         oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
         oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
         oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
-        oEmissionPdfW *= aLight.inverseArea;
-        oDirectPdfA = aLight.inverseArea;
+        oEmissionPdfW *= aLight.inverseArea; // p0_connect * p1 // for [tech. rep. (31)]
+        oDirectPdfA = aLight.inverseArea;    // p0_direct
         radiance = aLight.Lemit;// * oCosThetaLight;
     }
     else if(aLight.lightType == Light::POINT)
@@ -168,7 +168,7 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
         if (cosThetaLight < EPS_COSINE)
             return radiance;
 
-        //convert area sampling pdf mInvArea to pdf w.r.t solid angle 
+        // convert area sampling pdf mInvArea to pdf w.r.t solid angle 
         // (mult with inverse of W to A conversion factor cos/distSqr)
         oDirectPdfW = aLight.inverseArea * sqr(oDistance) / cosThetaLight;
         if(oCosThetaLight)
