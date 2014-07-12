@@ -24,9 +24,9 @@
 #define OPTIX_PRINTFID_ENABLED 0
 
 // Initialize light payload partial MIS terms  [tech. rep. (31)-(33)]
-RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight, const float & aCostAtLight,
-                                            const float & aDirectPdfW, const float & aEmissionPdfW,
-                                            const float & misVcWeightFactor, const float const * aVertexPickPdf = NULL)
+RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight, const float aCostAtLight,
+                                    const float aDirectPdfW, const float aEmissionPdfW,
+                                    const float misVcWeightFactor, const float const * aVertexPickPdf = NULL)
 {
     using namespace optix;
 
@@ -65,8 +65,7 @@ RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight,
 
 
 // Initialize camera payload partial MIS terms [tech. rep. (31)-(33)]
-RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float & aCameraPdf,
-                                              const optix::uint & aVcmLightSubpathCount)
+RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCameraPdfW, const float aVcmLightSubpathCount)
 {
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
     aCameraPrd.dVC = .0f;
@@ -81,7 +80,7 @@ RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float & aCame
     //      p0trace - pdf for technique used when sampling a ray starting point
     // p1 = p1_ro * g1 = areaSamplePdf * imageToSolidAngleFactor * g1 [g1 added after tracing]
     // p0connect/p0trace cancel out in our case
-    aCameraPrd.dVCM = vcmMis( aVcmLightSubpathCount / aCameraPdf );
+    aCameraPrd.dVCM = vcmMis( aVcmLightSubpathCount / aCameraPdfW );
     //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - dVCM %f lightSubCount %d camPdf %f\n", aCameraPrd.dVCM, 
     //    aVcmLightSubpathCount, cameraPdf);
 
@@ -92,7 +91,7 @@ RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float & aCame
 
 // Update MIS quantities before storing at the vertex, follows initialization on light [tech. rep. (31)-(33)]
 // or scatter from surface [tech. rep. (34)-(36)]
-RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float & aCosThetaIn, const float & aRayLen)
+RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float aCosThetaIn, const float aRayLen)
 {
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
     aLightPrd.dVCM *= vcmMis(sqr(aRayLen));

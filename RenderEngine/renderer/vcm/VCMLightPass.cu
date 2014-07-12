@@ -62,20 +62,6 @@ RT_PROGRAM void lightPass()
         { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT STORE PASS --------------------------------------------------------------------\n"); }
 
     SubpathPRD lightPrd;
-    lightPrd.launchIndex = launchIndex;
-    lightPrd.throughput = make_float3(1.f);
-    lightPrd.depth = 0.f;
-    lightPrd.done = 0.f;
-    lightPrd.dVC = 0.f;
-    lightPrd.dVM = 0.f;
-    lightPrd.dVCM = 0.f;
-    lightPrd.randomState = randomStates[launchIndex];
-    lightSubpathLengthBuffer[launchIndex] = 0u;
-
-#if VCM_UNIFORM_VERTEX_SAMPLING
-    lightPrd.dVC_unif_vert = 0.f;
-#endif
-
     // Initialize payload and ray
     initLightPayload(lightPrd);
     Ray lightRay = Ray(lightPrd.origin, lightPrd.direction, RayType::LIGHT_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
@@ -136,6 +122,20 @@ rtDeclareVariable(float, vertexPickPdf, , );
 RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
 {
     using namespace optix;
+
+    lightPrd.launchIndex = launchIndex;
+    lightPrd.throughput = make_float3(1.f);
+    lightPrd.depth = 0.f;
+    lightPrd.done = 0.f;
+    lightPrd.dVC = 0.f;
+    lightPrd.dVM = 0.f;
+    lightPrd.dVCM = 0.f;
+    lightPrd.randomState = randomStates[launchIndex];
+    lightSubpathLengthBuffer[launchIndex] = 0u;
+
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    lightPrd.dVC_unif_vert = 0.f;
+#endif
 
     float *pVertPickPdf = NULL;
 #if VCM_UNIFORM_VERTEX_SAMPLING

@@ -52,24 +52,14 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTF_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
 
 RT_PROGRAM void cameraPass()
 {
     OPTIX_PRINTFID(launchIndex, 0u, "\n\nGen C - CAMERA PASS -------------------------------------------------------------------------\n");
     SubpathPRD cameraPrd;
-    cameraPrd.launchIndex = launchIndex;
-    cameraPrd.randomState = randomStates[launchIndex];
-    cameraPrd.throughput = make_float3(1.0f);
-    cameraPrd.color = make_float3(0.0f);
-    cameraPrd.depth = 0;
-    cameraPrd.done = 0;
-    cameraPrd.dVC = 0;
-    cameraPrd.dVM = 0;
-    cameraPrd.dVCM = 0;
-#if VCM_UNIFORM_VERTEX_SAMPLING
-    cameraPrd.dVC_unif_vert = 0;
-#endif
-
     initCameraPayload(cameraPrd);
     Ray cameraRay = Ray(cameraPrd.origin, cameraPrd.direction, RayType::CAMERA_VCM, RAY_LEN_MIN, RT_DEFAULT_MAX );
 
@@ -110,8 +100,8 @@ RT_PROGRAM void cameraPass()
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
-    if (IS_DEBUG_ID(launchIndex))
-        outputBuffer[launchIndex] = make_float3(0.f); 
+    //if (IS_DEBUG_ID(launchIndex))
+    //    outputBuffer[launchIndex] = make_float3(0.f); 
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 
@@ -142,15 +132,26 @@ RT_PROGRAM void exception()
 
 rtDeclareVariable(Camera,   camera, , );
 rtDeclareVariable(float2,   pixelSizeFactor, , );
-rtDeclareVariable(float,    vcmMisVcWeightFactor, , );
-rtDeclareVariable(float,    vcmMisVmWeightFactor, , );
-rtDeclareVariable(uint,     vcmLightSubpathCount, , );
+rtDeclareVariable(float,    lightSubpathCount, , );
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
 RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
 {
+    aCameraPrd.launchIndex = launchIndex;
+    aCameraPrd.randomState = randomStates[launchIndex];
+    aCameraPrd.throughput = make_float3(1.0f);
+    aCameraPrd.color = make_float3(0.0f);
+    aCameraPrd.depth = 0;
+    aCameraPrd.done = 0;
+    aCameraPrd.dVC = 0;
+    aCameraPrd.dVM = 0;
+    aCameraPrd.dVCM = 0;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+    aCameraPrd.dVC_unif_vert = 0;
+#endif
+
     float2 screen = make_float2( outputBuffer.size() );
-    float2 sample = getRandomUniformFloat2(&aCameraPrd.randomState);             // jitter pixel pos
+    float2 sample = getRandomUniformFloat2(&aCameraPrd.randomState);            // jitter pixel pos
     float2 d = ( make_float2(launchIndex) + sample ) / screen * 2.0f - 1.0f;    // vmarz: map pixel pos to [-1,1]
     
     aCameraPrd.origin = camera.eye;
@@ -159,8 +160,8 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
 
     // pdf conversion factor from area on image plane to solid angle on ray
     float cosAtCamera = dot(normalize(camera.lookdir), aCameraPrd.direction);
-    float distToImgPlane = length(camera.lookdir);
-    float imagePointToCameraDist = length(camera.lookdir) / cosAtCamera;
+    float distToImagePlane = length(camera.lookdir);
+    float imagePointToCameraDist = distToImagePlane / cosAtCamera;
     float imageToSolidAngleFactor = sqr(imagePointToCameraDist) / cosAtCamera;
 
     float pixelArea = pixelSizeFactor.x * camera.imagePlaneSize.x * pixelSizeFactor.x * camera.imagePlaneSize.y;
@@ -169,9 +170,9 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     // Needed if use different image point sampling techniques, see p0connect/p0trace in dVCM comment below
     //float p0connect = areaSamplePdf;      // cancel out
     //float p0trace = areaSamplePdf;        // cancel out
-    float cameraPdf = areaSamplePdf * imageToSolidAngleFactor;
+    float cameraPdfW = areaSamplePdf * imageToSolidAngleFactor;
     //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - cosC %f planeDist %f pixA solidAngleFact %f camPdf %f\n", 
     //    cosAtCamera, distToImgPlane, imageToSolidAngleFactor, pixelArea);
 
-    initCameraMisTerms(aCameraPrd, cameraPdf, vcmLightSubpathCount);
+    initCameraMisTerms(aCameraPrd, cameraPdfW, lightSubpathCount);
 }
