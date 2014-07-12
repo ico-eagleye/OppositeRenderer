@@ -25,10 +25,10 @@
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
 
-RT_FUNCTION int isOccluded(const rtObject      & aSceneRootObject, 
-                           const optix::float3 & aPoint, 
-                           const optix::float3 & aDirection, 
-                           const float           aTMax)
+RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject, 
+                            const optix::float3 & aPoint, 
+                            const optix::float3 & aDirection, 
+                            const float           aTMax )
 {
     using namespace optix;
     if (aTMax < 3.f*EPS_RAY)
@@ -46,16 +46,16 @@ RT_FUNCTION int isOccluded(const rtObject      & aSceneRootObject,
 
 
 
-#define OPTIX_PRINTFID_ENABLED 1
-RT_FUNCTION void connectCamera(const rtObject        & aSceneRootObject,
-                               SubpathPRD            & aLightPrd,
-                               const VcmBSDF         & aLightBsdf,
-                               const optix::float3   & aLightHitpoint,
-                               const float           & aLightSubpathCount,
-                               const float             aMisVmWeightFactor,
-                               const Camera          & aCamera,
-                               const optix::float2   & aPixelSizeFactor,
-                               rtBufferId<float3, 2>   aOutputBuffer)
+#define OPTIX_PRINTFID_ENABLED 0
+RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
+                                  SubpathPRD            & aLightPrd,
+                                  const VcmBSDF         & aLightBsdf,
+                                  const optix::float3   & aLightHitpoint,
+                                  const float           & aLightSubpathCount,
+                                  const float             aMisVmWeightFactor,
+                                  const Camera          & aCamera,
+                                  const optix::float2   & aPixelSizeFactor,
+                                  rtBufferId<float3, 2>   aOutputBuffer )
 {
     using namespace optix;
         
@@ -80,14 +80,14 @@ RT_FUNCTION void connectCamera(const rtObject        & aSceneRootObject,
     const float3 unitCameraV = normalize(aCamera.camera_v);
     const float proj_u_len = dot(imagePlaneCenterToPointWorld, unitCameraU);
     const float proj_v_len = dot(imagePlaneCenterToPointWorld, unitCameraV);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -      proj_u_len % 14f     proj_v_len % 14f \n",
-        proj_u_len, proj_v_len);
+    
     float2 posOnPlane = make_float2(proj_u_len, proj_v_len); // image plane pos relative to center
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -  imgPlaneSize.x % 14f imgPlaneSize.y % 14f \n",
-        aCamera.imagePlaneSize.x, aCamera.imagePlaneSize.y);
-    int isOnImage = 2.f * fabs(posOnPlane.x) < aCamera.imagePlaneSize.x && 2.f * fabs(proj_v_len) < aCamera.imagePlaneSize.y; 
+    int isOnImage = 2.f * fabs(posOnPlane.x) < aCamera.imagePlaneSize.x && 2.f * fabs(proj_v_len) < aCamera.imagePlaneSize.y;
 
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -       isOnImage % 14d    casAtCamera % 14f\n", isOnImage, cosAtCamera);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -      proj_u_len % 14f     proj_v_len % 14f \n", proj_u_len, proj_v_len);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -  imgPlaneSize.x % 14f imgPlaneSize.y % 14f \n", aCamera.imagePlaneSize.x, aCamera.imagePlaneSize.y);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -       isOnImage % 14d    casAtCamera % 14f       distance % 14f\n", isOnImage, cosAtCamera, distance);
+
     if (!isOnImage)
         return;
 
@@ -96,6 +96,7 @@ RT_FUNCTION void connectCamera(const rtObject        & aSceneRootObject,
     size_t2 screenSize = aOutputBuffer.size();
     uint2 pixelIndex = make_uint2(pixelCoord.x * screenSize.x, pixelCoord.y * screenSize.y);
 
+    // get bsdf factor and dir/rev pdfs
     float cosToCamera, bsdfDirPdfW, bsdfRevPdfW;
     const float3 bsdfFactor = aLightBsdf.vcmF(dirToCamera, cosToCamera, &bsdfDirPdfW, &bsdfRevPdfW, &aLightPrd.launchIndex);
 
@@ -108,56 +109,83 @@ RT_FUNCTION void connectCamera(const rtObject        & aSceneRootObject,
     // Conversion factor from image plane area to surface area
     const float imageToSolidAngleFactor = sqr(imagePointToCameraDist) / cosAtCamera;
     const float imageToHitpointSurfaceFactor = imageToSolidAngleFactor * fabs(cosToCamera) / sqr(distance);
+    const float hitpointSurfaceToImageFactor = 1.f / (imageToHitpointSurfaceFactor);
+
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - imgSolAngleFac =  imgPtCamDist^2 *    cosAtCamera) \n");
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - % 14f = % 14f  * % 14f\n", imageToSolidAngleFactor, imagePointToCameraDist, cosAtCamera);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -  imgToSurfFact = (imgSolAngleFac *    cosToCamera) / sqr (      distance) \n");
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - % 14f = (% 14f * % 14f) / sqr (% 14f) \n", imageToHitpointSurfaceFactor, imageToSolidAngleFactor, cosToCamera, distance);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - surfToImgFactor % 14f 1/imgSurfFactr % 14f \n",  hitpointSurfaceToImageFactor, imageToHitpointSurfaceFactor);
 
     // Image plane is sampled per pixel when generating rays, so use pixel are pdf
     const float pixelArea = aPixelSizeFactor.x * aCamera.imagePlaneSize.x * aPixelSizeFactor.x * aCamera.imagePlaneSize.y;
     float imageSamplePdfA = 1.f / pixelArea;
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - imageSamplePdfA % 14f      pixelArea % 14f\n", imageSamplePdfA, pixelArea);
 
-    const float cameraPdfA = imageSamplePdfA * imageToHitpointSurfaceFactor;
+    // pdf factors for computed step by step and labeled as in [tech. rep. (46)]
+    const float cameraPdfW = imageSamplePdfA * imageToSolidAngleFactor;      // p_ro_1
+    const float cameraPdfA = cameraPdfW * fabs(cosToCamera) / sqr(distance); // p1 = p_ro_1 * g1
+    const float lightHitpointRevPdfA = cameraPdfA;                           // _p_s-1 - pdf for sampling aHitpoint as part of camera path
 
-    // Partial light sub-path weight [tech. rep. (46)]. Note the division by
-    // mLightPathCount, which is the number of samples this technique uses.
+    // pdf for sampling the point on camera image plane as part of camera subpath, e.g. t=1. 
+    // the reverse (in relation to light subpath) pdf p_s_-1 seen in [tech. rep (46)]
+    //const float cameraPdfA = imageSamplePdfA * imageToHitpointSurfaceFactor; 
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -      cameraPdfA % 14f =imgSamplePdfA % 14f 1/imgSurfFactr % 14f \n", cameraPdfA, imageSamplePdfA, imageToHitpointSurfaceFactor);
+
+    // Partial light sub-path weight [tech. rep. (46)]. Note the division by aLightSubpathCount, which is the number 
+    // of samples this technique uses (e.g. all light subpaths try to connect to camera at every hitpoint).
     // This division also appears a few lines below in the frame buffer accumulation.
-    const float wLight = vcmMis(cameraPdfA / aLightSubpathCount) * (
-        aMisVmWeightFactor + aLightPrd.dVCM + aLightPrd.dVC * vcmMis(bsdfRevPdfW));
+    //
+    // wLight also needs to account for different image point sampling techniques that could be used when 
+    // generating (p0trace) or when connecting to camera (p0connect). In our case both p0connect and p0trace 
+    // are imageSamplePdfA and cancel out
+    const float wLight = vcmMis(lightHitpointRevPdfA / aLightSubpathCount) * // * p0connect/p0trace *
+        (aMisVmWeightFactor + aLightPrd.dVCM + aLightPrd.dVC * vcmMis(bsdfRevPdfW));
 
     // Partial eye sub-path weight is 0 [tech. rep. (47)]
 
     // Full path MIS weight [tech. rep. (37)]. No MIS for traditional light tracing.
     const float misWeight = 1.f / (wLight + 1.f);
 
-    const float hitpointSurfaceToImageFactor = 1.f / imageToHitpointSurfaceFactor;
+    // Pixel integral is over image plane area, hence we need to convert invert cameraPdfA to get
+    // image area pdf. cameraPdfA is imageSamplePdf converted to represent possibility to sample point aLightHitpoint
+    // so we invert it to convert back image area pdf
+    const float cameraPdfAConvertedToImagePdfA = 1.f / cameraPdfA;
 
-    // Comment from SmallVCM:
-    // We divide the contribution by hitpointSurfaceToImageFactor to convert the (already
-    // divided) pdf from surface area to image plane area, w.r.t. which the
-    // pixel integral is actually defined. We also divide by the number of samples
-    // this technique makes, which is equal to the number of light sub-paths
-    //
-    // vmarz: TODO CHECK
-    // vmarz: not not sure why hitpointSurfaceToImageFactor is needed since neither bsdfFactor nor 
-    //        throughput yet been multiplied by surface pdf
-    const float3 contrib = misWeight * aLightPrd.throughput * bsdfFactor /
-        (aLightSubpathCount * hitpointSurfaceToImageFactor);
+    // We also divide by the number of samples this technique makes, which is equal to the number of light sub-paths
+    const float3 contrib = misWeight * aLightPrd.throughput * bsdfFactor / (aLightSubpathCount * cameraPdfAConvertedToImagePdfA);
+
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -   prd.througput % 14f % 14f % 14f\n", aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -       misWeight % 14f         wLight % 14f\n", 
-        misWeight, wLight);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - surfToImgFactor % 14f imgToSurfFactr % 14f\n", 
-        hitpointSurfaceToImageFactor, imageToHitpointSurfaceFactor);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -         contrib % 14e % 14e % 14e\n", 
-        contrib.x, contrib.y, contrib.z);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -       misWeight % 14f         wLight % 14f\n", misWeight, wLight);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -         contrib % 14e % 14e % 14e\n",  contrib.x, contrib.y, contrib.z);
 
     if (!isOccluded(aSceneRootObject, aLightHitpoint, dirToCamera, distance))
     {
         aOutputBuffer[pixelIndex] += contrib;
-        float3 outBuf = aOutputBuffer[pixelIndex];
-        OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -   aOutputBuffer % 14f % 14f % 14f\n", 
-            outBuf.x, outBuf.y, outBuf.z);
+        //float3 outBuf = aOutputBuffer[pixelIndex];
+        //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -   aOutputBuffer % 14f % 14f % 14f\n", outBuf.x, outBuf.y, outBuf.z);
     }
+
+    //// unit size pix
+    //float unitSizePixelPlaneDist = length(aCamera.lookdir) * (0.5f * aOutputBuffer.size().x) / length(aCamera.camera_u);
+    //const float imagePointToCameraDist2 = unitSizePixelPlaneDist / cosAtCamera;
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - unitPixPlaneDst % 14f  imgPtCamDist2 % 14f \n", unitSizePixelPlaneDist, imagePointToCameraDist2);
+    //const float imageToSolidAngleFactor2 = sqr(imagePointToCameraDist2) / cosAtCamera;
+    //const float imageToHitpointSurfaceFactor2 = imageToSolidAngleFactor2 * fabs(cosToCamera) / sqr(distance);
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - imgSolAngleFc2 =  imgPtCamDist^2 *    cosAtCamera) \n");
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - % 14f = % 14f  * % 14f\n", imageToSolidAngleFactor2, imagePointToCameraDist2, cosAtCamera);
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - imgToSurfFact2 = (imgSolAngleFc2 *    cosToCamera) / sqr (      distance) \n");
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - % 14f = (% 14f * % 14f) / sqr (% 14f) \n", imageToHitpointSurfaceFactor2, imageToSolidAngleFactor2, cosToCamera, distance);
+
+    //const float cameraPdfA2 = imageToHitpointSurfaceFactor2;
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -    cameraPdfA2 % 14f \n", cameraPdfA2);
+
+    //const float hitpointSurfaceToImageFactor2 = 1.f / imageToHitpointSurfaceFactor2;
+    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - surfToImgFactr2 % 14f 1/imgSurfFact2 % 14f \n",  hitpointSurfaceToImageFactor2, imageToHitpointSurfaceFactor2);
 }
 
 
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 0
 RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            SubpathPRD                   & aLightPrd,
                            const optix::float3          & aHitPoint, 
@@ -261,7 +289,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     // vmarz TODO connect to camera
     if (!aLightVertexCountEstimatePass)
     {
-        connectCamera(aSceneRootObject, aLightPrd, lightVertex.bsdf, aHitPoint, aLightSubpathCount,
+        connectCameraT1(aSceneRootObject, aLightPrd, lightVertex.bsdf, aHitPoint, aLightSubpathCount,
             aMisVmWeightFactor, aCamera, aPixelSizeFactor, aOutputBuffer);
     }
 
@@ -627,7 +655,7 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
 
 
 
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 0
 RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObject,
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
@@ -686,7 +714,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
 
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt1 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
-    //connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
+    connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt2 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
 
@@ -729,7 +757,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "%u %u - d %u - Hit C- %u conn vertIdx %u \n",
             launchIndex.x, launchIndex.y, aCameraPrd.depth, i, vertIdx);
         LightVertex lightVertex = aLightVertexBuffer[vertIdx];
-        //connectVertices(aSceneRootObject, lightVertex, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
+        connectVertices(aSceneRootObject, lightVertex, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Ver%u color % 14f % 14f % 14f \n",
             i, aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
     }    
