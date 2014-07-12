@@ -123,18 +123,18 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
 {
     using namespace optix;
 
-    lightPrd.launchIndex = launchIndex;
-    lightPrd.throughput = make_float3(1.f);
-    lightPrd.depth = 0.f;
-    lightPrd.done = 0.f;
-    lightPrd.dVC = 0.f;
-    lightPrd.dVM = 0.f;
-    lightPrd.dVCM = 0.f;
-    lightPrd.randomState = randomStates[launchIndex];
+    aLightPrd.launchIndex = launchIndex;
+    aLightPrd.throughput = make_float3(1.f);
+    aLightPrd.depth = 0.f;
+    aLightPrd.done = 0.f;
+    aLightPrd.dVC = 0.f;
+    aLightPrd.dVM = 0.f;
+    aLightPrd.dVCM = 0.f;
+    aLightPrd.randomState = randomStates[launchIndex];
     lightSubpathLengthBuffer[launchIndex] = 0u;
 
 #if VCM_UNIFORM_VERTEX_SAMPLING
-    lightPrd.dVC_unif_vert = 0.f;
+    aLightPrd.dVC_unif_vert = 0.f;
 #endif
 
     float *pVertPickPdf = NULL;
