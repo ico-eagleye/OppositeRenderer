@@ -52,9 +52,9 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTF_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+//#define OPTIX_PRINTF_ENABLED 1
+//#define OPTIX_PRINTFI_ENABLED 1
+//#define OPTIX_PRINTFID_ENABLED 1
 
 RT_PROGRAM void cameraPass()
 {
@@ -96,12 +96,13 @@ RT_PROGRAM void cameraPass()
     if (localIterationNumber == 0) bufColor = make_float3(0.f);
     bufColor = bufColor + cameraPrd.color;
     float3 avgColor = bufColor / (localIterationNumber + 1);
+    //if (IS_DEBUG_ID(launchIndex))
+    //    bufColor = make_float3(1.f) * (localIterationNumber + 1);
     outputBuffer[launchIndex] = bufColor;
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
-    //if (IS_DEBUG_ID(launchIndex))
-    //    outputBuffer[launchIndex] = make_float3(0.f); 
+
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 
@@ -171,8 +172,9 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     //float p0connect = areaSamplePdf;      // cancel out
     //float p0trace = areaSamplePdf;        // cancel out
     float cameraPdfW = areaSamplePdf * imageToSolidAngleFactor;
-    //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - cosC %f planeDist %f pixA solidAngleFact %f camPdf %f\n", 
-    //    cosAtCamera, distToImgPlane, imageToSolidAngleFactor, pixelArea);
+    //OPTIX_PRINTFID(launchIndex, aCameraPrd.depth, "Gen C - imgSolAngleFac =  imgPtCamDist^2 *    cosAtCamera) \n");
+    //OPTIX_PRINTFID(launchIndex, aCameraPrd.depth, "Gen C - % 14f = % 14f  * % 14f\n", imageToSolidAngleFactor, imagePointToCameraDist, cosAtCamera);
+    //OPTIX_PRINTFID(launchIndex, aCameraPrd.depth, "Gen C -      cameraPdfW % 14f \n", cameraPdfW);
 
-    initCameraMisTerms(aCameraPrd, cameraPdfW, lightSubpathCount);
+    initCameraMisTerms(aCameraPrd, cameraPdfW, lightSubpathCount /*, p0trace, p0connect */);
 }

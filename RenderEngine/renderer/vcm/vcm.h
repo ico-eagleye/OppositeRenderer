@@ -21,6 +21,11 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
 
+//#define CONNECT_VERTICES_DISABLED
+//#define CONNECT_CAMERA_T1_DISABLED
+//#define CONNECT_LIGHT_S0_DISABLED
+//#define CONNECT_LIGHT_S1_DISABLED
+
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
@@ -157,7 +162,7 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
 
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -   prd.througput % 14f % 14f % 14f\n", aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -       misWeight % 14f         wLight % 14f\n", misWeight, wLight);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -         contrib % 14e % 14e % 14e\n",  contrib.x, contrib.y, contrib.z);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -         contrib % 14f % 14f % 14f\n",  contrib.x, contrib.y, contrib.z);
 
     if (!isOccluded(aSceneRootObject, aLightHitpoint, dirToCamera, distance))
     {
@@ -165,17 +170,6 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
         //float3 outBuf = aOutputBuffer[pixelIndex];
         //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -   aOutputBuffer % 14f % 14f % 14f\n", outBuf.x, outBuf.y, outBuf.z);
     }
-
-    //// unit size pix
-    //float unitSizePixelPlaneDist = length(aCamera.lookdir) * (0.5f * aOutputBuffer.size().x) / length(aCamera.camera_u);
-    //const float imagePointToCameraDist2 = unitSizePixelPlaneDist / cosAtCamera;
-    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - unitPixPlaneDst % 14f  imgPtCamDist2 % 14f \n", unitSizePixelPlaneDist, imagePointToCameraDist2);
-    //const float imageToSolidAngleFactor2 = sqr(imagePointToCameraDist2) / cosAtCamera;
-    //const float imageToHitpointSurfaceFactor2 = imageToSolidAngleFactor2 * fabs(cosToCamera) / sqr(distance);
-    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - imgSolAngleFc2 =  imgPtCamDist^2 *    cosAtCamera) \n");
-    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - % 14f = % 14f  * % 14f\n", imageToSolidAngleFactor2, imagePointToCameraDist2, cosAtCamera);
-    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - imgToSurfFact2 = (imgSolAngleFc2 *    cosToCamera) / sqr (      distance) \n");
-    //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC - % 14f = (% 14f * % 14f) / sqr (% 14f) \n", imageToHitpointSurfaceFactor2, imageToSolidAngleFactor2, cosToCamera, distance);
 
     //const float cameraPdfA2 = imageToHitpointSurfaceFactor2;
     //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "HitLC -    cameraPdfA2 % 14f \n", cameraPdfA2);
@@ -286,12 +280,13 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
 #endif
     }
     
-    // vmarz TODO connect to camera
+#ifndef CONNECT_CAMERA_T1_DISABLED
     if (!aLightVertexCountEstimatePass)
     {
         connectCameraT1(aSceneRootObject, aLightPrd, lightVertex.bsdf, aHitPoint, aLightSubpathCount,
             aMisVmWeightFactor, aCamera, aPixelSizeFactor, aOutputBuffer);
     }
+#endif
 
     // Russian Roulette
     float contProb =  lightVertex.bsdf.continuationProb();
@@ -524,7 +519,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
                                        const float const          * aVertexPickPdf = NULL)
 {
     using namespace optix;
-    uint2 launchIndex = aCameraPrd.launchIndex;
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connectLightSourceS1(): \n");
 
     int lightIndex = 0;
     if (1 < alightsBuffer.size())
@@ -543,7 +538,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     float distance;
     float3 dirToLight;
     float3 radiance = lightIlluminate(light, aCameraPrd.randomState, aCameraHitpoint, dirToLight,
-        distance, emissionPdfW, &directPdfW, &cosAtLight, &aCameraPrd.launchIndex);
+        distance, directPdfW, &emissionPdfW, &cosAtLight, &aCameraPrd.launchIndex);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-  light radiance % 14f % 14f % 14f \n", radiance.x, radiance.y, radiance.z);
     
     if (isZero(radiance))
@@ -552,6 +547,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     float bsdfDirPdfW, bsdfRevPdfW, cosToLight;
     float3 bsdfFactor = aCameraBsdf.vcmF(dirToLight, cosToLight, &bsdfDirPdfW, &bsdfRevPdfW);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-      bsdfFactor % 14f % 14f % 14f \n", bsdfFactor.x, bsdfFactor.y, bsdfFactor.z);
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-      dirToLight % 14f % 14f % 14f      distance % 14f \n", dirToLight.x, dirToLight.y, dirToLight.z, distance);
 
     if (isZero(bsdfFactor))
     {
@@ -559,6 +555,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
         return;
     }
 
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-      cosAtLight % 14f   emissionPdfW % 14f     directPdfW % 14f \n", cosAtLight, emissionPdfW, directPdfW);
     const float contiueProb = aCameraBsdf.continuationProb();
 
     // If the light is delta light, we can never hit it by BSDF sampling, so the probability of this path is 0
@@ -571,7 +568,10 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     // Therefore we can write wLight as a ratio of solid angle pdfs,
     // both expressed w.r.t. the same shading point.
     const float wLight = vcmMis(bsdfDirPdfW / (lightPickProb * directPdfW));
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-         wLight =    bsdfDirPdfW / ( lightPickProb *     directPdfW )\n");
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-  % 14f = % 14f / (% 14f * % 14f ) \n", wLight, bsdfDirPdfW, lightPickProb, directPdfW);
 
+    // TODO Fix comments
     // Partial eye sub-path MIS weight [tech. rep. (45)].
     //
     // In front of the sum in the parenthesis we have Mis(ratio), where
@@ -589,6 +589,13 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     // multiplied by lightPickProb, so it cancels out.
     const float wCamera = vcmMis(emissionPdfW * cosToLight / (directPdfW * cosAtLight)) *
         (aMisVmWeightFactor + aCameraPrd.dVCM + aCameraPrd.dVC * vcmMis(bsdfRevPdfW));
+
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, 
+        "connL-         wCamera = (  emissionPdfW *     cosToLight / (    directPdfW *     cosAtLight ))"
+        "* ( vmWeightFactor +    camera.dVCM +     camera.dVC *    bsdfRevPdfW ) \n");
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth,
+        "connL-  % 14f = (% 14f * % 14f / (% 14f * % 14f)) * (% 14f + % 14f + % 14f + % 14f) \n",
+        wCamera, emissionPdfW, cosToLight, directPdfW, cosAtLight, aMisVmWeightFactor, aCameraPrd.dVCM, aCameraPrd.dVC, bsdfRevPdfW);
 
     // Full path MIS weight [tech. rep. (37)]
     const float misWeight = 1.f / (wLight + 1.f + wCamera);
@@ -714,7 +721,9 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
 
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt1 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
+#ifndef CONNECT_LIGHT_S1_DISABLED
     connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
+#endif
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt2 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
 
@@ -742,6 +751,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         connectVertices(aSceneRootObject, lightVertex, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor, pVertexPickPdf);
     }
 #else
+#ifndef CONNECT_VERTICES_DISABLED
     // CAUTION: this loop can cause weird issues, out of bound access with crazy indices, though they are based 
     // failing on launch index and loop variable, rtTrace crashing within the loop etc.
     // update: It seems it was caused multiple uses of std::printf
@@ -760,7 +770,8 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         connectVertices(aSceneRootObject, lightVertex, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Ver%u color % 14f % 14f % 14f \n",
             i, aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
-    }    
+    }
+#endif
 #endif
 
     // vmarz TODO check max path length

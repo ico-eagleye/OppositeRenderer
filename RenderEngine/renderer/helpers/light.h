@@ -5,9 +5,9 @@
 */
 
 #pragma once
-//#define OPTIX_PRINTF_DEF
-//#define OPTIX_PRINTFI_DEF
-//#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
 
 #include "renderer/Light.h"
 #include "random.h"
@@ -16,8 +16,9 @@
 #include "renderer/TransmissionPRD.h"
 #include "renderer/helpers/samplers.h"
 
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 RT_FUNCTION optix::float3 getLightContribution(const Light & light, const optix::float3 & rec_position, 
     const optix::float3 & rec_normal, const rtObject & rootObject, RandomState & randomState)
@@ -131,7 +132,7 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
     return radiance;
 };
 
-
+#define OPTIX_PRINTFI_ENABLED 0
 // Samples emission point on light source, returns radiance towards receiving point. Fills
 // emission and direct hit pdf, cosine at light source
 RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aRandomState, const float3 & aReceivePosition,
@@ -177,7 +178,8 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
         if(oEmissionPdfW)
             *oEmissionPdfW = aLight.inverseArea * cosThetaLight * M_1_PIf;
 
-        radiance = aLight.Lemit * cosThetaLight;
+        radiance = aLight.Lemit;// * cosThetaLight;
+        //OPTIX_PRINTFI((*launchIdx), "conLI-      cosAtLight % 14f   emissionPdfW % 14f     directPdfW % 14f \n", cosThetaLight, *oEmissionPdfW, oDirectPdfW);
         //if (launchIdx)
         //    OPTIX_PRINTFID((*launchIdx), "illum -       radiance % 14f % 14f % 14f \n", radiance.x, radiance.y, radiance.z);
         return radiance;

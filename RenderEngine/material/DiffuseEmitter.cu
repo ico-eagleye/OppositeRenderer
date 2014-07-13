@@ -85,7 +85,7 @@ rtDeclareVariable(int, vcmUseVC, , );
 rtDeclareVariable(int, vcmUseVM, , );
 
 RT_PROGRAM void vcmClosestHitCamera()
-{
+{    
     OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit1     Lemit % 14f % 14f % 14f \n", 
         Lemit.x, Lemit.y, Lemit.z);
     if (IS_DEBUG_ID(subpathPrd.launchIndex))
@@ -95,6 +95,10 @@ RT_PROGRAM void vcmClosestHitCamera()
     subpathPrd.done = 1;
     if (isZero(Lemit)) 
         return;
+
+#ifdef CONNECT_LIGHT_S0_DISABLED
+    return;
+#endif
 
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
