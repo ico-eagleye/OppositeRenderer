@@ -7,7 +7,8 @@
 #define OPTIX_PRINTF_DEF
 #define OPTIX_PRINTFI_DEF
 #define OPTIX_PRINTFID_DEF
-
+#define OPTIX_PRINTFC_DEF
+#define OPTIX_PRINTFCID_DEF
 
 #include <optix.h>
 #include <optix_device.h>

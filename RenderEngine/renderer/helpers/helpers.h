@@ -27,11 +27,15 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 135
-#define OPTIX_DEBUG_ID_Y 375
+#define OPTIX_DEBUG_ID_X 396
+#define OPTIX_DEBUG_ID_Y 26
 
+#define OPTIX_DEBUG_PIX 1
+#define OPTIX_DEBUG_PIX_X 64
+#define OPTIX_DEBUG_PIX_Y 440
 
 #define IS_DEBUG_ID(launchIdx) (launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y)
+#define IS_DEBUG_PIX(pixelIndex) (pixelIndex.x == OPTIX_DEBUG_PIX_X && pixelIndex.y == OPTIX_DEBUG_PIX_Y)
 
 #if OPTIX_DEBUG_STD_PRINTF || !defined(__CUDACC__)
 #include <stdio.h>
@@ -45,22 +49,26 @@
 #if ENABLE_RENDER_DEBUG_OUTPUT
 
 #if defined(OPTIX_PRINTFID_DEF)
+// prints if debug launch id
 #define OPTIX_PRINTFID(launchIdx, depth, str, ...) \
     if (OPTIX_PRINTFID_ENABLED && launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y) \
     {  \
         OPTIX_PRINTF_FUN("%u, %u - d %u - " str, launchIdx.x, launchIdx.y, depth, __VA_ARGS__); \
     }
 #else
+// prints if debug launch id
 #define OPTIX_PRINTFID(depth, str, ...) 
 #endif
 
 #if defined(OPTIX_PRINTFI_DEF)
+// prints if debug launch id
 #define OPTIX_PRINTFI(launchIdx, str, ...) \
     if (OPTIX_PRINTFI_ENABLED && launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y) \
     {  \
         OPTIX_PRINTF_FUN("%u, %u - d X - " str, launchIdx.x, launchIdx.y, __VA_ARGS__); \
     }
 #else
+// prints if debug launch id
 #define OPTIX_PRINTFI(str, launchIdx, ...) 
 #endif
 
@@ -69,14 +77,37 @@
 if (OPTIX_PRINTF_ENABLED) \
     OPTIX_PRINTF_FUN(str, __VA_ARGS__);
 #else
-#define OPTIX_PRINTF(depth, str, ...) 
+#define OPTIX_PRINTF(str, ...) 
+#endif
+
+
+#if defined(OPTIX_PRINTFC_DEF)
+// prints if condition cond true
+#define OPTIX_PRINTFC(cond, str, ...) \
+    if (OPTIX_PRINTFC_ENABLED && (cond) ) \
+        OPTIX_PRINTF_FUN(str, __VA_ARGS__);
+#else
+// prints if condition cond true
+#define OPTIX_PRINTFC(cond, str, ...) 
+#endif
+
+#if defined(OPTIX_PRINTFCID_DEF)
+// prints if condition cond true, prints launch index and depth in front
+#define OPTIX_PRINTFCID(cond, launchIdx, depth, str, ...) \
+    if (OPTIX_PRINTFCID_ENABLED && (cond) ) \
+        OPTIX_PRINTF_FUN("%u, %u - d %u - " str, launchIdx.x, launchIdx.y, depth, __VA_ARGS__);
+#else
+// prints if condition cond true, prints launch index and depth in front
+#define OPTIX_PRINTFCID(cond, str, ...) 
 #endif
 
 #else // !ENABLE_RENDER_DEBUG_OUTPUT
 
 #define OPTIX_PRINTF(str, ...)
-#define OPTIX_PRINTFI(depth, str, ...)
-#define OPTIX_PRINTFID(depth, str, ...)
+#define OPTIX_PRINTFI(launchIdx, str, ...)
+#define OPTIX_PRINTFID(launchIdx, depth, str, ...)
+#define OPTIX_PRINTFC(cond, str, ...) 
+#define OPTIX_PRINTFCID(cond, launchIdx, depth, str, ...) 
 
 #endif
 

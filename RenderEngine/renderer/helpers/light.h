@@ -102,6 +102,13 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
 
     if(aLight.lightType == Light::AREA)
     {
+        float2 posRnd = getRandomUniformFloat2(&aRandomState);
+        oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
+        oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
+        oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection));
+        oEmissionPdfW *= aLight.inverseArea; // p0_connect * p1 // for [tech. rep. (31)]
+        oDirectPdfA = aLight.inverseArea;    // p0_direct
+        radiance = aLight.Lemit * oCosThetaLight;
         if (launchIdx)
         {
             OPTIX_PRINTFI((*launchIdx), "GenLi -     light Lemit % 14f % 14f % 14f\n",
@@ -109,13 +116,6 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
             //OPTIX_PRINTFID((*launchIdx), "GenLi -        sample x % 14f       sample y % 14f\n",
             //    dirRnd.x, dirRnd.y);
         }
-        float2 posRnd = getRandomUniformFloat2(&aRandomState);
-        oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
-        oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
-        oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection)); // vmarz?: optimize using frames?
-        oEmissionPdfW *= aLight.inverseArea; // p0_connect * p1 // for [tech. rep. (31)]
-        oDirectPdfA = aLight.inverseArea;    // p0_direct
-        radiance = aLight.Lemit;// * oCosThetaLight;
     }
     else if(aLight.lightType == Light::POINT)
     {

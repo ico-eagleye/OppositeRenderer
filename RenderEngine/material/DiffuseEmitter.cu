@@ -88,8 +88,6 @@ RT_PROGRAM void vcmClosestHitCamera()
 {    
     OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit1     Lemit % 14f % 14f % 14f \n", 
         Lemit.x, Lemit.y, Lemit.z);
-    if (IS_DEBUG_ID(subpathPrd.launchIndex))
-        rtPrintf("conDE- Emit      Lemit % 14f % 14f % 14f \n", Lemit.x, Lemit.y, Lemit.z);
 
     subpathPrd.depth++;
     subpathPrd.done = 1;
@@ -111,7 +109,7 @@ RT_PROGRAM void vcmClosestHitCamera()
         return;
 
     float directPdfA = inverseArea;
-    float emissionPdfW = inverseArea * CosHemispherePdfW(worldShadingNormal, -ray.direction);
+    float emissionPdfW = CosHemispherePdfW(worldShadingNormal, -ray.direction) * inverseArea;
 
     //OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit1   prd.col % 14f % 14f % 14f \n", 
     //    subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
