@@ -41,9 +41,9 @@
     <DllFiles Include="$(OptixBinDir)\optix.1.dll"/>
     <DllFiles Include="$(OptixBinDir)\optixu.1.dll"/>
     <DllFiles Include="$(OptixBinDir)\cudart*.dll"/>
-    <DllFiles Include="$(QTDIR_MSVC)\bin\icudt51.dll"/>
-    <DllFiles Include="$(QTDIR_MSVC)\bin\icuin51.dll"/>
-    <DllFiles Include="$(QTDIR_MSVC)\bin\icuuc51.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\icudt*.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\icuin*.dll"/>
+    <DllFiles Include="$(QTDIR_MSVC)\bin\icuuc*.dll"/>
     <DllFiles Include="$(GLEW_PATH)\bin\Release\$(Platform)\*.dll"/>
     <DllFiles Include="$(NVTOOLSEXT_PATH)\bin\$(Platform)\*.dll"/>
   </ItemGroup>

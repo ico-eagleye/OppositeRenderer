@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project InitialTargets ="OppositeLogSDKs" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <QTDIR>C:\Qt\5.2.1\msvc2012_64_opengl</QTDIR>
+    <QTDIR32>C:\Qt\5.2.1\msvc2010_opengl</QTDIR32>
+    <!-- <QTDIR32>C:\Qt\5.3\msvc2010_opengl</QTDIR32> -->
+    
     <!-- <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER> -->
     <OPTIX_USE_VER>3.5.1</OPTIX_USE_VER>
     <!-- <CUDA_USE_VER>6.0</CUDA_USE_VER> -->
     <CUDA_USE_VER>5.5</CUDA_USE_VER>
+    
+    <!--     
+    <OPTIX_PATH_V3_0_1>C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.0.1</OPTIX_PATH_V3_0_1>
+    <OPTIX_PATH_V3_5_1>C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.5.1</OPTIX_PATH_V3_5_1>
+    <OPTIX_PATH_V3_6_0>C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0</OPTIX_PATH_V3_6_0>
+    -->
+    
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.0.1'">$(OPTIX_PATH_V3_0_1)</OptixDir>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.5.1'">$(OPTIX_PATH_V3_5_1)</OptixDir>
     <OptixDir Condition="'$(OPTIX_USE_VER)'=='3.6.0'">$(OPTIX_PATH_V3_6_0)</OptixDir>
@@ -36,7 +47,7 @@
   
   <Target Name="OppositeLogSDKs">
     <Message Importance="High" Text="OppositeLogSDKs" />    
-    <Message Importance="High" Text="SDKs.props CUDA_USE_VER    : '$(CUDA_USE_VER)'" />  
+    <Message Importance="High" Text="SDKs.props CUDA_USE_VER    : '$(CUDA_USE_VER)'" />
     <Message Importance="High" Text="SDKs.props OPTIX_USE_VER   : '$(OPTIX_USE_VER)'" />
     <Message Importance="High" Text="SDKs.props OptixDir        : '$(OptixDir)'" />
     <Message Importance="High" Text="SDKs.props OptixIncludeDir : '$(OptixIncludeDir)'" />
@@ -46,5 +57,7 @@
 -->
     <Message Importance="High" Text="SDKs.props OptixBinDir     : '$(OptixBinDir)'" />
     <Message Importance="High" Text="SDKs.props OptixLibDir     : '$(OptixLibDir)'" />
+    <Message Importance="High" Text="           QTDIR           : '$(QTDIR)'" />
+    <Message Importance="High" Text="           QTDIR32         : '$(QTDIR32)'" />
   </Target> 
 </Project>
