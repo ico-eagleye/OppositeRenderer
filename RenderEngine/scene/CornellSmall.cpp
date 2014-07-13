@@ -24,7 +24,8 @@ CornellSmall::CornellSmall(void)
     optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
     //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
     //optix::float3 power = optix::make_float3( 0.75f * 5.f );
-    optix::float3 power = optix::make_float3( M_PIf );
+    //optix::float3 power = optix::make_float3( M_PIf );
+    optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
     Light light(power, anchor, v1, v2);
     m_sceneLights.push_back(light);
 
