@@ -39,6 +39,7 @@ signals:
 public slots:
     void onNewFrameReadyForDisplay(const float *cpuBuffer, const unsigned long long *lastRendererIterationNumber,
                                    QMutex *outputBufferMutex = NULL);
+    void saveImageAsBMP(const char * fileName);
 
 protected:
     virtual void initializeGL();

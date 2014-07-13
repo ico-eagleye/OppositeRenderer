@@ -23,6 +23,7 @@ Takes mouse events and delegate them to the Mouse class
 #include "models/OutputSettingsModel.hxx"
 #include <QMessageBox>
 #include <QLabel>
+#include <fstream>
 
 RenderWidget::RenderWidget( QWidget *parent, Camera & camera, const OutputSettingsModel & outputSettings ) : 
     QGLWidget(parent),
@@ -76,7 +77,7 @@ void RenderWidget::displayFrame(const float *cpuBuffer, const unsigned long long
     assert(cpuBuffer);
 
     if (outputBufferMutex) (*outputBufferMutex).lock();
-    unsigned long long doneIterations = *lastRendererIterationNumber + 1; // iteration numbers 0-based
+    m_previewedIterations = *lastRendererIterationNumber + 1; // iteration numbers 0-based
     memcpy(m_displayBufferCpu, cpuBuffer, getDisplayBufferSizeBytes());
     if (outputBufferMutex) (*outputBufferMutex).unlock();
 
@@ -113,7 +114,7 @@ void RenderWidget::displayFrame(const float *cpuBuffer, const unsigned long long
     loc = glGetUniformLocation(m_GLProgram, "invIterations");
     if (loc != -1)
     {
-        glUniform1f(loc, 1.0f/doneIterations);
+        glUniform1f(loc, 1.0f/m_previewedIterations);
     }
 
     glEnable(GL_TEXTURE_2D);
@@ -231,4 +232,84 @@ void RenderWidget::initializeOpenGLShaders()
     glGenTextures(1, &m_GLOutputBufferTexture);
     glBindSampler(m_GLOutputBufferTexture, m_GLTextureSampler);
 
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// Saving BMP
+struct BmpHeader
+{
+    uint   mFileSize;        // Size of file in bytes
+    uint   mReserved01;      // 2x 2 reserved bytes
+    uint   mDataOffset;      // Offset in bytes where data can be found (54)
+
+    uint   mHeaderSize;      // 40B
+    int    mWidth;           // Width in pixels
+    int    mHeight;          // Height in pixels
+
+    short  mColorPlates;     // Must be 1
+    short  mBitsPerPixel;    // We use 24bpp
+    uint   mCompression;     // We use BI_RGB ~ 0, uncompressed
+    uint   mImageSize;       // mWidth x mHeight x 3B
+    uint   mHorizRes;        // Pixels per meter (75dpi ~ 2953ppm)
+    uint   mVertRes;         // Pixels per meter (75dpi ~ 2953ppm)
+    uint   mPaletteColors;   // Not using palette - 0
+    uint   mImportantColors; // 0 - all are important
+};
+
+struct Vec3f
+{
+    float x,y,z;
+};
+
+void RenderWidget::saveImageAsBMP(const char * fileName)
+{
+    assert(m_displayBufferCpu);
+    std::ofstream bmp(fileName, std::ios::binary);
+
+    uint width = m_outputSettingsModel.getWidth();
+    uint height = m_outputSettingsModel.getWidth();
+
+    BmpHeader header;
+    bmp.write("BM", 2);
+    header.mFileSize   = uint(sizeof(BmpHeader) + 2) + width * height * 3;
+    header.mReserved01 = 0;
+    header.mDataOffset = uint(sizeof(BmpHeader) + 2);
+    header.mHeaderSize = 40;
+    header.mWidth      = width;
+    header.mHeight     = height;
+    header.mColorPlates     = 1;
+    header.mBitsPerPixel    = 24;
+    header.mCompression     = 0;
+    header.mImageSize       = width * height * 3;
+    header.mHorizRes        = 2953;
+    header.mVertRes         = 2953;
+    header.mPaletteColors   = 0;
+    header.mImportantColors = 0;
+
+    bmp.write((char*)&header, sizeof(header));
+    Vec3f * img = reinterpret_cast<Vec3f*>(m_displayBufferCpu);
+
+    const float invGamma = 1.f / m_outputSettingsModel.getGamma();
+    const float invIterations = 1.f / m_previewedIterations;
+    for(int y=0; y<height; y++)
+    {
+        for(int x=0; x<width; x++)
+        {
+            // bmp is stored from bottom up
+            const Vec3f &rgbF = img[x + y*width];
+            typedef unsigned char byte;
+            float gammaBgr[3];
+            gammaBgr[0] = std::pow(rgbF.z * invIterations, invGamma) * 255.f;
+            gammaBgr[1] = std::pow(rgbF.y * invIterations, invGamma) * 255.f;
+            gammaBgr[2] = std::pow(rgbF.x * invIterations, invGamma) * 255.f;
+
+            byte bgrB[3];
+            bgrB[0] = byte(std::min(255.f, std::max(0.f, gammaBgr[0])));
+            bgrB[1] = byte(std::min(255.f, std::max(0.f, gammaBgr[1])));
+            bgrB[2] = byte(std::min(255.f, std::max(0.f, gammaBgr[2])));
+
+            bmp.write((char*)&bgrB, sizeof(bgrB));
+        }
+    }
 }

@@ -81,6 +81,8 @@
     <addaction name="actionOpenBuiltInScene"/>
     <addaction name="actionReload_scene"/>
     <addaction name="separator"/>
+    <addaction name="actionSaveImageBMP"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
    </widget>
@@ -203,6 +205,17 @@
     <string>VCM Bidirectional Path Tracing</string>
    </property>
   </action>
+  <action name="actionSaveImageBMP">
+   <property name="text">
+    <string>Save image as .BMP</string>
+   </property>
+   <property name="toolTip">
+    <string>Save image as .BMP</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -302,23 +315,23 @@
     </hint>
    </hints>
   </connection>
-   <connection>
-     <sender>actionVCM_Bidirectional_Path_Tracing</sender>
-     <signal>triggered()</signal>
-     <receiver>MainWindowBase</receiver>
-     <slot>onChangeRenderMethodVCM()</slot>
-     <hints>
-       <hint type="sourcelabel">
-         <x>-1</x>
-         <y>-1</y>
-       </hint>
-       <hint type="destinationlabel">
-         <x>509</x>
-         <y>405</y>
-       </hint>
-     </hints>
-   </connection>
-   <connection>
+  <connection>
+   <sender>actionVCM_Bidirectional_Path_Tracing</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onChangeRenderMethodVCM()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>509</x>
+     <y>405</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>actionConfigure_GPU_devices</sender>
    <signal>triggered()</signal>
    <receiver>MainWindowBase</receiver>
@@ -382,6 +395,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSaveImageBMP</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionSaveImageBMP()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onActionAbout()</slot>
@@ -395,5 +424,6 @@
   <slot>onReloadLastScene()</slot>
   <slot>onActionOpenBuiltInScene()</slot>
   <slot>onActionSaveImagePPM()</slot>
+  <slot>onActionSaveImageBMP()</slot>
  </slots>
 </ui>

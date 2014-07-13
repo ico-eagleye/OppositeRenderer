@@ -318,7 +318,13 @@ QString MainWindowBase::getApplicationStatusString(const Application & applicati
     return status;
 }
 
-void MainWindowBase::onActionSaveImagePPM()
+
+void MainWindowBase::onActionSaveImageBMP()
 {
-    printf("Save image as PPM!");
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save image"),
+        "image.bmp", tr("BMP image (*.bmp);;Any(*.*)"));
+    if(fileName.length() > 0)
+    {
+        m_renderWidget->saveImageAsBMP(fileName.toLatin1().constData());
+    }
 }

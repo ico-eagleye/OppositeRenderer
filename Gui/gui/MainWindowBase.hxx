@@ -49,7 +49,7 @@ private slots:
     void onUpdateRunningStatusLabelTimer();
     void onApplicationError(QString);
     void onActionOpenBuiltInScene();
-    void onActionSaveImagePPM();
+    void onActionSaveImageBMP();
 
 private:
     void loadSceneByName( QString &fileName );
