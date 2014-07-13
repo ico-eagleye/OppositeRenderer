@@ -104,7 +104,6 @@ RT_PROGRAM void vcmClosestHitCamera()
     float lightPickProb = 1.f / lights.size();
   
     float cosAtLight = maxf(0.f, dot(worldShadingNormal, -ray.direction));
-    if (IS_DEBUG_ID(subpathPrd.launchIndex)) rtPrintf("conDE- Emit   cosLight % 14f \n", cosAtLight);
     if (cosAtLight == 0.f) 
         return;
 
