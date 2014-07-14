@@ -23,10 +23,10 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
 
-//#define CONNECT_VERTICES_DISABLED
+#define CONNECT_VERTICES_DISABLED
 //#define CONNECT_CAMERA_T1_DISABLED
-//#define CONNECT_LIGHT_S0_DISABLED
-//#define CONNECT_LIGHT_S1_DISABLED
+#define CONNECT_LIGHT_S0_DISABLED
+#define CONNECT_LIGHT_S1_DISABLED
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -54,7 +54,7 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
 
 
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 1
 RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
@@ -123,6 +123,7 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
     if (isZero(bsdfFactor))
         return;
 
+    OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -mult bsdfRevPdfW % 14f  with contProb % 14f \n", bsdfRevPdfW, aLightBsdf.continuationProb());
     bsdfRevPdfW *= aLightBsdf.continuationProb();
 
     // Conversion factor from image plane area to surface area
@@ -430,6 +431,11 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
         return;
     }
 
+    // Add camera continuation probability (for russian roulette)
+    const float lightCont = aLightVertex.bsdf.continuationProb();
+    lightBsdfDirPdfW *= lightCont;
+    lightBsdfRevPdfW *= lightCont;
+
     // Geometry term
     const float geometryTerm = lightCosTheta * cameraCosTheta / dist2;
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  -    geometryTerm % 14f         dist2 % 14f\n", geometryTerm, dist2);
@@ -635,8 +641,17 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     float3 contrib = (misWeight * cosToLight / (lightPickProb * directPdfW)) * (radiance * bsdfFactor);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL- noThp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
 
-    if (isZero(contrib) || isOccluded(aSceneRootObject, aCameraHitpoint, dirToLight, distance))
+    if (isZero(contrib))
+    {
+        OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL- ZERO light contrib\n");
         return;
+    }
+
+    if (isOccluded(aSceneRootObject, aCameraHitpoint, dirToLight, distance))
+    {
+        OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL- Light OCCLUDED\n");
+        return;
+    }
 
     contrib *= aCameraPrd.throughput;
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-   Thp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
