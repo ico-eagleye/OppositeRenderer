@@ -13,7 +13,7 @@
 // sampled with the cosine distribution p(theta, phi) = cos(theta)/PI. In oPdfW returns PDF with 
 // respect to solid angle measure
 RT_FUNCTION static optix::float3 sampleUnitHemisphereCos(const optix::float3 & normal, const optix::float2& sample,
-                                                         float * oPdfW = NULL, float * oCosTheta = NULL)
+                                                         float * oPdfW = NULL, float * oCosTheta = NULL, bool biasSmallCosine = 0)
 {
     using namespace optix;
 
@@ -25,6 +25,8 @@ RT_FUNCTION static optix::float3 sampleUnitHemisphereCos(const optix::float3 & n
 
     float3 U, V;
     createCoordinateSystem(normal, U, V);
+    if (biasSmallCosine && ys < EPS_COSINE) // otherwise sometimes it is 0
+        ys = EPS_COSINE;
     if (oPdfW)
         *oPdfW = ys * M_1_PIf;
     if (oCosTheta)

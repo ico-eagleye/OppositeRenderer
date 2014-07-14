@@ -104,8 +104,8 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
     {
         float2 posRnd = getRandomUniformFloat2(&aRandomState);
         oPosition = aLight.position + posRnd.x*aLight.v1 + posRnd.y*aLight.v2;
-        oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW);
-        oCosThetaLight = maxf(0, optix::dot(aLight.normal, oDirection));
+        // cannot not emit particle so bias direction if cosine is too low (true last parameter)
+        oDirection = sampleUnitHemisphereCos(aLight.normal, dirRnd, &oEmissionPdfW, &oCosThetaLight, true);
         oEmissionPdfW *= aLight.inverseArea; // p0_connect * p1 // for [tech. rep. (31)]
         oDirectPdfA = aLight.inverseArea;    // p0_direct
         radiance = aLight.Lemit * oCosThetaLight;

@@ -54,7 +54,7 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
 
 
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 1
 RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
@@ -187,14 +187,14 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
     if (!isOccluded(aSceneRootObject, aLightHitpoint, dirToCamera, distance))
     {
         aOutputBuffer[pixelIndex] += contrib;
-        //float3 outBuf = aOutputBuffer[pixelIndex];
-        //OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -   aOutputBuffer % 14f % 14f % 14f \n", outBuf.x, outBuf.y, outBuf.z);
+        float3 outBuf = aOutputBuffer[pixelIndex];
+        OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -   aOutputBuffer % 14f % 14f % 14f \n", outBuf.x, outBuf.y, outBuf.z);
     }
 }
 
 
-#define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFCID_ENABLED 1
 RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            SubpathPRD                   & aLightPrd,
                            const optix::float3          & aHitPoint, 
@@ -242,7 +242,12 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
         return;
     }   
 
-    updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - cosThetaIn      % 14f         rayLen % 14f\n", cosThetaIn, aRayTHit);
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS preUpd  dVC % 14e            dVM % 14e           dVCM % 14e\n",
+        aLightPrd.dVC, aLightPrd.dVM, aLightPrd.dVCM);
+    updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);;
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS postUpd dVC % 14e            dVM % 14e           dVCM % 14e\n",
+        aLightPrd.dVC, aLightPrd.dVM, aLightPrd.dVCM);
 
     LightVertex lightVertex;
     lightVertex.launchIndex = aLightPrd.launchIndex;
@@ -687,7 +692,7 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
 
 
 
-#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 1
 RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObject,
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
