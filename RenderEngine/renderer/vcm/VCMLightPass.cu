@@ -95,7 +95,7 @@ RT_PROGRAM void lightPass()
 rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
-    lightPrd.done = 1;
+    lightPrd.done = true;
     //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
     OPTIX_PRINTFID(launchIndex, lightPrd.depth, "GenCL -       MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
                       lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z,
@@ -126,10 +126,10 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     aLightPrd.launchIndex = launchIndex;
     aLightPrd.throughput = make_float3(1.f);
     aLightPrd.depth = 0.f;
-    aLightPrd.done = 0.f;
     aLightPrd.dVC = 0.f;
     aLightPrd.dVM = 0.f;
     aLightPrd.dVCM = 0.f;
+    aLightPrd.done = false;
     aLightPrd.randomState = randomStates[launchIndex];
     lightSubpathLengthBuffer[launchIndex] = 0u;
 

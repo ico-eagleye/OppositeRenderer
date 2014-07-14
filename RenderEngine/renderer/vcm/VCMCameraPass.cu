@@ -53,7 +53,7 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 0
 #define OPTIX_PRINTFCID_ENABLED 1
 
 RT_PROGRAM void cameraPass()
@@ -121,7 +121,7 @@ RT_PROGRAM void cameraPass()
 rtDeclareVariable(SubpathPRD, cameraPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
-    cameraPrd.done = 1;
+    cameraPrd.done = true;
     //OPTIX_PRINTFI(cameraPrd.depth, "Miss\n");
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C -      MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
                       cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z,
@@ -151,13 +151,13 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     aCameraPrd.throughput = make_float3(1.0f);
     aCameraPrd.color = make_float3(0.0f);
     aCameraPrd.depth = 0;
-    aCameraPrd.done = 0;
     aCameraPrd.dVC = 0;
     aCameraPrd.dVM = 0;
     aCameraPrd.dVCM = 0;
 #if VCM_UNIFORM_VERTEX_SAMPLING
     aCameraPrd.dVC_unif_vert = 0;
 #endif
+    aCameraPrd.done = false;
 
     float2 screen = make_float2( outputBuffer.size() );
     float2 sample = getRandomUniformFloat2(&aCameraPrd.randomState);            // jitter pixel pos

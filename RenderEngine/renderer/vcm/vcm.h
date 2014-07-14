@@ -23,10 +23,10 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
 
-#define CONNECT_VERTICES_DISABLED
+//#define CONNECT_VERTICES_DISABLED
 //#define CONNECT_CAMERA_T1_DISABLED
-#define CONNECT_LIGHT_S0_DISABLED
-#define CONNECT_LIGHT_S1_DISABLED
+//#define CONNECT_LIGHT_S0_DISABLED
+//#define CONNECT_LIGHT_S1_DISABLED
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -54,7 +54,7 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
 
 
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 1
+#define OPTIX_PRINTFCID_ENABLED 0
 RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
@@ -193,8 +193,8 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
 }
 
 
-#define OPTIX_PRINTFID_ENABLED 1
-#define OPTIX_PRINTFCID_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
 RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            SubpathPRD                   & aLightPrd,
                            const optix::float3          & aHitPoint, 
@@ -238,7 +238,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L - cos theta       % 14f \n", cosThetaIn);
     if (cosThetaIn < EPS_COSINE) // reject if cos too low
     {
-        aLightPrd.done = 1;
+        aLightPrd.done = true;
         return;
     }   
 
@@ -281,7 +281,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
         if (aLightPrd.depth == aLightSubpathMaxLen)
         {
             OPTIX_PRINTF("%u %u - d %u - Hit L - Light path reached MAX LENGTH \n", aLightPrd.launchIndex.x, aLightPrd.launchIndex.y, aLightPrd.depth);
-            aLightPrd.done = 1;
+            aLightPrd.done = true;
             return;
         }
 #endif
@@ -324,7 +324,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L - continue sample % 14f             RR % 14f \n", contProb, rrSample);
     if (contProb < rrSample)
     {
-        aLightPrd.done = 1;
+        aLightPrd.done = true;
         return;
     }
 
@@ -692,7 +692,7 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
 
 
 
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 0
 RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObject,
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
@@ -734,7 +734,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - cosThetaIn      % 14f \n", cosThetaIn);
     if (cosThetaIn < EPS_COSINE) // reject if cos too low
     {
-        aCameraPrd.done = 1;
+        aCameraPrd.done = true;
         return;
     }   
 
@@ -811,7 +811,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - continue sample % 14f             RR % 14f \n", contProb, rrSample);
     if (contProb < rrSample)
     {
-        aCameraPrd.done = 1;
+        aCameraPrd.done = true;
         return;
     }
 

@@ -67,7 +67,7 @@ rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
 */
 RT_PROGRAM void vcmClosestHitLight()
 {
-    subpathPrd.done = 1;
+    subpathPrd.done = true;
 }
 
 //#define OPTIX_PRINTF_ENABLED 1
@@ -90,7 +90,7 @@ RT_PROGRAM void vcmClosestHitCamera()
         Lemit.x, Lemit.y, Lemit.z);
 
     subpathPrd.depth++;
-    subpathPrd.done = 1;
+    subpathPrd.done = true;
     if (isZero(Lemit)) 
         return;
 
