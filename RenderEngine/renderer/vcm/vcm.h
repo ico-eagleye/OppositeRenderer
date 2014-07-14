@@ -23,10 +23,10 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
 
-//#define CONNECT_VERTICES_DISABLED
+#define CONNECT_VERTICES_DISABLED
 //#define CONNECT_CAMERA_T1_DISABLED
-//#define CONNECT_LIGHT_S0_DISABLED
-//#define CONNECT_LIGHT_S1_DISABLED
+#define CONNECT_LIGHT_S0_DISABLED
+#define CONNECT_LIGHT_S1_DISABLED
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -100,8 +100,8 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
     float2 pixelCoord = (posOnPlane + 0.5f * aCamera.imagePlaneSize) / aCamera.imagePlaneSize;
     size_t2 screenSize = aOutputBuffer.size();
     uint2 pixelIndex = make_uint2(pixelCoord.x * screenSize.x, pixelCoord.y * screenSize.y);
-    //pixelIndex.x = clamp(pixelIndex.x, 0u, screenSize.x-1);
-    //pixelIndex.y = clamp(pixelIndex.y, 0u, screenSize.y-1);
+    pixelIndex.x = clamp(pixelIndex.x, 0u, screenSize.x-1);
+    pixelIndex.y = clamp(pixelIndex.y, 0u, screenSize.y-1);
 
     uint2 dbgIdx = aLightPrd.launchIndex;
     if (oConnectedPixel != NULL && IS_DEBUG_PIX(pixelIndex))
