@@ -52,11 +52,12 @@ RT_FUNCTION static optix::float3 sampleUnitHemisphere(const optix::float3 & norm
 RT_FUNCTION static optix::float3 sampleUnitSphere(const optix::float2& sample, float * oPdfW = NULL)
 {
     optix::float3 v;
-    v.z = sample.x;
-    float t =  2*M_PIf*sample.y;
-    float r = sqrtf(1.f-v.z*v.z);
-    v.x = r*cosf(t);
-    v.y = r*sinf(t);
+    v.z = 1.f - 2.f * sample.x; // vmarz: needs to be in range [-1,1], actually is (-1,1) due random number range
+    float phi =  2*M_PIf*sample.y;
+    float r = sqrtf(1.f - v.z * v.z);
+    v.x = r * cosf(phi);
+    v.y = r * sinf(phi);
+
     if (oPdfW)
         *oPdfW = 0.25f * M_1_PIf;
 
