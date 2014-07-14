@@ -7,10 +7,12 @@
 #define OPTIX_PRINTF_DEF
 #define OPTIX_PRINTFI_DEF
 #define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTFCID_DEF
 
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
+#include "device_functions.h"
 #include "renderer/helpers/helpers.h"
 #include "config.h"
 #include "renderer/Light.h"
@@ -51,10 +53,8 @@ RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 o
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
-#define OPTIX_PRINTFID_ENABLED 0
-//#define OPTIX_PRINTF_ENABLED 1
-//#define OPTIX_PRINTFI_ENABLED 1
-//#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTFCID_ENABLED 1
 
 RT_PROGRAM void cameraPass()
 {
@@ -98,6 +98,14 @@ RT_PROGRAM void cameraPass()
     float3 avgColor = bufColor / (localIterationNumber + 1);
     //if (IS_DEBUG_ID(launchIndex))
     //    bufColor = make_float3(1.f) * (localIterationNumber + 1);
+    //if (isNAN(bufColor))
+    //{
+    //    OPTIX_PRINTF(launchIndex, cameraPrd.depth, "Gen C - ENCOUNTERED NAN ! \n");
+    //}
+    
+    OPTIX_PRINTFCID(isNaN(bufColor), launchIndex, cameraPrd.depth, "Gen C - ENCOUNTERED NAN ! \n");
+    OPTIX_PRINTFCID(isInf(bufColor), launchIndex, cameraPrd.depth, "Gen C - ENCOUNTERED INF ! \n");
+
     outputBuffer[launchIndex] = bufColor;
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
     OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);

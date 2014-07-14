@@ -27,12 +27,12 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 396
-#define OPTIX_DEBUG_ID_Y 26
+#define OPTIX_DEBUG_ID_X 89
+#define OPTIX_DEBUG_ID_Y 334
 
 #define OPTIX_DEBUG_PIX 1
-#define OPTIX_DEBUG_PIX_X 64
-#define OPTIX_DEBUG_PIX_Y 440
+#define OPTIX_DEBUG_PIX_X 67
+#define OPTIX_DEBUG_PIX_Y 444
 
 #define IS_DEBUG_ID(launchIdx) (launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y)
 #define IS_DEBUG_PIX(pixelIndex) (pixelIndex.x == OPTIX_DEBUG_PIX_X && pixelIndex.y == OPTIX_DEBUG_PIX_Y)
@@ -181,17 +181,47 @@ __host__ __device__ __inline__ unsigned int getBufIndex1D(
     return index2D.x + index2D.y * bufSize.x;
 }
 
-RT_FUNCTION bool isNAN(float f)
+
+template<typename T>
+RT_FUNCTION bool _isNaN(T v)
 {
-    return f != f;
+    return v != v;
 }
 
-RT_FUNCTION bool isNAN(optix::float2 f)
+RT_FUNCTION bool isNaN(float v)
 {
-    return f.x != f.x || f.y != f.y;
+    return _isNaN(v);
 }
 
-RT_FUNCTION bool isNAN(optix::float3 f)
+RT_FUNCTION bool isNaN(optix::float2 v)
 {
-    return f.x != f.x || f.y != f.y || f.z != f.z;
+    return _isNaN(v.x) || _isNaN(v.y);
+}
+
+RT_FUNCTION bool isNaN(optix::float3 v)
+{
+    return _isNaN(v.x) || _isNaN(v.y) || _isNaN(v.z);
+}
+
+#if defined(__CUDACC__)
+#define CUDART_INF_F_POS __int_as_float(0x7f800000)
+#define CUDART_INF_F_NEG __int_as_float(0xff800000)
+#else
+#define CUDART_INF_F_POS std::numeric_limits<float>::infinity() 
+#define CUDART_INF_F_NEG -1*std::numeric_limits<float>::infinity()
+#endif
+
+RT_FUNCTION bool isInf(float v)
+{
+    return v == CUDART_INF_F_POS || v == CUDART_INF_F_NEG;
+}
+
+RT_FUNCTION bool isInf(optix::float2 v)
+{
+    return isInf(v.x) || isInf(v.y);
+}
+
+RT_FUNCTION bool isInf(optix::float3 v)
+{
+    return isInf(v.x) || isInf(v.y) || isInf(v.z);
 }
