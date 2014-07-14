@@ -46,18 +46,18 @@
   </PropertyGroup>
   
   <Target Name="OppositeLogSDKs">
-    <Message Importance="High" Text="OppositeLogSDKs" />    
-    <Message Importance="High" Text="SDKs.props CUDA_USE_VER    : '$(CUDA_USE_VER)'" />
-    <Message Importance="High" Text="SDKs.props OPTIX_USE_VER   : '$(OPTIX_USE_VER)'" />
-    <Message Importance="High" Text="SDKs.props OptixDir        : '$(OptixDir)'" />
-    <Message Importance="High" Text="SDKs.props OptixIncludeDir : '$(OptixIncludeDir)'" />
+    <Message Importance="High" Text="Settings in SDKs.props:" />    
+    <Message Importance="High" Text="CUDA_USE_VER    : '$(CUDA_USE_VER)'" />
+    <Message Importance="High" Text="OPTIX_USE_VER   : '$(OPTIX_USE_VER)'" />
+    <Message Importance="High" Text="OptixDir        : '$(OptixDir)'" />
+    <Message Importance="High" Text="OptixIncludeDir : '$(OptixIncludeDir)'" />
 <!--
-    <Message Importance="High" Text="SDKs.props OptixIncludeDir : trailing slash" Condition="HasTrailingSlash('$(OptixIncludeDir)')"/>
-    <Message Importance="High" Text="SDKs.props OptixIncludeDir : no trailing slash" Condition="!HasTrailingSlash('$(OptixIncludeDir)')"/>   
+    <Message Importance="High" Text="OptixIncludeDir : trailing slash" Condition="HasTrailingSlash('$(OptixIncludeDir)')"/>
+    <Message Importance="High" Text="OptixIncludeDir : no trailing slash" Condition="!HasTrailingSlash('$(OptixIncludeDir)')"/>   
 -->
-    <Message Importance="High" Text="SDKs.props OptixBinDir     : '$(OptixBinDir)'" />
-    <Message Importance="High" Text="SDKs.props OptixLibDir     : '$(OptixLibDir)'" />
-    <Message Importance="High" Text="           QTDIR           : '$(QTDIR)'" />
-    <Message Importance="High" Text="           QTDIR32         : '$(QTDIR32)'" />
+    <Message Importance="High" Text="OptixBinDir     : '$(OptixBinDir)'" />
+    <Message Importance="High" Text="OptixLibDir     : '$(OptixLibDir)'" />
+    <Message Importance="High" Text="QTDIR           : '$(QTDIR)'" />
+    <Message Importance="High" Text="QTDIR32         : '$(QTDIR32)'" />
   </Target> 
 </Project>
