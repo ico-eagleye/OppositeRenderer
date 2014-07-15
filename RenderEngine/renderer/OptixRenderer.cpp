@@ -47,31 +47,13 @@ const unsigned int OptixRenderer::EMITTED_PHOTONS_PER_ITERATION = OptixRenderer:
 const unsigned int OptixRenderer::NUM_PHOTONS = OptixRenderer::EMITTED_PHOTONS_PER_ITERATION*OptixRenderer::MAX_PHOTON_COUNT;
 
 // VCM
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 512u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 512u;
+const unsigned int OptixRenderer::VCM_MAX_PATH_LENGTH = 10u;
 const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 128u;
 const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 128u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 32u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 32u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 16u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 16u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 2u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 2u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH = 1u;
-//const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 1u;
 
+// This would be used for uniform vertex sampling
 const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 512u;
 const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 512u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 256u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 256u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 64u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 64u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 32u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 32u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 4u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 4u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 2u;
-//const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 2u;
 
 //#define VCM_CAMERA_PASS_LAUNCH_WIDTH 2u
 //#define VCM_CAMERA_PASS_LAUNCH_HEIGHT 2u
@@ -362,9 +344,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_context["vcmNumlightVertexConnections"]->setUint(VCM_NUM_LIGHT_PATH_CONNECTIONS);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-    m_lightSubpathMaxLength = 1u;
     m_lightSubpathVertexIndexBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT,
-        m_width, m_height, m_lightSubpathMaxLength );
+        m_width, m_height, VCM_MAX_PATH_LENGTH-1 );
     m_context["lightSubpathVertexIndexBuffer"]->set(m_lightSubpathVertexIndexBuffer);
     m_context["lightSubpathVertexIndexBufferId"]->setInt(m_lightSubpathVertexIndexBuffer->getId());
 #endif
@@ -751,7 +732,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     subpathEstimateCount, sumPathLengths, avgSubpathLength, maxLen);
 
                 // init light vertex buffer based on average length + ~10% extra
-                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength) / 0.3f;
+                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength) / 0.8f;
                 m_lightVertexBuffer->setSize(vertBufSize);
                 dbgPrintf("Vertex buffer size set to: %u \n", vertBufSize);
                 
@@ -759,9 +740,9 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_lightSubpathLengthBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-                m_lightSubpathMaxLength = maxLen * 2.f; // 30% extra size margin
-                m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, m_lightSubpathMaxLength);
-                m_context["lightSubpathMaxLen"]->setUint(m_lightSubpathMaxLength);
+
+                m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
+                m_context["maxPathLen"]->setUint(VCM_MAX_PATH_LENGTH);
 #else
                 // vertex pick pdf
                 const float vertexPickPdf = avgSubpathLength / sumPathLengths;
@@ -855,7 +836,7 @@ void OptixRenderer::resizeBuffers(unsigned int width, unsigned int height)
 #if !VCM_UNIFORM_VERTEX_SAMPLING // when using uniform sampling then there is no need to align with output buffer size
     m_lightPassLaunchWidth = m_width;
     m_lightPassLaunchHeight = m_height;
-    m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, m_lightSubpathMaxLength);
+    m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
     m_context["lightSubpathCount"]->setFloat(float(m_lightPassLaunchWidth * m_lightPassLaunchHeight));
 #endif
     // used to scale camera_u and camera_v for VCM

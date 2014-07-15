@@ -202,6 +202,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            const optix::float3          & aWorldNormal,
                            const optix::float3            aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                            const float                    aRayTHit,
+                           const optix::uint              aMaxPathLen,
                            const optix::uint              aLightVertexCountEstimatePass,
                            const float                    aLightSubpathCount,
                            const float                    aMisVcWeightFactor,
@@ -213,7 +214,6 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                         // for 1 to 1 camera - light path connections
                            rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer,
-                           const optix::uint              aLightSubpathMaxLen,
 #else                                                    // uniform vertex sampling
                            const float                  * aVertexPickPdf,
 #endif
@@ -278,15 +278,6 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     // store path vertex
     if (!aLightVertexCountEstimatePass)
     {
-#if !VCM_UNIFORM_VERTEX_SAMPLING
-        if (aLightPrd.depth == aLightSubpathMaxLen)
-        {
-            OPTIX_PRINTF("%u %u - d %u - Hit L - Light path reached MAX LENGTH \n", aLightPrd.launchIndex.x, aLightPrd.launchIndex.y, aLightPrd.depth);
-            aLightPrd.done = true;
-            return;
-        }
-#endif
-        //uint vertIdx = atomicAdd(&aLightVertexBufferIndexBuffer[0], 1u);
         uint vertIdx = atomicAdd(&aLightVertexBufferIndexBuffer[0], 1u);
         OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L - Vert.throuhput  % 14f % 14f % 14f \n", 
             lightVertex.throughput.x, lightVertex.throughput.y, lightVertex.throughput.z);
@@ -318,6 +309,13 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
         OPTIX_PRINTFCID(dbgPix, aLightPrd.launchIndex, aLightPrd.depth, "HitL2 - DONE light path vertex data \n");
     }
 #endif
+
+    // Terminate if path would become too long after scattering (e.g. +2 for next hit and connection)
+    if (!aLightVertexCountEstimatePass && aMaxPathLen < aLightPrd.depth + 2)
+    {
+        aLightPrd.done = true;
+        return;
+    }
 
     // Russian Roulette
     float contProb =  lightVertex.bsdf.continuationProb();
@@ -506,33 +504,6 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
     contrib *= aCameraPrd.throughput * aLightVertex.throughput;
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  -   Thp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
 
-    //if (isNAN(aCameraPrd.color.x))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN prd.color  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(invVertPickPdf))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN invVertPickPdf  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(misWeight))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN misWeight  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(wLight))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN wLight  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(wCamera))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN wCamera  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(lightBsdfDirPdfA))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN lightBsdfDirPdfA \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(aCameraPrd_dVC))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN aCameraPrd_dVC  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(cameraBsdfRevPdfW))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN cameraBsdfRevPdfW  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(lightBsdfDirPdfW))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN lightBsdfDirPdfW  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-    //if (isNAN(lightCosTheta))
-    //    OPTIX_PRINTF("%d %d - d %d - DQNAN lightCosTheta  \n", launchIndex.x, launchIndex.y, aCameraPrd.depth);
-
-    //OPTIX_PRINTF("%d %d - d %d - Occlude check aCameraHitpoint %f %f %f \n", 
-    //    launchIndex.x, launchIndex.y, aCameraPrd.depth, aCameraHitpoint.x, aCameraHitpoint.y, aCameraHitpoint.z);
-    //OPTIX_PRINTF("%d %d - d %d - Occlude check direction %f %f %f dist %f\n", 
-    //    launchIndex.x, launchIndex.y, aCameraPrd.depth, direction.x, direction.y, direction.z, distance);
-    //OPTIX_PRINTF("%d %d - d %d - Occlude check direction %f %f %f \n", 
-    //    launchIndex.x, launchIndex.y, aCameraPrd.depth, direction.x, direction.y, direction.z);
 
     // TODO try early occlusion check
     if (isOccluded(aSceneRootObject, aCameraHitpoint, direction, distance)) // CRASH HERE
@@ -717,6 +688,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
                             const optix::float3                & aWorldNormal,
                             const optix::float3                  aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                             const float                          aRayTHit,
+                            optix::uint                          aMaxPathLen,
                             const float                          aMisVcWeightFactor,
                             const float                          aMisVmWeightFactor,
                             const rtBufferId<Light, 1>           alightsBuffer,
@@ -822,7 +794,13 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
 #endif
 #endif
 
-    // vmarz TODO check max path length
+    // Terminate if path too long for connections and merging
+    if (aMaxPathLen <= aCameraPrd.depth)
+    {
+        aCameraPrd.done = true;
+        return;
+    }
+
     // Russian Roulette
     float contProb =  cameraBsdf.continuationProb();
     float rrSample = getRandomUniformFloat(&aCameraPrd.randomState);    

@@ -143,6 +143,7 @@ rtDeclareVariable(Camera,     camera, , );
 rtDeclareVariable(float2,     pixelSizeFactor, , );
 rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
 rtDeclareVariable(uint,       lightVertexCountEstimatePass, , );
+rtDeclareVariable(uint,       maxPathLen, , );
 
 rtBuffer<LightVertex>  lightVertexBuffer;
 rtBuffer<uint>         lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
@@ -156,7 +157,6 @@ rtDeclareVariable(int, outputBufferId, , );                 // rtBufferId<float3
 #if !VCM_UNIFORM_VERTEX_SAMPLING
 rtBuffer<uint, 3>       lightSubpathVertexIndexBuffer;
 rtDeclareVariable(int,  lightSubpathVertexIndexBufferId, , ); // rtBufferId<uint, 3>
-rtDeclareVariable(uint, lightSubpathMaxLen, , );
 #else
 rtDeclareVariable(float, vertexPickPdf, , );                // used for uniform vertex sampling
 #endif
@@ -182,13 +182,12 @@ RT_PROGRAM void vcmClosestHitLight()
 #endif
 
     Lambertian lambertian = Lambertian(Kd);
-    lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, ray.direction, tHit, 
+    lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, ray.direction, tHit, maxPathLen,
         lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
         camera, pixelSizeFactor,
         _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING
         _lightSubpathVertexIndexBufferId,
-        lightSubpathMaxLen,
 #else
         &vertexPickPdf,
 #endif
@@ -215,7 +214,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
-    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, ray.direction, tHit,
+    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, ray.direction, tHit, maxPathLen,
          misVcWeightFactor, misVmWeightFactor, 
          _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING

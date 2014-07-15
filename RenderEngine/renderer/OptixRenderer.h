@@ -92,6 +92,9 @@ private:
 
     const static unsigned int VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH;
     const static unsigned int VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
+    const static unsigned int VCM_MAX_PATH_LENGTH;
+
+    // For use with uniform light vertex sampling
     const static unsigned int VCM_LIGHT_PASS_LAUNCH_WIDTH;
     const static unsigned int VCM_LIGHT_PASS_LAUNCH_HEIGHT;
     const static unsigned int VCM_NUM_LIGHT_PATH_CONNECTIONS;
@@ -100,7 +103,6 @@ private:
     optix::Buffer m_lightVertexBufferIndexBuffer;   // indices for m_lightVertexBuffer
     optix::Buffer m_lightSubpathLengthBuffer;              // light subpath lengths
     optix::Buffer m_lightSubpathVertexIndexBuffer;         // light subpath indices for m_lightVertexBufferIndexBuffer
-    unsigned int  m_lightSubpathMaxLength;
 
     bool m_vcmUseVM;
     bool m_vcmUseVC;

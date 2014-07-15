@@ -45,7 +45,7 @@ rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 1
+#define OPTIX_PRINTFCID_ENABLED 0
 
 RT_PROGRAM void cameraPass()
 {

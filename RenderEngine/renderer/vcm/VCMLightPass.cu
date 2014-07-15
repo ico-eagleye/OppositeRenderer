@@ -133,12 +133,9 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     aLightPrd.randomState = randomStates[launchIndex];
     lightSubpathLengthBuffer[launchIndex] = 0u;
 
-#if VCM_UNIFORM_VERTEX_SAMPLING
-    aLightPrd.dVC_unif_vert = 0.f;
-#endif
-
     float *pVertPickPdf = NULL;
 #if VCM_UNIFORM_VERTEX_SAMPLING
+    aLightPrd.dVC_unif_vert = 0.f;
     pVertPickPdf = &vertexPickPdf;
 #endif
 
