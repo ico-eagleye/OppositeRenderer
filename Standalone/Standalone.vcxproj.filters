@@ -15,7 +15,9 @@
     <ClCompile Include="standalone.cpp" />
     <ClCompile Include="StandaloneRenderManager.cpp" />
     <ClCompile Include="StandaloneApplication.cpp" />
-    <ClCompile Include="moc_StandaloneRenderManager.cpp" />
+    <ClCompile Include="moc_StandaloneRenderManager.cpp">
+      <Filter>gui\moc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Standalone.vcxproj" />
