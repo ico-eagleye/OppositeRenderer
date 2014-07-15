@@ -173,8 +173,8 @@ public:
 
     RT_FUNCTION float reflectProbability() const
     {
-        float lum = optix::luminanceCIE(_reflectance);
-        return lum;
+        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+        //return optix::luminanceCIE(_reflectance);  // using luminance causes noise in the image
     }
 
     RT_FUNCTION float transmitProbability() const
