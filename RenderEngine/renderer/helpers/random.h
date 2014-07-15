@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "renderer/RandomState.h"
+#include "renderer/device_common.h"
 #include "renderer/helpers/helpers.h"
 #include <stdint.h>
 #include <float.h>
@@ -58,7 +59,7 @@ static void __device__ initializeRandomState(RandomState* state, unsigned int se
 }
 
 // Return a float in range [0,1)
-static __device__ __inline__ float getRandomUniformFloat( RandomState* state )
+static RT_FUNCTION float getRandomUniformFloat( RandomState* state )
 {
     // Currand generates values in range (0,1]
     return maxf(curand_uniform(state) - FLT_EPSILON, 0.0f);

@@ -9,6 +9,7 @@
 #define OPTIX_PRINTFI_DEF
 #define OPTIX_PRINTFID_DEF
 
+#include "renderer/device_common.h"
 #include "renderer/Light.h"
 #include "random.h"
 #include "helpers.h"

@@ -290,6 +290,9 @@
     <ClInclude Include="renderer\RenderMethod.h">
       <Filter>renderer</Filter>
     </ClInclude>
+    <ClInclude Include="renderer\device_common.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="material">

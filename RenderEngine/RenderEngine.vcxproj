@@ -263,6 +263,7 @@
     <ClInclude Include="math\Vector3.h" />
     <ClInclude Include="renderer\BSDF.h" />
     <ClInclude Include="renderer\BxDF.h" />
+    <ClInclude Include="renderer\device_common.h" />
     <ClInclude Include="renderer\helpers\camera.h" />
     <ClInclude Include="renderer\helpers\samplers.h" />
     <ClInclude Include="renderer\helpers\optix.h" />

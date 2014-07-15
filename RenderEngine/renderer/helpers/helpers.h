@@ -6,10 +6,7 @@
 
 #pragma once
 #include "config.h"
-
-// Optix inlines all functions, Cuda compiles sometimes fails to inline many parameter functions with __inline__ hint
-// so this is precaution macro
-#define RT_FUNCTION __forceinline__ __device__
+#include "renderer/device_common.h"
 
 // Printf issues
 //rtPrintf()
@@ -27,8 +24,8 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 250
-#define OPTIX_DEBUG_ID_Y 60
+#define OPTIX_DEBUG_ID_X 64
+#define OPTIX_DEBUG_ID_Y 86
 
 #define OPTIX_DEBUG_PIX 0
 #define OPTIX_DEBUG_PIX_X 40
