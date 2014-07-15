@@ -41,15 +41,6 @@ rtDeclareVariable(uint, localIterationNumber, , );
 rtBuffer<RandomState, 2> randomStates;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
-//rtDeclareVariable(Sphere, sceneBoundingSphere, , );
-
-RT_FUNCTION float3 averageInNewRadiance(const float3 newRadiance, const float3 oldRadiance, const float localIterationNumber)
-{
-    if (1 <= localIterationNumber)
-        return oldRadiance + (newRadiance-oldRadiance)/(localIterationNumber+1);
-    else
-        return newRadiance;
-}
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
