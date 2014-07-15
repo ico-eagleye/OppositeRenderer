@@ -376,7 +376,12 @@
     <CudaCompile Include="geometry_instance\Sphere.cu" />
     <CudaCompile Include="geometry_instance\TriangleMesh.cu" />
     <CudaCompile Include="material\DiffuseEmitter.cu" />
-    <CudaCompile Include="material\Mirror.cu" />
+    <CudaCompile Include="material\Mirror.cu">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
     <CudaCompile Include="material\Texture.cu" />
     <CudaCompile Include="renderer\ppm\IndirectRadianceEstimation.cu" />
     <CudaCompile Include="material\Diffuse.cu">

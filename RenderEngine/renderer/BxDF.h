@@ -1,12 +1,21 @@
-#pragma once
-
 // Partially borrowed from https://github.com/LittleCVR/MaoPPM
+
+#pragma once
 
 #include <optixu/optixu_math_namespace.h>
 #include "renderer/device_common.h"
 #include "renderer/reflection.h"
 #include "renderer/helpers/samplers.h"
 #include "config.h"
+
+
+// Cuda doesn't support virtual functions, hence resort to macro below
+#define CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(lvalue, op, fresnel, function, ...) \
+    if (fresnel->type() & Fresnel::NoOp) \
+    lvalue op reinterpret_cast<const FresnelNoOp *>(fresnel)->function(__VA_ARGS__); \
+    else if (fresnel->type() & Fresnel::Dielectric) \
+    lvalue op reinterpret_cast<const FresnelDielectric *>(fresnel)->function(__VA_ARGS__);
+
 
 class BxDF 
 {
@@ -26,6 +35,8 @@ public:
         All             = AllReflection | AllTransmission,
         // BxDF types
         Lambertian            = 1 << 5,
+        SpecularReflection    = 1 << 6,
+        SpecularTransmission  = 1 << 7
     };
 
 private:
@@ -36,11 +47,15 @@ public:
 
     RT_FUNCTION Type type() const { return _type; }
 
-    // Because we compress the basic types and BxDF types in a single
-    // $_type variable, it is necessary to AND All first.
+    // Because we compress the basic types and BxDF types in a single _type variable, it is necessary to AND All first.
     RT_FUNCTION bool matchFlags(Type type) const
     {
         return (_type & All & type) == (_type & All);
+    }
+
+    static RT_FUNCTION bool matchFlags(Type flagsToCheck, Type flagsToCheckFor)
+    {
+        return (flagsToCheck & All & flagsToCheckFor) == (flagsToCheck & All);
     }
 
     // Evaluates brdf, returns pdf if oPdf is not NULL
@@ -52,9 +67,9 @@ public:
         return optix::make_float3(0.0f);
     }
 
-    RT_FUNCTION float pdf( const optix::float3 & aWo, const optix::float3 & aWi ) const
+    RT_FUNCTION float pdf( const optix::float3 & aWo, const optix::float3 & aWi, const bool aEvalReverse = false ) const
     {
-        return localIsSameHemisphere(aWo, aWi) ? fabsf(localCosTheta(aWi)) * M_1_PIf : 0.0f;
+        return 0.0f;
     }
 
 
@@ -63,9 +78,9 @@ public:
                                        const optix::float2 & aSample,
                                        float               * oPdf ) const
     {
-        optix::cosine_sample_hemisphere(aSample.x, aSample.y, *oWi);
-        *oPdf = pdf(aWo, *oWi);
-        return f(aWo, *oWi);
+        *oWi = localReflect(aWo);
+        *oPdf = 0.f;
+        return optix::make_float3(0.0f);
     }
 
     //#define BxDF_rho \
@@ -104,7 +119,7 @@ public:
         return 0.f;
     }
 
-    // Evaluation for VCM returning also reverse pdfs
+    // Evaluation for VCM returning also reverse pdfs, default implementation of "virtual" functions
     RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
                                     const optix::float3 & aWi,
                                     float * oDirectPdf = NULL,
@@ -113,6 +128,15 @@ public:
         if (*oDirectPdf != NULL) *oDirectPdf = 0.f;
         if (*oReversePdf != NULL) *oReversePdf = 0.f;
         return optix::make_float3(0.0f);
+    }
+
+    RT_FUNCTION void vcmPdf( const optix::float3 & aWo,
+                             const optix::float3 & aWi,
+                             float * oDirectPdf = NULL,
+                             float * oReversePdf = NULL) const
+    {
+        if (*oDirectPdf != NULL) *oDirectPdf = 0.f;
+        if (*oReversePdf != NULL) *oReversePdf = 0.f;
     }
 
 };  /* -----  end of class BxDF  ----- */
@@ -140,16 +164,23 @@ public:
     }
 
     RT_FUNCTION float pdf( const optix::float3 & aWo,
-                           const optix::float3 & aWi ) const
+                           const optix::float3 & aWi,
+                           const bool aEvalReverse = false ) const
     {
-        return localIsSameHemisphere(aWo, aWi) ? fabsf(localCosTheta(aWi)) * M_1_PIf : 0.0f;
+        if (localIsSameHemisphere(aWo, aWi))
+        {
+            if (!aEvalReverse)
+                return fabsf(localCosTheta(aWi)) * M_1_PIf;
+            else
+                return fabsf(localCosTheta(aWo)) * M_1_PIf;
+        }
+        return 0.f;
     }
 
-
-    __device__ __forceinline__ optix::float3 sampleF( const optix::float3 & aWo,
-                                                      optix::float3       * oWi,
-                                                      const optix::float2 & aSample,
-                                                      float               * oPdfW ) const
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
+                                       optix::float3       * oWi,
+                                       const optix::float2 & aSample,
+                                       float               * oPdfW ) const
     {
         if (aWo.z < EPS_COSINE)
         {
@@ -159,7 +190,7 @@ public:
 
         optix::cosine_sample_hemisphere(aSample.x, aSample.y, *oWi);
 #if DEBUG_SCATTER_MIRROR_REFLECT // to force repeatable, predictable bounces
-        *oWi = make_float3(-aWo.x, -aWo.y, aWo.z);
+        *oWi = localReflect(aWo);
 #endif
         *oPdfW = pdf(aWo, *oWi);
         return f(aWo, *oWi);
@@ -204,4 +235,119 @@ public:
 };
 
 
-static const unsigned int  MAX_BXDF_SIZE  = sizeof(Lambertian);
+class SpecularReflection : public BxDF {
+public:
+    RT_FUNCTION SpecularReflection(const optix::float3 & aReflectance, Fresnel * aFresnel) :
+        BxDF(BxDF::Type(BxDF::SpecularReflection | BxDF::Reflection | BxDF::Specular)),
+        _reflectance(aReflectance) 
+    {
+        Fresnel *fresnel = reinterpret_cast<Fresnel *>(&_fresnel);
+        memcpy(fresnel, aFresnel, MAX_FRESNEL_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
+    }
+
+public:
+    RT_FUNCTION Fresnel * fresnel() 
+    {
+        return reinterpret_cast<Fresnel *>(_fresnel);
+    }
+
+    RT_FUNCTION const Fresnel * fresnel() const
+    {
+        return reinterpret_cast<const Fresnel *>(_fresnel);
+    }
+
+    RT_FUNCTION float reflectProbability() const
+    {
+        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+    }
+
+    RT_FUNCTION float transmitProbability() const
+    {
+        return 0.f;
+    }
+
+    RT_FUNCTION optix::float3 f( const optix::float3 & /* wo */, const optix::float3 & /* wi */, float * oPdfW = NULL) const
+    {
+        return optix::make_float3(0.0f);
+    }
+
+    RT_FUNCTION float pdf(const optix::float3 & wo, const optix::float3 & wi, const bool aEvalReverse = false ) const
+    {
+        return 0.0f;
+    }
+
+    RT_FUNCTION optix::float3 sampleF(
+        const optix::float3 & wo, optix::float3 * wi,
+        const optix::float2 & sample, float * prob) const
+    {
+        *wi = optix::make_float3(-wo.x, -wo.y, wo.z);
+        *prob = 1.0f;
+        optix::float3 F;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(F, =, fresnel(), evaluate, localCosTheta(wo));
+        F = F * _reflectance / fabsf(localCosTheta(*wi));
+        return F;
+    }
+
+private:
+    optix::float3  _reflectance;
+    char           _fresnel[MAX_FRESNEL_SIZE];
+};
+
+
+
+class SpecularTransmission : public BxDF 
+{
+public:
+    RT_FUNCTION SpecularTransmission(const optix::float3 & transmittance, float ei, float et) :
+        BxDF(BxDF::Type(BxDF::SpecularTransmission | BxDF::Transmission | BxDF::Specular)),
+        m_transmittance(transmittance), m_fresnel(ei, et) {  }
+
+public:
+    RT_FUNCTION FresnelDielectric * fresnel() { return &m_fresnel; }
+    RT_FUNCTION const FresnelDielectric * fresnel() const { return &m_fresnel; }
+
+public:
+    RT_FUNCTION optix::float3 f( const optix::float3 & wo , const optix::float3 &  wi, float * oPdfW = NULL ) const
+    {
+        return optix::make_float3(0.0f);
+    }
+
+    RT_FUNCTION float pdf( const optix::float3 & wo, const optix::float3 & wi, const bool aEvalReverse = false ) const
+    {
+        return 0.0f;
+    }
+
+    RT_FUNCTION optix::float3 sampleF(
+        const optix::float3 & wo, optix::float3 * wi,
+        const optix::float2 & sample, float * prob) const
+    {
+        using namespace optix;
+        
+        // Figure out which $\eta$ is incident and which is transmitted
+        bool entering = localCosTheta(wo) > 0.0f;
+        float ei = fresnel()->eta_i, et = fresnel()->eta_t;
+        if (!entering) swap(ei, et);
+
+        // Compute transmitted ray direction
+        float sini2 = localSinThetaSquared(wo);
+        float eta = ei / et;
+        float sint2 = eta * eta * sini2;
+
+        // Handle total internal reflection for transmission
+        if (sint2 >= 1.f) return make_float3(0.f);
+        float cost = sqrtf(fmaxf(0.f, 1.f - sint2));
+        if (entering) cost = -cost;
+        float sintOverSini = eta;
+        *wi = make_float3(sintOverSini * -wo.x, sintOverSini * -wo.y, cost);
+        *prob = 1.f;
+        float3 F = fresnel()->evaluate(localCosTheta(wo));
+        return (make_float3(1.f) - F) * m_transmittance / fabsf(localCosTheta(*wi));
+    }
+
+private:
+    optix::float3      m_transmittance;
+    FresnelDielectric  m_fresnel;
+};
+
+
+static const unsigned int  MAX_BXDF_SIZE  = sizeof(SpecularTransmission);

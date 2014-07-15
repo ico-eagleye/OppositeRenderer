@@ -24,8 +24,8 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 64
-#define OPTIX_DEBUG_ID_Y 86
+#define OPTIX_DEBUG_ID_X 50
+#define OPTIX_DEBUG_ID_Y 18
 
 #define OPTIX_DEBUG_PIX 0
 #define OPTIX_DEBUG_PIX_X 40
@@ -221,4 +221,12 @@ RT_FUNCTION bool isInf(optix::float2 v)
 RT_FUNCTION bool isInf(optix::float3 v)
 {
     return isInf(v.x) || isInf(v.y) || isInf(v.z);
+}
+
+template<typename T>
+RT_FUNCTION void swap(T & t1, T & t2)
+{
+    T tmp = t1;
+    t1 = t2;
+    t2 = tmp;
 }

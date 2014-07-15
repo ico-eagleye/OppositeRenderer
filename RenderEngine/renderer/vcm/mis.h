@@ -124,26 +124,36 @@ RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float aCosThe
 // Initializes MIS terms for next event, partial implementation of [tech. rep. (34)-(36)], completed on hit
 RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aCosThetaOut, const float & aBsdfDirPdfW,
                                          const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
-                                         const float const * aVertexPickPdf = NULL)
+                                         BxDF::Type aSampledEvent, const float const * aVertexPickPdf = NULL)
 {
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "updateMisTermsOnScatter(): \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "updateMisTermsOnScatter(): \n");
     float vertPickPdf = aVertexPickPdf ?  (*aVertexPickPdf) : 1.f;
     const float dVC = aPathPrd.dVC;
     const float dVM = aPathPrd.dVM;
     const float dVCM = aPathPrd.dVCM;
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -            dVC % 14f            dVM % 14f           dVCM % 14f \n",
-        dVC, dVM, dVCM);
+
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -            dVC % 14f            dVM % 14f           dVCM % 14f \n", dVC, dVM, dVCM);
 
     //float cosDivBsfPdf = aCosThetaOut / aBsdfDirPdfW;
     //double cosDivBsfPdfD = double(aCosThetaOut) / aBsdfDirPdfW;
 
     //if (isNAN(dVC))
     //{
-    //    OPTIX_PRINTF("%d %d - d %d - MIS - DQNAN aPathPrd.dVC - aCosThetaOut %f  cosDivBsfPdf %f cosDivBsfPdfD %f \n", 
-    //    aPathPrd.launchIndex.x, aPathPrd.launchIndex.y, aPathPrd.depth, aCosThetaOut, cosDivBsfPdf, cosDivBsfPdfD);
-    //    OPTIX_PRINTF("%d %d - d %d - MIS- DQNAN aPathPrd.dVC - aBsdfDirPdfW %f  cosDivBsfPdf %f cosDivBsfPdfD %f \n", 
-    //        aPathPrd.launchIndex.x, aPathPrd.launchIndex.y, aPathPrd.depth, aBsdfDirPdfW, cosDivBsfPdf, cosDivBsfPdfD);
+    //    OPTIX_PRINTF("%d %d - d %d - MIS - DQNAN aPathPrd.dVC - aCosThetaOut %f  cosDivBsfPdf %f cosDivBsfPdfD %f \n",  aPathPrd.launchIndex.x, aPathPrd.launchIndex.y, aPathPrd.depth, aCosThetaOut, cosDivBsfPdf, cosDivBsfPdfD);
+    //    OPTIX_PRINTF("%d %d - d %d - MIS- DQNAN aPathPrd.dVC - aBsdfDirPdfW %f  cosDivBsfPdf %f cosDivBsfPdfD %f \n",  aPathPrd.launchIndex.x, aPathPrd.launchIndex.y, aPathPrd.depth, aBsdfDirPdfW, cosDivBsfPdf, cosDivBsfPdfD);
     //}
+
+    if (aSampledEvent & BxDF::Specular)
+    {
+        OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS S -    bsdfDirPdfW % 14f    bsdfRevPdfW % 14f \n", aBsdfDirPdfW, aBsdfRevPdfW);
+
+        aPathPrd.dVCM = 0.f;
+        // pdfs must be the same for specular event and so cancel out
+        aPathPrd.dVC *= vcmMis(aCosThetaOut); // * (aBsdfRevPdfW / aBsdfDirPdfW)
+        aPathPrd.dVM *= vcmMis(aCosThetaOut); // * (aBsdfRevPdfW / aBsdfDirPdfW)
+        OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS S -            dVC % 14f            dVM % 14f           dVCM % 14f \n", dVC, dVM, dVCM);
+        return;
+    }
 
     // dVC = (g_i-1 / pi) * (etaVCM + dVCM_i-1 + _p_ro_i-2 * dVC_i-1)
     // cosThetaOut part of g_i-1  [ _g reverse pdf conversion!, uses outgoing cosTheta]

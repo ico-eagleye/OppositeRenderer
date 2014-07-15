@@ -26,12 +26,12 @@
 #include "renderer/vcm/mis.h"
 #include "renderer/vcm/config_vcm.h"
 
-//#define OPTIX_PRINTF_ENABLED 1
-//#define OPTIX_PRINTFI_ENABLED 1
-//#define OPTIX_PRINTFID_ENABLED 1
+
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
 
 
 void initLightPayload(SubpathPRD & aLightPrd);

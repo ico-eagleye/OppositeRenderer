@@ -19,19 +19,19 @@
 
 CornellSmall::CornellSmall(void)
 {
-    //optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
-    //optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
-    //optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
-    ////optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
-    ////optix::float3 power = optix::make_float3( 0.75f * 5.f );
-    ////optix::float3 power = optix::make_float3( M_PIf );
-    //optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
-    //Light light(power, anchor, v1, v2);
+    optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
+    optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
+    optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
+    //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
+    //optix::float3 power = optix::make_float3( 0.75f * 5.f );
+    //optix::float3 power = optix::make_float3( M_PIf );
+    optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
+    Light light(power, anchor, v1, v2);
     
     // point light
-    optix::float3 anchor = optix::make_float3( 1.25f, 2.25f, 1.25f);
-    //Light light(M_PIf, anchor);
-    Light light(70.f, anchor);
+    //optix::float3 anchor = optix::make_float3( 1.25f, 2.25f, 1.25f);
+    //Light light(30.f, anchor);
+    //Light light(70.f, anchor);
 
     m_sceneLights.push_back(light);
 
@@ -92,16 +92,21 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     // create geometry instances
     QVector<optix::GeometryInstance> gis;
 
-    Diffuse diffuseWhite = Diffuse(optix::make_float3( 0.8f ));
-    Diffuse diffuseGreen = Diffuse(optix::make_float3( 0.05f, 0.8f, 0.05f ));
-    Diffuse diffuseRed = Diffuse(optix::make_float3( 1.f, 0.05f, 0.05f ));
+    Diffuse diffuseWhite = Diffuse(make_float3( 0.8f ));
+    Diffuse diffuseGreen = Diffuse(make_float3( 0.05f, 0.8f, 0.05f ));
+    Diffuse diffuseRed = Diffuse(make_float3( 1.f, 0.05f, 0.05f ));
+    Mirror mirror = Mirror(make_float3(0.7f,0.7f,1.f));
 
     // Cornell box size in SmallVCM 2.56004
     // Floor
+    //gis.push_back( createParallelogram(0, context, optix::make_float3( 0.0f, 0.0f, 0.0f ),
+    //    optix::make_float3( 0.0f, 0.0f, 2.5f ),
+    //    optix::make_float3( 2.5f, 0.0f, 0.0f ),
+    //    diffuseWhite ) );
     gis.push_back( createParallelogram(0, context, optix::make_float3( 0.0f, 0.0f, 0.0f ),
         optix::make_float3( 0.0f, 0.0f, 2.5f ),
         optix::make_float3( 2.5f, 0.0f, 0.0f ),
-        diffuseWhite ) );
+        mirror ) );
 
     // Ceiling
     gis.push_back( createParallelogram(1, context, optix::make_float3( 0.0f, 2.5f, 0.0f ),
@@ -190,9 +195,9 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
         gis.push_back(createParallelogram(15 + i, context, m_sceneLights[i].position, m_sceneLights[i].v1, m_sceneLights[i].v2, emitter));
     }
 
-    Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
-    Mirror mirror = Mirror(optix::make_float3(0.7f,0.7f,1.f));
-    Diffuse diff(optix::make_float3(0.f,1.f,0.f));
+    //Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
+    //Mirror mirror = Mirror(optix::make_float3(0.7f,0.7f,1.f));
+    //Diffuse diff(optix::make_float3(0.f,1.f,0.f));
 
     // Participating Tests
 
@@ -212,8 +217,6 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     for (int i = 0; i < gis.size(); ++i )
         geometry_group->setChild( i, gis[i] );
 
-    // vmarz: Changed to Trbvh. Sbvh can cause weird hangs 
-    // https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
     geometry_group->setAcceleration(context->createAcceleration("NoAccel", "NoAccel")); // Bvh Sbvh Trbvh NoAccel
 
     optix::Group gro = context->createGroup();

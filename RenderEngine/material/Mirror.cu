@@ -4,6 +4,12 @@
  * file that was distributed with this source code.
  */
 
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTFC_DEF
+#define OPTIX_PRINTFCID_DEF
+
 #include <optix.h>
 #include <optix_device.h>
 #include <optixu/optixu_math_namespace.h>
@@ -12,6 +18,16 @@
 #include "renderer/RadiancePRD.h"
 #include "renderer/ppm/PhotonPRD.h"
 #include "renderer/ppm/Photon.h"
+#include "renderer/vcm/vcm.h"
+#include "renderer/vcm/LightVertex.h"
+#include "renderer/vcm/SubpathPRD.h"
+#include "renderer/Light.h"
+
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
 
 using namespace optix;
 
@@ -55,4 +71,115 @@ RT_PROGRAM void closestHitPhoton()
         Ray newPhoton (hitPoint, newPhotonDirection, RayType::PHOTON, 0.0001 );
         rtTrace(sceneRootObject, newPhoton, photonPrd);
     }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Vertex Connection and Merging
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
+
+rtDeclareVariable(Camera,     camera, , );
+rtDeclareVariable(float2,     pixelSizeFactor, , );
+rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
+rtDeclareVariable(uint,       lightVertexCountEstimatePass, , );
+rtDeclareVariable(uint,       maxPathLen, , );
+
+rtBuffer<LightVertex>  lightVertexBuffer;
+rtBuffer<uint>         lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
+rtBuffer<uint, 2>      lightSubpathLengthBuffer;
+
+rtDeclareVariable(int, lightVertexBufferId, , );            // rtBufferId<LightVertex>
+rtDeclareVariable(int, lightVertexBufferIndexBufferId, , ); // rtBufferId<uint>
+rtDeclareVariable(int, lightSubpathLengthBufferId, , );     // rtBufferId<uint, 2>
+rtDeclareVariable(int, outputBufferId, , );                 // rtBufferId<float3, 2>
+
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+rtBuffer<uint, 3>       lightSubpathVertexIndexBuffer;
+rtDeclareVariable(int,  lightSubpathVertexIndexBufferId, , ); // rtBufferId<uint, 3>
+#else
+rtDeclareVariable(float, vertexPickPdf, , );                // used for uniform vertex sampling
+#endif
+
+
+rtDeclareVariable(float, lightSubpathCount, , );
+rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
+rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
+
+
+ // Light subpath program
+RT_PROGRAM void vcmClosestHitLight()
+{
+    // vmarz TODO make sure shading normals used correctly
+    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;      
+    
+    rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
+    rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
+    rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+    rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
+#endif
+
+    if (isZero(Kr))
+        return;
+    
+    FresnelNoOp fresnelNoOp;
+    SpecularReflection reflection(Kr, &fresnelNoOp );
+    VcmBSDF lightBsdf = VcmBSDF(worldShadingNormal, -ray.direction);
+    lightBsdf.AddBxDF(&reflection);
+
+    lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, lightBsdf, ray.direction, tHit, maxPathLen,
+        lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
+        camera, pixelSizeFactor,
+        _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+        _lightSubpathVertexIndexBufferId
+#else
+        &vertexPickPdf
+#endif
+        );
+}
+
+
+//rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
+rtDeclareVariable(float, averageLightSubpathLength, , );
+rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint, 1>
+
+ // Camra subpath program
+RT_PROGRAM void vcmClosestHitCamera()
+{
+    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;
+
+    rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
+    rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);
+    rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
+    rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+    rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
+#endif
+
+    if (isZero(Kr))
+        return;
+    
+    FresnelNoOp fresnelNoOp;
+    SpecularReflection reflection(Kr, &fresnelNoOp );
+    VcmBSDF cameraBsdf = VcmBSDF(worldShadingNormal, -ray.direction);
+    cameraBsdf.AddBxDF(&reflection);
+
+    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
+         misVcWeightFactor, misVmWeightFactor, 
+         _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+         _lightSubpathVertexIndexBufferId
+#else
+         averageLightSubpathLength,
+         &vertexPickPdf
+#endif
+        );
 }

@@ -1,10 +1,11 @@
+// Partially borrowed from https://github.com/LittleCVR/MaoPPM
+
 #pragma once
 
 //#define OPTIX_PRINTF_DEF
 //#define OPTIX_PRINTFI_DEF
 //#define OPTIX_PRINTFID_DEF
 
-// Partially borrowed from https://github.com/LittleCVR/MaoPPM
 #include <optix_world.h>
 #include <optixu/optixu_math_namespace.h>
 #include "renderer/device_common.h"
@@ -15,12 +16,17 @@
 #include "renderer/vcm/config_vcm.h"
 
 #define OPTIX_PRINTF_ENABLED 0
-#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 1
 #define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 1
 
 #define CALL_BXDF_CONST_VIRTUAL_FUNCTION(lvalue, op, bxdf, function, ...) \
     if (bxdf->type() & BxDF::Lambertian) \
-        lvalue op reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__);
+        lvalue op reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__); \
+    else if (bxdf->type() & BxDF::SpecularReflection) \
+        lvalue op reinterpret_cast<const SpecularReflection *>(bxdf)->function(__VA_ARGS__);
+    //else if (bxdf->type() & BxDF::SpecularTransmission) \
+    //    lvalue op reinterpret_cast<const SpecularTransmission *>(bxdf)->function(__VA_ARGS__); \
 
 //#define CAST_BXDF_TO_SUBTYPE(pointerVariable, bxdf) \
 //    if (bxdf->type() & BxDF::Lambertian) \
@@ -84,23 +90,22 @@ public:
     RT_FUNCTION float continuationProb() const { return _continuationProb; }
 
     // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
-    RT_FUNCTION int AddBxDF(const BxDF * bxdf)
+    RT_FUNCTION int AddBxDF(const BxDF * bxdf)//, uint2 * launchIndex = NULL)
     {
         //OPTIX_PRINTF("AddBxDF - passed BxDF 0x%X\n", sizeof(BxDF * ), (optix::optix_size_t) bxdf);
         if (_nBxDFs == MAX_N_BXDFS) return 0;
         
         // get BxDF list address
         BxDF *pBxDF = reinterpret_cast<BxDF *>(&_bxdfList[_nBxDFs * MAX_BXDF_SIZE]);
-        //OPTIX_PRINTF("AddBxDF - this 0x%X BxDF count %d target address 0x%X \n", 
-        //    (optix::optix_size_t) this, _nBxDFs, (optix::optix_size_t) pBxDF);
-        memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if coppy too much, extra bytes won't be used by target type anyway
+        //OPTIX_PRINTF("AddBxDF - this 0x%X BxDF count %d target address 0x%X \n", (optix::optix_size_t) this, _nBxDFs, (optix::optix_size_t) pBxDF);
+        memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
         
         //Lambertian *lamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(bxdf));
         //Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
         //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
         //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
 
-        // setting pick probabilty unweighted by other BxDFs, weighted during sampling based sampled BxDF types
+        // setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
         float pickProb = 0.f;
         CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
         CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
@@ -109,8 +114,8 @@ public:
         // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
         // to make sure the weight of sample never rise
         _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
-        //OPTIX_PRINTF("AddBxDF - _nBxDFs %d _continuationProb %f _bxdfPickProb[_nBxDFs] %f \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs]);
         _nBxDFs++;
+        //OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
         return 1;
     }
 
@@ -203,7 +208,6 @@ public:
 
         //float matchedSumContProb = sumContProb(aSampleType);
 
-        // vmarz TODO pick based on albedo of each component as in SmallVCM?
         // Sample BxDF.
         //unsigned int index = optix::min(nMatched-1,
         //        static_cast<unsigned int>(floorf(aSmple.x * static_cast<float>(nMatched))));
@@ -242,7 +246,6 @@ public:
         // If not specular, sum all non-specular BxDF's probability.
         if (!(bxdf->type() & BxDF::Specular) && nMatched > 1) 
         {
-            //*oPdf = 1.0f; // original - vmarz why this ?
             for (unsigned int i = 0; i < _nBxDFs; i++) // vmarz original condition was i<1
             {
                 if (i == index) continue; // index of bxdf used for direction sampling, skip computing pdf
@@ -258,8 +261,6 @@ public:
         // If not specular, sum all f.
         if (!(bxdf->type() & BxDF::Specular))
         {
-            // f = make_float3(0.0f); // vmarz commented out. reuse value computed when direction was 
-
             // Cannot use localIsSameHemisphere(wo, *wi) here,
             // do not confuse with the geometric normal and the shading normal.
             if (optix::dot(_geometricNormal, *oWorldWi) * optix::dot(_geometricNormal, aWorldWo) >= 0.0f) 
@@ -362,6 +363,22 @@ public:
                                                          BxDF::Type          * oSampledType = NULL ) const
     {
         return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, oPdfW, oCosThetaOut, aSampleType, oSampledType);
+    }
+
+
+    // Evaulates pdf for given direction, returns reverse pdf if aEvalRevPdf == true
+    // Specular BxDFs are ignored
+    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, bool aEvalRevPdf ) const
+    {      
+        optix::float3 wo = _diffGemetry.ToLocal(oWorldDirGen);
+
+        float pdf = 0.f;
+        for(int i=0; i < _nBxDFs; i++)
+        {
+            if ( !(bxdfAt(i)->type() & BxDF::Specular) )
+                CALL_BXDF_CONST_VIRTUAL_FUNCTION(pdf, +=, bxdfAt(i), pdf, _localDirFix, wo, true);
+        }
+        return pdf;
     }
 
 #define OPTIX_PRINTFI_ENABLED 0
