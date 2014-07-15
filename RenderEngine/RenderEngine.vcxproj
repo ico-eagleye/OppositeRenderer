@@ -267,7 +267,6 @@
     <ClInclude Include="renderer\helpers\samplers.h" />
     <ClInclude Include="renderer\helpers\optix.h" />
     <ClInclude Include="renderer\helpers\store_photon.h" />
-    <ClInclude Include="renderer\helpers\vector_types.h" />
     <ClInclude Include="renderer\reflection.h" />
     <ClInclude Include="renderer\TransmissionPRD.h" />
     <ClInclude Include="renderer\vcm\config_vcm.h" />
@@ -320,13 +319,7 @@
     <ClInclude Include="select.h" />
     <ClInclude Include="renderer\ShadowPRD.h" />
     <ClInclude Include="renderer\ppm\PhotonGrid.h" />
-    <ClInclude Include="sutil\ImageDisplay.h" />
-    <ClInclude Include="sutil\ImageLoader.h" />
-    <ClInclude Include="sutil\ModelLoader.h" />
     <ClInclude Include="renderer\helpers\nsight.h" />
-    <ClInclude Include="sutil\ObjLoader.h" />
-    <ClInclude Include="sutil\RayGenCameraData.h" />
-    <ClInclude Include="sutil\SunSky.h" />
     <ClInclude Include="util\logging.h" />
     <ClInclude Include="util\Mouse.h" />
     <ClInclude Include="util\sutil.h" />
@@ -378,6 +371,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="geometry_instance\AAB.cu" />
+    <CudaCompile Include="geometry_instance\parallelogram.cu" />
     <CudaCompile Include="geometry_instance\Sphere.cu" />
     <CudaCompile Include="geometry_instance\TriangleMesh.cu" />
     <CudaCompile Include="material\DiffuseEmitter.cu" />
@@ -394,7 +388,6 @@
     </CudaCompile>
     <CudaCompile Include="material\Glass.cu" />
     <CudaCompile Include="material\ParticipatingMedium.cu" />
-    <CudaCompile Include="parallelogram.cu" />
     <CudaCompile Include="renderer\ppm\DirectRadianceEstimation.cu" />
     <CudaCompile Include="renderer\ppm\Output.cu" />
     <CudaCompile Include="renderer\ppm\PhotonGenerator.cu">
