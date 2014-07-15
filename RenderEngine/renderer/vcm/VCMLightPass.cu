@@ -163,6 +163,8 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     emissionPdfW *= lightPickPdf;
     directPdfW   *= lightPickPdf;
     aLightPrd.throughput /= emissionPdfW;
+    aLightPrd.isGenByFiniteLight = light.isFinite;
+
     //lightPrd.isFinite = isDelta.isFinite ... vmarz?
     OPTIX_PRINTFID(aLightPrd.launchIndex, 0u, "GenLi - emission Pdf    % 14f     directPdfW % 14f     cosAtLight % 14f \n", 
         emissionPdfW, directPdfW, cosAtLight);

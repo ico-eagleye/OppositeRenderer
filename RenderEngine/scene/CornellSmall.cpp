@@ -19,19 +19,34 @@
 
 CornellSmall::CornellSmall(void)
 {
-    optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
-    optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
-    optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
-    //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
-    //optix::float3 power = optix::make_float3( 0.75f * 5.f );
-    //optix::float3 power = optix::make_float3( M_PIf );
-    optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
-    Light light(power, anchor, v1, v2);
+    //optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
+    //optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
+    //optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
+    ////optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
+    ////optix::float3 power = optix::make_float3( 0.75f * 5.f );
+    ////optix::float3 power = optix::make_float3( M_PIf );
+    //optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
+    //Light light(power, anchor, v1, v2);
+    
+    // point light
+    optix::float3 anchor = optix::make_float3( 1.25f, 2.25f, 1.25f);
+    //Light light(M_PIf, anchor);
+    Light light(70.f, anchor);
+
     m_sceneLights.push_back(light);
 
     m_sceneAABB.min = Vector3(-0.1f);
     m_sceneAABB.max = Vector3(2.5f, 2.5f, 2.5f) + 0.1f;
 }
+
+//float CornellSmall::getSceneInitialPPMRadiusEstimate() const
+//{
+//    Vector3 sceneExtent = getSceneAABB().getExtent();
+//    float radius = 0.0015f * sceneExtent.length();
+//    //return radius;
+//    return 0.00649519078f;
+//}
+
 
 optix::GeometryInstance CornellSmall::createParallelogram(
     unsigned int meshId,

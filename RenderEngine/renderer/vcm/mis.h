@@ -55,12 +55,19 @@ RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight,
         aLightPrd.dVC_unif_vert = aLightPrd.dVC;
 #endif
     }
+    else
+    {
+        aLightPrd.dVC = 0.f;
+    }
 
     // dVM_1 = dVC_1 / etaVCM
     aLightPrd.dVM = aLightPrd.dVC * misVcWeightFactor;
+
+#if VCM_UNIFORM_VERTEX_SAMPLING
     if (aVertexPickPdf)
         aLightPrd.dVM *= *aVertexPickPdf; // should divide etaVCM, bust since it is denominator, we just multiply
     // aVertexPickPdf pointer passed only when using uniform vertex sampling from buffer
+#endif
 }
 
 
@@ -84,7 +91,7 @@ RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCamera
     //OPTIX_PRINTFID(aCameraPrd.launchIndex, "Gen C - init  - dVCM %f lightSubCount %d camPdf %f\n", aCameraPrd.dVCM, 
     //    aVcmLightSubpathCount, cameraPdf);
 
-    //cameraPrd.specularPath = 1; // vmarz TODO ?
+    aCameraPrd.isSpecularPath = true;
 }
 
 
@@ -93,6 +100,8 @@ RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCamera
 // or scatter from surface [tech. rep. (34)-(36)]
 RT_FUNCTION void updateMisTermsOnHit(SubpathPRD & aLightPrd, const float aCosThetaIn, const float aRayLen)
 {
+    // infinite lights potentially need additional handling here if MIS handled via solid angle integration [tech. rep. Section 5.1]
+
     // sqr(dist) term from g in 1/p1 (or 1/pi), for dVC and dVM sqr(dist) terms of _g and pi cancel out
     aLightPrd.dVCM *= vcmMis(sqr(aRayLen));
     aLightPrd.dVCM /= vcmMis(aCosThetaIn);
@@ -146,8 +155,8 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
         aPathPrd.dVC * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM + aMisVmWeightFactor);               
 
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -          U dVC = (   cosThetaOut /    bsdfDirPdfW) * (           dVC *    bsdfRevPdfW +           dVCM + VmWeightFactor) \n");
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f) \n", 
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -          U dVC = (   cosThetaOut /    bsdfDirPdfW) * (           dVC *    bsdfRevPdfW +           dVCM + VmWeightFactor) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f) \n", 
         aPathPrd.dVC, aCosThetaOut, aBsdfDirPdfW, dVC, aBsdfRevPdfW, dVCM, aMisVmWeightFactor);
 
 #if VCM_UNIFORM_VERTEX_SAMPLING
@@ -167,16 +176,16 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
     aPathPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
         aPathPrd.dVM * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM * aMisVcWeightFactor * vertPickPdf + 1.f ); // vertPickPdf should divide etaVCM which is inverse in aMisVcWeightFactor
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -          U dVM = (   cosThetaOut /    bsdfDirPdfW) * (           dVM *    bsdfRevPdfW +           dVCM + VcWeightFactor *    vertPickPdf + 1) \n");
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f * % 14f + 1) \n", 
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -          U dVM = (   cosThetaOut /    bsdfDirPdfW) * (           dVM *    bsdfRevPdfW +           dVCM + VcWeightFactor *    vertPickPdf + 1) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f * % 14f + 1) \n", 
         aPathPrd.dVM, aCosThetaOut, aBsdfDirPdfW, dVM, aBsdfRevPdfW, dVCM, aMisVcWeightFactor, vertPickPdf);
 
     // dVCM = 1 / pi
     // pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
     aPathPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
-    OPTIX_PRINTFI(aPathPrd.launchIndex, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
+    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
 }
 
 

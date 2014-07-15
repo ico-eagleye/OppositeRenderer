@@ -158,6 +158,9 @@ public:
         }
 
         optix::cosine_sample_hemisphere(aSample.x, aSample.y, *oWi);
+#if DEBUG_SCATTER_MIRROR_REFLECT // to force repeatable, predictable bounces
+        *oWi = make_float3(-aWo.x, -aWo.y, aWo.z);
+#endif
         *oPdfW = pdf(aWo, *oWi);
         return f(aWo, *oWi);
     }
@@ -172,8 +175,7 @@ public:
     __device__ __forceinline__ float reflectProbability() const
     {
         float lum = optix::luminanceCIE(_reflectance);
-        //OPTIX_PRINTF("reflectProbability - refl %f %f %f lum %f\n",
-        //    _reflectance.x, _reflectance.y, _reflectance.z, lum);
+        //OPTIX_PRINTF("reflectProbability - refl %f %f %f lum %f\n", _reflectance.x, _reflectance.y, _reflectance.z, lum);
         return lum;
     }
 

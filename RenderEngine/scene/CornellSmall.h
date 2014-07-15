@@ -28,6 +28,7 @@ public:
     RENDER_ENGINE_EXPORT_API virtual unsigned int getNumTriangles() const;
     RENDER_ENGINE_EXPORT_API virtual unsigned int getNumMeshes() const;
     RENDER_ENGINE_EXPORT_API virtual AAB getSceneAABB() const;
+    //RENDER_ENGINE_EXPORT_API virtual float getSceneInitialPPMRadiusEstimate() const;
 
 private:
     optix::Material m_material;

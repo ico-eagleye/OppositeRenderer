@@ -15,6 +15,7 @@
 #include "renderer/ShadowPRD.h"
 #include "renderer/TransmissionPRD.h"
 #include "renderer/helpers/samplers.h"
+#include "renderer/vcm/config_vcm.h"
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -121,7 +122,11 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
     {
         oPosition = aLight.position;
         oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
-        oDirectPdfA = oEmissionPdfW;
+#if DEBUG_EMIT_DIR_FIXED
+        oDirection = DEBUG_EMIT_DIR;
+#endif
+        oDirectPdfA = 1.f;
+        oCosThetaLight = 1.f;           // not used for delta lights
         radiance = aLight.intensity;
     }
     else if(aLight.lightType == Light::SPOT)
@@ -178,7 +183,7 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
         if(oEmissionPdfW)
             *oEmissionPdfW = aLight.inverseArea * cosThetaLight * M_1_PIf;
 
-        radiance = aLight.Lemit;// * cosThetaLight;
+        radiance = aLight.Lemit;
         //OPTIX_PRINTFI((*launchIdx), "conLI-      cosAtLight % 14f   emissionPdfW % 14f     directPdfW % 14f \n", cosThetaLight, *oEmissionPdfW, oDirectPdfW);
         //if (launchIdx)
         //    OPTIX_PRINTFID((*launchIdx), "illum -       radiance % 14f % 14f % 14f \n", radiance.x, radiance.y, radiance.z);
@@ -188,9 +193,10 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
     {
         oDirectionToLight = aLight.position - aReceivePosition;
         oDistance = length(oDirectionToLight);
-        oDirectPdfW = 1.f;
+        oDirectionToLight /= oDistance;
+        oDirectPdfW = sqr(oDistance);
         if (oEmissionPdfW)
-            *oEmissionPdfW = 0.25f * M_1_PIf;
+            *oEmissionPdfW = 0.25f * M_1_PIf; // uniform sphere sampling pdf
         if (oCosThetaLight)
             *oCosThetaLight = 1.f;
         radiance = aLight.intensity;

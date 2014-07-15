@@ -23,10 +23,10 @@
 #include "renderer/vcm/config_vcm.h"
 #include "renderer/vcm/mis.h"
 
-#define CONNECT_VERTICES_DISABLED
+//#define CONNECT_VERTICES_DISABLED
 //#define CONNECT_CAMERA_T1_DISABLED
-#define CONNECT_LIGHT_S0_DISABLED
-#define CONNECT_LIGHT_S1_DISABLED
+//#define CONNECT_LIGHT_S0_DISABLED
+//#define CONNECT_LIGHT_S1_DISABLED
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -54,7 +54,7 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
 
 
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 1
+#define OPTIX_PRINTFCID_ENABLED 0
 RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
@@ -244,10 +244,10 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     }   
 
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - cosThetaIn      % 14f         rayLen % 14f\n", cosThetaIn, aRayTHit);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS preUpd  dVC % 14e            dVM % 14e           dVCM % 14e\n",
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS preUpd  dVC % 14f            dVM % 14f           dVCM % 14f\n",
         aLightPrd.dVC, aLightPrd.dVM, aLightPrd.dVCM);
     updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);;
-    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS postUpd dVC % 14e            dVM % 14e           dVCM % 14e\n",
+    OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS postUpd dVC % 14f            dVM % 14f           dVCM % 14f\n",
         aLightPrd.dVC, aLightPrd.dVM, aLightPrd.dVCM);
 
     LightVertex lightVertex;
@@ -339,7 +339,10 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L -      bsdfFactor % 14f % 14f % 14f \n", bsdfFactor.x, bsdfFactor.y, bsdfFactor.z);
 
     if (isZero(bsdfFactor))
+    {
+        OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L - bsdfFactor ZERO \n");
         return;
+    }
 
     float bsdfRevPdfW = cosThetaIn * M_1_PIf;
     bsdfDirPdfW *= contProb;
@@ -754,10 +757,10 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     }   
 
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - cosThetaIn      % 14f         rayLen % 14f\n", cosThetaIn, aRayTHit);
-    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - MIS preUpd  dVC % 14e            dVM % 14e           dVCM % 14e\n",
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - MIS preUpd  dVC % 14f            dVM % 14f           dVCM % 14f\n",
         aCameraPrd.dVC, aCameraPrd.dVM, aCameraPrd.dVCM);
     updateMisTermsOnHit(aCameraPrd, cosThetaIn, aRayTHit);
-    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - MIS postUpd dVC % 14e            dVM % 14e           dVCM % 14e\n",
+    OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - MIS postUpd dVC % 14f            dVM % 14f           dVCM % 14f\n",
         aCameraPrd.dVC, aCameraPrd.dVM, aCameraPrd.dVCM);
 
     VcmBSDF cameraBsdf = VcmBSDF(aWorldNormal, -aRayWorldDir);
