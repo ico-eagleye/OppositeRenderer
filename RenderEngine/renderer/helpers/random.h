@@ -67,7 +67,7 @@ static __device__ __inline__ float getRandomUniformFloat( RandomState* state )
 #endif
 
 // Return a float in range [0,1)
-static __device__ __inline__ optix::float2 getRandomUniformFloat2( RandomState* state )
+static RT_FUNCTION optix::float2 getRandomUniformFloat2( RandomState* state )
 {
     // Currand generates values in range (0,1]
     optix::float2 sample;
@@ -77,7 +77,7 @@ static __device__ __inline__ optix::float2 getRandomUniformFloat2( RandomState* 
 }
 
 // Return a float in range [0,1)
-static __device__ __inline__ optix::float3 getRandomUniformFloat3( RandomState* state )
+static RT_FUNCTION optix::float3 getRandomUniformFloat3( RandomState* state )
 {
     // Currand generates values in range (0,1]
     optix::float3 sample;
@@ -89,7 +89,7 @@ static __device__ __inline__ optix::float3 getRandomUniformFloat3( RandomState* 
 
 // <Random number generation used in Optix SDK>
 // Generate random unsigned int in [0, 2^24)
-static __host__ __device__ __inline__ unsigned int lcg(unsigned int &prev)
+static __host__ RT_FUNCTION unsigned int lcg(unsigned int &prev)
 {
   const unsigned int LCG_A = 1664525u;
   const unsigned int LCG_C = 1013904223u;
@@ -98,13 +98,13 @@ static __host__ __device__ __inline__ unsigned int lcg(unsigned int &prev)
 }
 
 // Generate random float in [0, 1)
-static __host__ __device__ __inline__ float rnd(unsigned int &prev)
+static __host__ RT_FUNCTION float rnd(unsigned int &prev)
 {
   return ((float) lcg(prev) / (float) 0x01000000);
 }
 
 template<unsigned int N>
-static __host__ __device__ __inline__ unsigned int tea( unsigned int val0, unsigned int val1 )
+static __host__ RT_FUNCTION unsigned int tea( unsigned int val0, unsigned int val1 )
 {
     unsigned int v0 = val0;
     unsigned int v1 = val1;

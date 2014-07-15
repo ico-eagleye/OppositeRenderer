@@ -31,37 +31,36 @@ private:
     Type  _type;
 
 public:
-    __device__ __forceinline__ BxDF(Type type) : _type(type) {  }
+    RT_FUNCTION BxDF(Type type) : _type(type) {  }
 
-    __device__ __forceinline__ Type type() const { return _type; }
+    RT_FUNCTION Type type() const { return _type; }
 
     // Because we compress the basic types and BxDF types in a single
     // $_type variable, it is necessary to AND All first.
-    __device__ __forceinline__ bool matchFlags(Type type) const
+    RT_FUNCTION bool matchFlags(Type type) const
     {
         return (_type & All & type) == (_type & All);
     }
 
     // Evaluates brdf, returns pdf if oPdf is not NULL
-    __device__ __forceinline__ optix::float3 f( const optix::float3 & aWo,
-                                                const optix::float3 & aWi,
-                                                float * oPdf = NULL ) const
+    RT_FUNCTION optix::float3 f( const optix::float3 & aWo,
+                                 const optix::float3 & aWi,
+                                 float * oPdf = NULL ) const
     {
         if (*oPdf != NULL) *oPdf = 0.f;
         return optix::make_float3(0.0f);
     }
 
-    __device__ __forceinline__ float pdf( const optix::float3 & aWo,
-                                          const optix::float3 & aWi ) const
+    RT_FUNCTION float pdf( const optix::float3 & aWo, const optix::float3 & aWi ) const
     {
         return localIsSameHemisphere(aWo, aWi) ? fabsf(localCosTheta(aWi)) * M_1_PIf : 0.0f;
     }
 
 
-    __device__ __forceinline__ optix::float3 sampleF( const optix::float3 & aWo,
-                                                      optix::float3       * oWi,
-                                                      const optix::float2 & aSample,
-                                                      float               * oPdf ) const
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
+                                       optix::float3       * oWi,
+                                       const optix::float2 & aSample,
+                                       float               * oPdf ) const
     {
         optix::cosine_sample_hemisphere(aSample.x, aSample.y, *oWi);
         *oPdf = pdf(aWo, *oWi);
@@ -87,28 +86,28 @@ public:
     //}
 
 
-    __device__ __forceinline__ optix::float3 rho( unsigned int  aNSamples,
-                                                  const float * aSamples1, 
-                                                  const float * aSamples2 ) const
+    RT_FUNCTION optix::float3 rho( unsigned int  aNSamples,
+                                   const float * aSamples1, 
+                                   const float * aSamples2 ) const
     {
         return optix::make_float3(0.0f);
     }
 
-    __device__ __forceinline__ float reflectProbability() const
+    RT_FUNCTION float reflectProbability() const
     {
         return 0.f;
     }
 
-    __device__ __forceinline__ float transmitProbability() const
+    RT_FUNCTION float transmitProbability() const
     {
         return 0.f;
     }
 
     // Evaluation for VCM returning also reverse pdfs
-    __device__ __forceinline__ optix::float3 vcmF( const optix::float3 & aWo,
-                                                   const optix::float3 & aWi,
-                                                   float * oDirectPdf = NULL,
-                                                   float * oReversePdf = NULL) const
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float * oDirectPdf = NULL,
+                                    float * oReversePdf = NULL) const
     {
         if (*oDirectPdf != NULL) *oDirectPdf = 0.f;
         if (*oReversePdf != NULL) *oReversePdf = 0.f;
@@ -126,21 +125,21 @@ public:
     optix::float3  _reflectance;
 
 public:
-    __device__ __forceinline__ Lambertian( const optix::float3 & aReflectance ) :
+    RT_FUNCTION Lambertian( const optix::float3 & aReflectance ) :
         BxDF(BxDF::Type(BxDF::Lambertian | BxDF::Reflection | BxDF::Diffuse)),
         _reflectance(aReflectance) {  }
 
     // Evaluates brdf, returns pdf if oPdf is not NULL
-    __device__ __forceinline__ optix::float3 f( const optix::float3 & aWo,
-                                                const optix::float3 & aWi,
-                                                float * oPdfW = NULL  ) const
+    RT_FUNCTION optix::float3 f( const optix::float3 & aWo,
+                                 const optix::float3 & aWi,
+                                 float * oPdfW = NULL  ) const
     {
         if (*oPdfW != NULL) *oPdfW = pdf(aWo, aWi);
         return _reflectance * M_1_PIf;
     }
 
-    __device__ __forceinline__ float pdf( const optix::float3 & aWo,
-                                          const optix::float3 & aWi ) const
+    RT_FUNCTION float pdf( const optix::float3 & aWo,
+                           const optix::float3 & aWi ) const
     {
         return localIsSameHemisphere(aWo, aWi) ? fabsf(localCosTheta(aWi)) * M_1_PIf : 0.0f;
     }
@@ -165,30 +164,29 @@ public:
         return f(aWo, *oWi);
     }
 
-    __device__ __forceinline__ optix::float3 rho( unsigned int  aNSamples,
-                                                  const float * aSamples1,
-                                                  const float * aSamples2 ) const
+    RT_FUNCTION optix::float3 rho( unsigned int  aNSamples,
+                                   const float * aSamples1,
+                                   const float * aSamples2 ) const
     {
         return _reflectance;
     }
 
-    __device__ __forceinline__ float reflectProbability() const
+    RT_FUNCTION float reflectProbability() const
     {
         float lum = optix::luminanceCIE(_reflectance);
-        //OPTIX_PRINTF("reflectProbability - refl %f %f %f lum %f\n", _reflectance.x, _reflectance.y, _reflectance.z, lum);
         return lum;
     }
 
-    __device__ __forceinline__ float transmitProbability() const
+    RT_FUNCTION float transmitProbability() const
     {
         return 0.f;
     }
 
     // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
-    __device__ __forceinline__ optix::float3 vcmF( const optix::float3 & aWo,
-                                                   const optix::float3 & aWi,
-                                                   float * oDirectPdfW = NULL,
-                                                   float * oReversePdfW = NULL) const
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float * oDirectPdfW = NULL,
+                                    float * oReversePdfW = NULL) const
     {
         using namespace optix;
         if(aWo.z < EPS_COSINE || aWi.z < EPS_COSINE)
@@ -202,7 +200,7 @@ public:
 
         return _reflectance * M_1_PIf;
     }
-};  /* -----  end of class Lambertian  ----- */
+};
 
 
 static const unsigned int  MAX_BXDF_SIZE  = sizeof(Lambertian);

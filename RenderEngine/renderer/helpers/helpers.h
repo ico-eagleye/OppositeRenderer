@@ -27,12 +27,12 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 89
-#define OPTIX_DEBUG_ID_Y 334
+#define OPTIX_DEBUG_ID_X 250
+#define OPTIX_DEBUG_ID_Y 60
 
-#define OPTIX_DEBUG_PIX 1
-#define OPTIX_DEBUG_PIX_X 67
-#define OPTIX_DEBUG_PIX_Y 444
+#define OPTIX_DEBUG_PIX 0
+#define OPTIX_DEBUG_PIX_X 40
+#define OPTIX_DEBUG_PIX_Y 400
 
 #define IS_DEBUG_ID(launchIdx) (launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y)
 #define IS_DEBUG_PIX(pixelIndex) (pixelIndex.x == OPTIX_DEBUG_PIX_X && pixelIndex.y == OPTIX_DEBUG_PIX_Y)
@@ -115,7 +115,7 @@ if (OPTIX_PRINTF_ENABLED) \
 
 
 // Create ONB from normalized normal (code: Physically Based Rendering, Pharr & Humphreys pg. 63)
-static  __device__ __inline__ void createCoordinateSystem( const optix::float3& N, optix::float3& U, optix::float3& V/*, optix::float3& W*/ )
+static  RT_FUNCTION void createCoordinateSystem( const optix::float3& N, optix::float3& U, optix::float3& V/*, optix::float3& W*/ )
 {
     using namespace optix;
 
@@ -132,50 +132,50 @@ static  __device__ __inline__ void createCoordinateSystem( const optix::float3& 
     V = cross(N, U);
 }
 
-static __device__ __host__ __forceinline__ float maxf(float a, float b)
+static __host__ RT_FUNCTION float maxf(float a, float b)
 {
     return a > b ? a : b;
 }
 
 // Returns true if ray direction points in the opposite direction 
 // as the normal, where the normal points outwards from the face
-static __device__ __host__ __inline__ bool hitFromOutside(const optix::float3 & rayDirection, const optix::float3 & normal)
+static __host__ RT_FUNCTION bool hitFromOutside(const optix::float3 & rayDirection, const optix::float3 & normal)
 {
     return (optix::dot(normal, rayDirection) < 0);
 }
 
-static __device__ __forceinline__ int intmin(int a, int b)
+static RT_FUNCTION int intmin(int a, int b)
 {
     return a < b ? a : b;
 }
 
-static __device__ __forceinline__ int intmin(unsigned int a, unsigned int b)
+static RT_FUNCTION int intmin(unsigned int a, unsigned int b)
 {
     return a < b ? a : b;
 }
 
-static __device__ __forceinline__ float favgf(const optix::float3 & v )
+static RT_FUNCTION float favgf(const optix::float3 & v )
 {
     return (v.x+v.y+v.z)*0.3333333333f;
 }
 
 template<typename T>
-__device__ __forceinline__ T sqr(const T& a) { return a*a; }
+RT_FUNCTION T sqr(const T& a) { return a*a; }
 
 
-static __device__ __forceinline__ bool isZero(const optix::float3 & v )
+static RT_FUNCTION bool isZero(const optix::float3 & v )
 {
     return v.x == 0.f && v.y == 0.f && v.z == 0.f;
 }
 
 
-__host__ __device__ __inline__ unsigned int getBufIndex1D(
+__host__ RT_FUNCTION unsigned int getBufIndex1D(
     const optix::uint3 & index3D, const optix::uint3& bufSize )
 {
     return index3D.x + index3D.y * bufSize.x + index3D.z * bufSize.x * bufSize.y;
 }
 
-__host__ __device__ __inline__ unsigned int getBufIndex1D(
+__host__ RT_FUNCTION unsigned int getBufIndex1D(
     const optix::uint2 & index2D, const optix::uint2& bufSize )
 {
     return index2D.x + index2D.y * bufSize.x;

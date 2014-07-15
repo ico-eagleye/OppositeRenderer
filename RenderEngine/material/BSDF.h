@@ -11,6 +11,7 @@
 #include "BxDF.h"
 #include "math/DifferentialGeometry.h"
 #include <device_functions.h>
+#include "renderer/vcm/config_vcm.h"
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -38,9 +39,9 @@ protected:
     float                 _continuationProb;           // Russian roulette probability
 
 public:
-    __device__ __forceinline__ BSDF() {  }
-    __device__ __forceinline__ BSDF( const DifferentialGeometry aDiffGeomShading,
-                                     const optix::float3      & aWorldGeometricNormal )
+    RT_FUNCTION BSDF() {  }
+    RT_FUNCTION BSDF( const DifferentialGeometry aDiffGeomShading,
+                      const optix::float3      & aWorldGeometricNormal )
     {
         _geometricNormal = aWorldGeometricNormal;
         _diffGemetry = aDiffGeomShading;
@@ -53,7 +54,7 @@ public:
 
     // For simple case when not differentiating between geometric and shading normal,
     // generates tangent and bitangent
-    __device__ __forceinline__ BSDF( const optix::float3 & aWorldNormal )
+    RT_FUNCTION BSDF( const optix::float3 & aWorldNormal )
     {
         _diffGemetry.SetFromNormal(aWorldNormal);
         _geometricNormal = aWorldNormal;
@@ -63,11 +64,11 @@ public:
         _continuationProb = 0.f;
     }
 
-    __device__ __forceinline__ unsigned int nBxDFs() const { return _nBxDFs; }
+    RT_FUNCTION unsigned int nBxDFs() const { return _nBxDFs; }
 
-    __device__ __forceinline__ const DifferentialGeometry & differentialGeometry() const { return _diffGemetry; }
+    RT_FUNCTION const DifferentialGeometry & differentialGeometry() const { return _diffGemetry; }
 
-    __device__ __forceinline__ unsigned int nBxDFs(BxDF::Type aType) const
+    RT_FUNCTION unsigned int nBxDFs(BxDF::Type aType) const
     {
         unsigned int count = 0;
         for (unsigned int i = 0; i < _nBxDFs; ++i)
@@ -79,10 +80,10 @@ public:
     }
 
     // Continuation probability for Russian roulette
-    __device__ __forceinline__ float continuationProb() const { return _continuationProb; }
+    RT_FUNCTION float continuationProb() const { return _continuationProb; }
 
     // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
-    __device__ __inline__ int AddBxDF(const BxDF * bxdf)
+    RT_FUNCTION int AddBxDF(const BxDF * bxdf)
     {
         //OPTIX_PRINTF("AddBxDF - passed BxDF 0x%X\n", sizeof(BxDF * ), (optix::optix_size_t) bxdf);
         if (_nBxDFs == MAX_N_BXDFS) return 0;
@@ -112,12 +113,12 @@ public:
         return 1;
     }
 
-    __device__ __inline__ const BxDF * bxdfAt(const optix::uint & aIndex) const
+    RT_FUNCTION const BxDF * bxdfAt(const optix::uint & aIndex) const
     {
         return reinterpret_cast<const BxDF *>(&_bxdfList[aIndex * MAX_BXDF_SIZE]);
     }
 
-    __device__ __inline__ const BxDF * bxdfAt(const optix::uint & aIndex, BxDF::Type aType) const
+    RT_FUNCTION const BxDF * bxdfAt(const optix::uint & aIndex, BxDF::Type aType) const
     {
         optix::uint count = aIndex;
         for (unsigned int i = 0; i < nBxDFs(); ++i) 
@@ -133,7 +134,7 @@ public:
         return NULL;
     }
 
-    __device__ __forceinline__ bool isSpecular() const
+    RT_FUNCTION bool isSpecular() const
     {
         return (nBxDFs(BxDF::Type(BxDF::All & ~BxDF::Specular)) == 0);
     }
@@ -141,10 +142,10 @@ public:
     // Return bsdf factor for directions oWorldWi and aWorldWi
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is incident direction. Returns pdf if oPdf not NULL
-    __device__ optix::float3 f( const optix::float3 & aWorldWo,
-                                const optix::float3 & aWorldWi, 
-                                BxDF::Type            aSampleType = BxDF::All,
-                                float               * oPdf = NULL) const
+    RT_FUNCTION optix::float3 f( const optix::float3 & aWorldWo,
+                                 const optix::float3 & aWorldWi, 
+                                 BxDF::Type            aSampleType = BxDF::All,
+                                 float               * oPdf = NULL) const
     {
         optix::float3 wo = _diffGemetry.ToLocal(aWorldWo);
         optix::float3 wi = _diffGemetry.ToLocal(aWorldWi);
@@ -178,17 +179,17 @@ public:
     }
 
 
+
     // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
-    __forceinline__
-        __device__ optix::float3 sampleF( const optix::float3 & aWorldWo,
-                                      optix::float3       * oWorldWi, 
-                                      const optix::float3 & aSample,
-                                      float               * oPdfW,
-                                      float               * oCosThetaWi = NULL,
-                                      BxDF::Type            aSampleType = BxDF::All,
-                                      BxDF::Type          * oSampledType = NULL ) const
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWorldWo,
+                                       optix::float3       * oWorldWi, 
+                                       const optix::float3 & aSample,
+                                       float               * oPdfW,
+                                       float               * oCosThetaWi = NULL,
+                                       BxDF::Type            aSampleType = BxDF::All,
+                                       BxDF::Type          * oSampledType = NULL ) const
     {
         // Count matched components.
         //unsigned int nMatched = nBxDFs(aSampleType);
@@ -277,7 +278,7 @@ public:
     }
 
 protected:
-    __device__ __forceinline__ unsigned int sampleBxDF(float sample, BxDF::Type aType, unsigned int * bxdfIndex) const
+    RT_FUNCTION unsigned int sampleBxDF(float sample, BxDF::Type aType, unsigned int * bxdfIndex) const
     {
         unsigned int nMatched = nBxDFs(aType);
         if (nMatched == 0) return 0;
@@ -303,7 +304,7 @@ protected:
     }
 
 
-    __device__ __forceinline__ float sumContProb(BxDF::Type aType) const
+    RT_FUNCTION float sumContProb(BxDF::Type aType) const
     {
         float contProb = 0.f;
         for (unsigned int i = 0; i < _nBxDFs; ++i)
@@ -327,9 +328,9 @@ private:
     optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to fixed incident dir stored 
                                    // at hit point opposed to "gen" for generated
 public:
-    __device__ __forceinline__ VcmBSDF() : BSDF() { }
+    RT_FUNCTION VcmBSDF() : BSDF() { }
 
-    __device__ __forceinline__ VcmBSDF( const DifferentialGeometry aDiffGeomShading,
+    RT_FUNCTION VcmBSDF( const DifferentialGeometry aDiffGeomShading,
                                         const optix::float3      & aWorldGeometricNormal,
                                         const optix::float3      & aIncidentDir ) : 
                                BSDF( aDiffGeomShading, aWorldGeometricNormal )
@@ -339,21 +340,20 @@ public:
 
     // For simple case when not differentiating between geometric and shading normal,
     // generates tangent and bitangent
-    __device__ __forceinline__ VcmBSDF( const optix::float3 & aWorldNormal,
+    RT_FUNCTION VcmBSDF( const optix::float3 & aWorldNormal,
                                         const optix::float3 & aIncidentDir ) : BSDF(aWorldNormal)
     {
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
 
-    __device__ __forceinline__ int isValid() const { return EPS_COSINE < _localDirFix.z; }
+    RT_FUNCTION int isValid() const { return EPS_COSINE < _localDirFix.z; }
 
-    __device__ __forceinline__ optix::float3 localDirFix() const { return _localDirFix; }
+    RT_FUNCTION optix::float3 localDirFix() const { return _localDirFix; }
 
     // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
-    //__forceinline__
-        __device__ optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
+    RT_FUNCTION optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
                                                          const optix::float3 & aSample,
                                                          float               * oPdfW,
                                                          float               * oCosThetaOut, //= NULL,
@@ -363,17 +363,20 @@ public:
         return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, oPdfW, oCosThetaOut, aSampleType, oSampledType);
     }
 
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+
     // Estimates bsdf factor for directions oWorldWi and aWorldWi and pdfs.
     // In typical conventions as when tracing from camera Wo corresponds to light outgoing direction, Wi to 
     // generated incident direction.
     // For VCM evaluation the stored direction localDirFix is used as Wo, generated direction aWorldDirGen as Wi,
     // either when tracing from light or camera. Similarly directPdf corresponds sampling from Wo->Wi, reverse to Wi->Wo
-    __device__ optix::float3 vcmF( const optix::float3 & aWorldDirGen,
-                                   float               & oCosThetaGen,
-                                   float               * oDirectPdfW,// = NULL,
-                                   float               * oReversePdfW,// = NULL,
-                                   const optix::uint2  * dbgLaunchIndex = NULL,
-                                   BxDF::Type            aSampleType = BxDF::All ) const
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWorldDirGen,
+                                    float               & oCosThetaGen,
+                                    float               * oDirectPdfW,// = NULL,
+                                    float               * oReversePdfW,// = NULL,
+                                    const optix::uint2  * dbgLaunchIndex = NULL,
+                                    BxDF::Type            aSampleType = BxDF::All ) const
     {
         using namespace optix;
 
