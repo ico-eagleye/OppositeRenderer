@@ -200,6 +200,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            SubpathPRD                   & aLightPrd,
                            const optix::float3          & aHitPoint, 
                            const optix::float3          & aWorldNormal,
+                           const VcmBSDF                & aLightBsdf,
                            const optix::float3            aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                            const float                    aRayTHit,
                            const optix::uint              aMaxPathLen,
@@ -213,12 +214,11 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            rtBufferId<LightVertex>        aLightVertexBuffer,
                            rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                         // for 1 to 1 camera - light path connections
-                           rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer,
+                           rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer
 #else                                                    // uniform vertex sampling
-                           const float                  * aVertexPickPdf,
+                           const float                  * aVertexPickPdf
 #endif
-                           const BxDF                   * bxdf1,
-                           const BxDF                   * bxdf2 = NULL )
+                           )
 {
     using namespace optix;
 
@@ -264,9 +264,10 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
     // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
     // equations in [tech. rep. (38-47)]
 #endif
-    lightVertex.bsdf = VcmBSDF(aWorldNormal, -aRayWorldDir);
-    lightVertex.bsdf.AddBxDF(bxdf1);
-    if (bxdf2) lightVertex.bsdf.AddBxDF(bxdf2);
+    lightVertex.bsdf = aLightBsdf;
+    //lightVertex.bsdf = VcmBSDF(aWorldNormal, -aRayWorldDir);
+    //lightVertex.bsdf.AddBxDF(bxdf1);
+    //if (bxdf2) lightVertex.bsdf.AddBxDF(bxdf2);
 
     DifferentialGeometry dg = lightVertex.bsdf.differentialGeometry();
     //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L - frame vectors b % 14f % 14f % 14f\n", dg.bitangent.x, dg.bitangent.y, dg.bitangent.z);
@@ -686,6 +687,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
                             const optix::float3                & aWorldNormal,
+                            const VcmBSDF                      & aCameraBsdf,
                             const optix::float3                  aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                             const float                          aRayTHit,
                             optix::uint                          aMaxPathLen,
@@ -696,13 +698,12 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
                             const rtBufferId<LightVertex>        aLightVertexBuffer,
                             const rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                                // for 1 to 1 camera - light path connections
-                            const rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer,
+                            const rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer
 #else                                                           // uniform vertex sampling
                             const float                          averageLightSubpathLength,
-                            const float                        * aVertexPickPdf,
+                            const float                        * aVertexPickPdf
 #endif
-                            const BxDF                         * bxdf1,
-                            const BxDF                         * bxdf2 = NULL )
+                            )
 {
     using namespace optix;
     uint2 launchIndex = aCameraPrd.launchIndex;
@@ -735,14 +736,14 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - MIS postUpd dVC % 14f            dVM % 14f           dVCM % 14f\n",
         aCameraPrd.dVC, aCameraPrd.dVM, aCameraPrd.dVCM);
 
-    VcmBSDF cameraBsdf = VcmBSDF(aWorldNormal, -aRayWorldDir);
-    cameraBsdf.AddBxDF(bxdf1);
-    if (bxdf2) cameraBsdf.AddBxDF(bxdf2);
+    //VcmBSDF cameraBsdf = VcmBSDF(aWorldNormal, -aRayWorldDir);
+    //cameraBsdf.AddBxDF(bxdf1);
+    //if (bxdf2) cameraBsdf.AddBxDF(bxdf2);
 
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt1 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
 #ifndef CONNECT_LIGHT_S1_DISABLED
-    connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
+    connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
 #endif
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt2 color % 14f % 14f % 14f \n",
         aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
@@ -787,7 +788,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "%u %u - d %u - Hit C- %u conn vertIdx %u \n",
             launchIndex.x, launchIndex.y, aCameraPrd.depth, i, vertIdx);
         LightVertex lightVertex = aLightVertexBuffer[vertIdx];
-        connectVertices(aSceneRootObject, lightVertex, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor);
+        connectVertices(aSceneRootObject, lightVertex, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Ver%u color % 14f % 14f % 14f \n",
             i, aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
     }
@@ -802,7 +803,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     }
 
     // Russian Roulette
-    float contProb =  cameraBsdf.continuationProb();
+    float contProb =  aCameraBsdf.continuationProb();
     float rrSample = getRandomUniformFloat(&aCameraPrd.randomState);    
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - continue sample % 14f             RR % 14f \n", contProb, rrSample);
     if (contProb < rrSample)
@@ -815,7 +816,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     float bsdfDirPdfW;
     float cosThetaOut;
     float3 bsdfSample = getRandomUniformFloat3(&aCameraPrd.randomState);
-    float3 bsdfFactor = cameraBsdf.vcmSampleF(&aCameraPrd.direction, bsdfSample, &bsdfDirPdfW, &cosThetaOut); // CUDA 6 fails here
+    float3 bsdfFactor = aCameraBsdf.vcmSampleF(&aCameraPrd.direction, bsdfSample, &bsdfDirPdfW, &cosThetaOut); // CUDA 6 fails here
     //OPTIX_PRINTFI(aCameraPrd.depth, "Hit - new dir %f %f %f\n", aCameraPrd.direction.x, aCameraPrd.direction.y, aCameraPrd.direction.z);
 
     float bsdfRevPdfW = cosThetaIn * M_1_PIf;
