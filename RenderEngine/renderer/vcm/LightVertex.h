@@ -2,7 +2,7 @@
 
 #pragma once
 //#include <optix_world.h>
-#include "material/BSDF.h"
+#include "renderer/BSDF.h"
 #include "optix.h"
 
 struct LightVertex

@@ -17,7 +17,7 @@
 #include "renderer/helpers/light.h"
 #include "renderer/Light.h"
 #include "renderer/Camera.h"
-#include "material/BSDF.h"
+#include "renderer/BSDF.h"
 #include "renderer/vcm/LightVertex.h"
 #include "renderer/vcm/SubpathPRD.h"
 #include "renderer/vcm/config_vcm.h"

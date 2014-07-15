@@ -179,14 +179,14 @@
     <ClInclude Include="util\logging.h" />
     <ClInclude Include="renderer\vcm\vcm.h" />
     <ClInclude Include="renderer\vcm\LightVertex.h" />
-    <ClInclude Include="material\BxDF.h" />
-    <ClInclude Include="material\BSDF.h" />
-    <ClInclude Include="renderer\helpers\reflection.h" />
     <ClInclude Include="math\DifferentialGeometry.h" />
     <ClInclude Include="scene\CornellSmall.h" />
     <ClInclude Include="renderer\vcm\config_vcm.h" />
     <ClInclude Include="renderer\vcm\mis.h" />
     <ClInclude Include="renderer\vcm\vcm_shared.h" />
+    <ClInclude Include="renderer\reflection.h" />
+    <ClInclude Include="renderer\BSDF.h" />
+    <ClInclude Include="renderer\BxDF.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="sutil">

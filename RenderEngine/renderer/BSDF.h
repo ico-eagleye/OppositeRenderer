@@ -7,7 +7,7 @@
 // Partially borrowed from https://github.com/LittleCVR/MaoPPM
 #include <optix_world.h>
 #include <optixu/optixu_math_namespace.h>
-#include "renderer/helpers/reflection.h"
+#include "renderer/reflection.h"
 #include "BxDF.h"
 #include "math/DifferentialGeometry.h"
 #include <device_functions.h>

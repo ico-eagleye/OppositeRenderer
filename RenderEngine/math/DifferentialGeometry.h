@@ -12,7 +12,7 @@ public:
         optix::float3  normal;
 
 public:
-    __device__ __forceinline__  DifferentialGeometry()
+    RT_FUNCTION  DifferentialGeometry()
     {
         bitangent = make_float3(1.f, 0.f, 0.f);
         tangent   = make_float3(0.f, 1.f, 0.f);
@@ -20,7 +20,7 @@ public:
     };
 
     // parameters - bitangent, tangent, normal
-    __device__ __forceinline__ DifferentialGeometry(
+    RT_FUNCTION DifferentialGeometry(
         const optix::float3 b,
         const optix::float3 t,
         const optix::float3 z
@@ -29,7 +29,7 @@ public:
     {}
 
     // sets from tangent t and normal n
-    __device__ __forceinline__ DifferentialGeometry(
+    RT_FUNCTION DifferentialGeometry(
         const optix::float3 t,
         const optix::float3 n
     ) :
@@ -39,7 +39,7 @@ public:
     }
 
     // sets from normal
-    __device__ __inline__ void SetFromNormal(const optix::float3& n)
+    RT_FUNCTION void SetFromNormal(const optix::float3& n)
     {
         normal = optix::normalize(n);
         optix::float3 tmpBiTan = (std::abs(normal.x) > 0.99f) ? make_float3(0.f, 1.f, 0.f) : make_float3(1.f, 0.f, 0.f);
@@ -47,7 +47,7 @@ public:
         bitangent = optix::cross(tangent, normal);
     }
 
-    __device__  __inline__ optix::float3 ToWorld(const optix::float3& a) const
+    RT_FUNCTION optix::float3 ToWorld(const optix::float3& a) const
     {
         // basis vectors are columns of a matrix multiplied by a
         return bitangent * a.x + 
@@ -55,7 +55,7 @@ public:
                normal    * a.z;
     }
 
-    __device__  __inline__ optix::float3 ToLocal(const optix::float3& a) const
+    RT_FUNCTION optix::float3 ToLocal(const optix::float3& a) const
     {
         // a multiplied by the inverse of the basis matrix
         return make_float3(optix::dot(bitangent, a), 
@@ -63,7 +63,7 @@ public:
                            optix::dot(normal,    a));
     }
 
-    __device__ __forceinline__  const optix::float3 Bitangent() const { return bitangent; }
-    __device__ __forceinline__  const optix::float3 Tangent()   const { return tangent; }
-    __device__ __forceinline__  const optix::float3 Normal()    const { return normal; }
+    RT_FUNCTION  const optix::float3 Bitangent() const { return bitangent; }
+    RT_FUNCTION  const optix::float3 Tangent()   const { return tangent; }
+    RT_FUNCTION  const optix::float3 Normal()    const { return normal; }
 };

@@ -257,18 +257,18 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="material\BSDF.h" />
-    <ClInclude Include="material\BxDF.h" />
     <ClInclude Include="math\AAB.h" />
     <ClInclude Include="math\DifferentialGeometry.h" />
     <ClInclude Include="math\Sphere.h" />
     <ClInclude Include="math\Vector3.h" />
+    <ClInclude Include="renderer\BSDF.h" />
+    <ClInclude Include="renderer\BxDF.h" />
     <ClInclude Include="renderer\helpers\camera.h" />
-    <ClInclude Include="renderer\helpers\reflection.h" />
     <ClInclude Include="renderer\helpers\samplers.h" />
     <ClInclude Include="renderer\helpers\optix.h" />
     <ClInclude Include="renderer\helpers\store_photon.h" />
     <ClInclude Include="renderer\helpers\vector_types.h" />
+    <ClInclude Include="renderer\reflection.h" />
     <ClInclude Include="renderer\TransmissionPRD.h" />
     <ClInclude Include="renderer\vcm\config_vcm.h" />
     <ClInclude Include="renderer\vcm\LightVertex.h" />
@@ -280,7 +280,7 @@
     <ClInclude Include="util\imageformats\libtga\tga.h" />
     <ClInclude Include="util\imageformats\libtga\tgaconfig.h" />
     <ClInclude Include="util\Image.h" />
-    <ClInclude Include="material\mirror.h" />
+    <ClInclude Include="material\Mirror.h" />
     <ClInclude Include="material\Texture.h" />
     <ClInclude Include="renderer\helpers\light.h" />
     <ClInclude Include="clientserver\RenderServerRenderRequestDetails.h" />

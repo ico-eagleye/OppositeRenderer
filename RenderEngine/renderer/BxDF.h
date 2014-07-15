@@ -3,7 +3,7 @@
 // Partially borrowed from https://github.com/LittleCVR/MaoPPM
 
 #include <optixu/optixu_math_namespace.h>
-#include "renderer/helpers/reflection.h"
+#include "renderer/reflection.h"
 #include "renderer/helpers/samplers.h"
 #include "config.h"
 

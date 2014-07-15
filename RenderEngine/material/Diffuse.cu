@@ -28,8 +28,8 @@
 #include "renderer/vcm/vcm.h"
 #include "renderer/vcm/mis.h"
 #include "renderer/vcm/config_vcm.h"
-#include "material/BxDF.h"
-#include "material/BSDF.h"
+#include "renderer/BxDF.h"
+#include "renderer/BSDF.h"
 
 #define OPTIX_PRINTF_ENABLED 1
 #define OPTIX_PRINTFI_ENABLED 1
