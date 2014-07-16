@@ -48,8 +48,13 @@ private slots:
     void onRenderRestart();
     void onUpdateRunningStatusLabelTimer();
     void onApplicationError(QString);
-    void onActionOpenBuiltInScene();
     void onActionSaveImageBMP();
+    void onActionOpenBuiltInScene();
+    void onActionOpenBuiltInSceneCornell();
+    void onActionOpenBuiltInSceneCornellSmall();
+    void onActionOpenBuiltInSceneCornellSmallLargeSphere();
+    void onActionOpenBuiltInSceneCornellSmallSmallSpheres();
+    void onActionOpenBuiltInSceneCornellSmallUpwardsLight();
 
 private:
     void loadSceneByName( QString &fileName );

@@ -262,6 +262,31 @@ void MainWindowBase::onActionOpenBuiltInScene()
     }
 }
 
+void MainWindowBase::onActionOpenBuiltInSceneCornell()
+{
+    loadSceneByName(QString("Cornell"));
+}
+
+void MainWindowBase::onActionOpenBuiltInSceneCornellSmall()
+{
+    loadSceneByName(QString("CornellSmall"));
+}
+
+void MainWindowBase::onActionOpenBuiltInSceneCornellSmallLargeSphere()
+{
+    loadSceneByName(QString("CornellSmallLargeSphere"));
+}
+
+void MainWindowBase::onActionOpenBuiltInSceneCornellSmallSmallSpheres()
+{
+    loadSceneByName(QString("CornellSmallSmallSpheres"));
+}
+
+void MainWindowBase::onActionOpenBuiltInSceneCornellSmallUpwardsLight()
+{
+    loadSceneByName(QString("CornellSmall"));
+}
+
 void MainWindowBase::onRenderRestart()
 {
     emit renderRestart();

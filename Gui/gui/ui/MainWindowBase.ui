@@ -77,8 +77,19 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuOpen_buil_in_scene">
+     <property name="title">
+      <string>Open buil-in scene</string>
+     </property>
+     <addaction name="actionCornell"/>
+     <addaction name="actionCornellSmall"/>
+     <addaction name="actionCornellSmall_large_mirror_sphere"/>
+     <addaction name="actionCornellSmall_small_spheres"/>
+     <addaction name="actionCornellSmall_upwards_light"/>
+     <addaction name="actionOpenBuiltInScene"/>
+    </widget>
     <addaction name="actionOpen_scene"/>
-    <addaction name="actionOpenBuiltInScene"/>
+    <addaction name="menuOpen_buil_in_scene"/>
     <addaction name="actionReload_scene"/>
     <addaction name="separator"/>
     <addaction name="actionSaveImageBMP"/>
@@ -214,6 +225,31 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionCornell">
+   <property name="text">
+    <string>Cornell</string>
+   </property>
+  </action>
+  <action name="actionCornellSmall">
+   <property name="text">
+    <string>CornellSmall</string>
+   </property>
+  </action>
+  <action name="actionCornellSmall_large_mirror_sphere">
+   <property name="text">
+    <string>CornellSmall + large sphere</string>
+   </property>
+  </action>
+  <action name="actionCornellSmall_small_spheres">
+   <property name="text">
+    <string>CornellSmall + small spheres</string>
+   </property>
+  </action>
+  <action name="actionCornellSmall_upwards_light">
+   <property name="text">
+    <string>CornellSmall + upwards light</string>
    </property>
   </action>
  </widget>
@@ -411,6 +447,86 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCornell</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionOpenBuiltInSceneCornell()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCornellSmall</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionOpenBuiltInSceneCornellSmall()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCornellSmall_large_mirror_sphere</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionOpenBuiltInSceneCornellSmallLargeSphere()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCornellSmall_small_spheres</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionOpenBuiltInSceneCornellSmallSmallSpheres()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCornellSmall_upwards_light</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionOpenBuiltInSceneCornellSmallUpwardsLight()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onActionAbout()</slot>
@@ -423,6 +539,11 @@
   <slot>onOpenSceneFile()</slot>
   <slot>onReloadLastScene()</slot>
   <slot>onActionOpenBuiltInScene()</slot>
+  <slot>onActionOpenBuiltInSceneCornell()</slot>
+  <slot>onActionOpenBuiltInSceneCornellSmall()</slot>
+  <slot>onActionOpenBuiltInSceneCornellSmallLargeSphere()</slot>
+  <slot>onActionOpenBuiltInSceneCornellSmallSmallSpheres()</slot>
+  <slot>onActionOpenBuiltInSceneCornellSmallUpwardsLight()</slot>
   <slot>onActionSaveImagePPM()</slot>
   <slot>onActionSaveImageBMP()</slot>
  </slots>
