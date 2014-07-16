@@ -158,9 +158,9 @@ optix::Group Cornell::getSceneRootGroup(optix::Context & context)
 		gis.push_back(createParallelogram(15 + i, context, m_sceneLights[i].position, m_sceneLights[i].v1, m_sceneLights[i].v2, emitter));
 	}
 
-	Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
-	Mirror mirror = Mirror(optix::make_float3(0.7f,0.7f,1.f));
-	Diffuse diff(optix::make_float3(0.f,1.f,0.f));
+	//Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
+	//Mirror mirror = Mirror(optix::make_float3(0.7f,0.7f,1.f));
+	//Diffuse diff(optix::make_float3(0.f,1.f,0.f));
 
 	// Participating Tests
 
@@ -180,8 +180,6 @@ optix::Group Cornell::getSceneRootGroup(optix::Context & context)
 	for (int i = 0; i < gis.size(); ++i )
 		geometry_group->setChild( i, gis[i] );
 
-	// vmarz: Changed to Trbvh. Sbvh can cause weird hangs 
-	// https://devtalk.nvidia.com/default/topic/751906/optix/weird-ray-generation-hang-really-simple-code-/
 	geometry_group->setAcceleration(context->createAcceleration("NoAccel", "NoAccel")); // Bvh Sbvh Trbvh NoAccel
 
 	optix::Group gro = context->createGroup();
