@@ -140,20 +140,23 @@ void MainWindowBase::onSetCameraToDefault()
 void MainWindowBase::onChangeRenderMethodPPM()
 {
     m_application.setRenderMethod(RenderMethod::PROGRESSIVE_PHOTON_MAPPING);
-    emit renderRestart();
+    if (m_application.getSceneManager().getStatus() == SceneManagerStatus::HAS_SCENE)
+        emit renderRestart();
 }
 
 void MainWindowBase::onChangeRenderMethodPT()
 {
     m_application.setRenderMethod(RenderMethod::PATH_TRACING);
-    emit renderRestart();
+    if (m_application.getSceneManager().getStatus() == SceneManagerStatus::HAS_SCENE)
+        emit renderRestart();
 }
 
 
 void MainWindowBase::onChangeRenderMethodVCM()
 {
     m_application.setRenderMethod(RenderMethod::BIDIRECTIONAL_PATH_TRACING);
-    emit renderRestart();
+    if (m_application.getSceneManager().getStatus() == SceneManagerStatus::HAS_SCENE)
+        emit renderRestart();
 }
 
 
