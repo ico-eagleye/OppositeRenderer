@@ -703,7 +703,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 {
                     dbgPrintf("OptixEntryPoint::VCM_LIGHT_PASS subpath length estimate launch dim %u x %u\n", 
                         VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH, VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT);
-
+                    m_context["maxPathLen"]->setUint(VCM_MAX_PATH_LENGTH);
                     m_context["lightVertexCountEstimatePass"]->setUint(1u);
                     nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
                     sutilCurrentTime( &t0 );
@@ -728,7 +728,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_lightSubpathLengthBuffer->unmap();
 
                 float avgSubpathLength = float(sumPathLengths) / subpathEstimateCount;
-                dbgPrintf("LVC estimate. paths: %u  vertices: %u  avgLen: %.4f  maxLen: %u\n",
+                dbgPrintf("LVC estimate. paths: %u  vertices: %llu  avgLen: %f  maxLen: %u\n",
                     subpathEstimateCount, sumPathLengths, avgSubpathLength, maxLen);
 
                 // init light vertex buffer based on average length + ~10% extra
@@ -740,9 +740,8 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_lightSubpathLengthBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-
                 m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
-                m_context["maxPathLen"]->setUint(VCM_MAX_PATH_LENGTH);
+                //m_context["maxPathLen"]->setUint(VCM_MAX_PATH_LENGTH); increase?
 #else
                 // vertex pick pdf
                 const float vertexPickPdf = avgSubpathLength / sumPathLengths;
