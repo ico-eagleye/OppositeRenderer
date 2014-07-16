@@ -13,13 +13,34 @@
 #include "render_engine_export_api.h"
 
 
+
+
 class Material;
 
 class CornellSmall : public IScene
 {
 public:
-    RENDER_ENGINE_EXPORT_API CornellSmall(void);
-    RENDER_ENGINE_EXPORT_API virtual ~CornellSmall(void){}
+    enum Config
+    {
+        SmallVCMColors     = 1<<0,
+        LightArea          = 1<<1,
+        LightAreaUpwards   = 1<<2,
+        LightPoint         = 1<<3,
+        LightPointStrong   = 1<<4,
+        BackwallBlue       = 1<<5,
+        FloorMirror        = 1<<6,
+        FloorGlossy        = 1<<7,
+        Blocks             = 1<<8,
+        LargeMirrorSphere  = 1<<9,
+        LargeGlassSphere   = 1<<10,
+        SmallMirrorSphere  = 1<<11,
+        SmallGlassSphere   = 1<<12,
+        Default            = (LightArea | Blocks)
+    };
+
+    RENDER_ENGINE_EXPORT_API CornellSmall(void) : m_config(Config::Default) { initialize(); };
+    RENDER_ENGINE_EXPORT_API CornellSmall(uint config) : m_config(config) { initialize(); }
+    RENDER_ENGINE_EXPORT_API virtual ~CornellSmall(void) {}
     RENDER_ENGINE_EXPORT_API virtual optix::Group getSceneRootGroup(optix::Context & context);
     RENDER_ENGINE_EXPORT_API virtual const QVector<Light> & getSceneLights() const;
     RENDER_ENGINE_EXPORT_API virtual Camera getDefaultCamera(void) const;
@@ -31,6 +52,9 @@ public:
     //RENDER_ENGINE_EXPORT_API virtual float getSceneInitialPPMRadiusEstimate() const;
 
 private:
+    void initialize();
+
+    uint            m_config;
     optix::Material m_material;
     optix::Material m_glassMaterial;
     optix::Program m_pgram_bounding_box;

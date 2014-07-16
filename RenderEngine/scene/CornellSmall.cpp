@@ -16,24 +16,35 @@
 #include "material/ParticipatingMedium.h"
 #include "material/Mirror.h"
 #include "material/DiffuseEmitter.h"
+#include "material/Glossy.h"
 
-CornellSmall::CornellSmall(void)
+
+
+void CornellSmall::initialize()
 {
-    optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
-    optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
-    optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
-    //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
-    //optix::float3 power = optix::make_float3( 0.75f * 5.f );
-    //optix::float3 power = optix::make_float3( M_PIf );
-    optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
-    Light light(power, anchor, v1, v2);
-    
-    // point light
-    //optix::float3 anchor = optix::make_float3( 1.25f, 2.25f, 1.25f);
-    //Light light(30.f, anchor);
-    //Light light(70.f, anchor);
-
-    m_sceneLights.push_back(light);
+    if ((m_config & Config::LightArea) != 0)
+    {
+        optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
+        optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
+        optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
+        //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
+        //optix::float3 power = optix::make_float3( 0.75f * 5.f );
+        //optix::float3 power = optix::make_float3( M_PIf );
+        optix::float3 power = optix::make_float3( 19.661107023935260172519494336416f );
+        Light light(power, anchor, v1, v2);
+        m_sceneLights.push_back(light);
+    }
+    else if ( ((m_config & Config::LightPoint)       != 0) || 
+              ((m_config & Config::LightPointStrong) != 0) )
+    {
+        // point light
+        optix::float3 anchor = optix::make_float3( 1.25f, 2.25f, 1.25f);
+        float power = 30.f;
+        if ((m_config & Config::LightPointStrong) != 0)
+            power = 70.f;
+        Light light(power, anchor);
+        m_sceneLights.push_back(light);
+    }
 
     m_sceneAABB.min = Vector3(-0.1f);
     m_sceneAABB.max = Vector3(2.5f, 2.5f, 2.5f) + 0.1f;
@@ -84,132 +95,197 @@ optix::GeometryInstance CornellSmall::createParallelogram(
 
 optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
 {
-    using namespace optix;
-
     m_pgram_bounding_box = context->createProgramFromPTXFile( "parallelogram.cu.ptx", "bounds" );
     m_pgram_intersection = context->createProgramFromPTXFile( "parallelogram.cu.ptx", "intersect" );
-
-    //m_sphere_bounding_box = context->createProgramFromPTXFile( "sphere.cu.ptx", "boundingBox" );
-    //m_sphere_intersection = context->createProgramFromPTXFile( "sphere.cu.ptx", "intersect" );
 
     // create geometry instances
     QVector<optix::GeometryInstance> gis;
 
-    Diffuse diffuseWhite = Diffuse(make_float3( 0.8f ));
-    Diffuse diffuseGreen = Diffuse(make_float3( 0.05f, 0.8f, 0.05f ));
-    Diffuse diffuseRed = Diffuse(make_float3( 1.f, 0.05f, 0.05f ));
-    //Mirror mirror = Mirror(make_float3(0.7f,0.7f,1.f));
-    Mirror mirror = Mirror(make_float3(1.f,1.f,1.f));
+    Diffuse diffuseWhite = Diffuse(optix::make_float3( 0.8f ));
+    Diffuse diffuseGreen = Diffuse(optix::make_float3( 0.05f, 0.8f, 0.05f ));
+    Diffuse diffuseRed = Diffuse(optix::make_float3( 1.f, 0.05f, 0.05f ));
 
-    // Cornell box size in SmallVCM 2.56004
+    // colors as in SmallVCM
+    if ((m_config & CornellSmall::SmallVCMColors) != 0)
+    {
+        diffuseWhite = Diffuse(optix::make_float3( 0.803922f, 0.803922f, 0.803922f ));
+        diffuseGreen = Diffuse(optix::make_float3( 0.156863f, 0.803922f, 0.172549f ));
+        diffuseRed = Diffuse(optix::make_float3( 0.803922f, 0.152941f, 0.152941f ));
+    }
+    Diffuse diffuseBlue = Diffuse(optix::make_float3( 0.156863f, 0.172549f, 0.803922f ));
+
+    Mirror mirror = Mirror(optix::make_float3(1.f,1.f,1.f));
+    Glossy glossyWhite = Glossy(optix::make_float3(.1f,.1f,.1f), optix::make_float3(.7f,.7f,.7f), 90.f);
+    Glass glass = Glass(1.6, optix::make_float3(1.f,1.f,1.f));
+    DiffuseEmitter emitter = DiffuseEmitter(m_sceneLights[0].power, Vector3(1));
+
+    // Set up materials
     // Floor
-    //gis.push_back( createParallelogram(0, context, optix::make_float3( 0.0f, 0.0f, 0.0f ),
-    //    optix::make_float3( 0.0f, 0.0f, 2.5f ),
-    //    optix::make_float3( 2.5f, 0.0f, 0.0f ),
-    //    diffuseWhite ) );
+    Material *matFloor = &diffuseWhite;
+    if ((m_config & Config::FloorMirror) != 0)
+    {
+        matFloor = &mirror;
+    }
+    else if ((m_config & Config::FloorGlossy) != 0)
+    {
+        matFloor = &glossyWhite;
+    }
+
+    // Ceiling
+    Material *matCeiling = &diffuseWhite;
+
+    // Back wall
+    Material *matBackWall = &diffuseWhite;
+    if ((m_config & Config::BackwallBlue) != 0)
+    {
+        matBackWall = &diffuseBlue;
+    }
+
+    // Right wall
+    Material *matRightWall = &diffuseGreen;
+    if ((m_config & CornellSmall::SmallVCMColors) != 0)
+        matRightWall = &diffuseRed;
+
+    // Left wall
+    Material *matLeftWall = &diffuseRed;
+    if ((m_config & CornellSmall::SmallVCMColors) != 0)
+        matLeftWall = &diffuseGreen;
+
+    // Short block
+    Material *matShortBlock = &diffuseWhite;
+
+    // Tall block
+    Material *matTallBlock = &diffuseWhite;
+
+
+    // Set geometry - Cornell box size in SmallVCM 2.56004, here rounded up slightly
+    // Floor    
     gis.push_back( createParallelogram(0, context, optix::make_float3( 0.0f, 0.0f, 0.0f ),
         optix::make_float3( 0.0f, 0.0f, 2.5f ),
         optix::make_float3( 2.5f, 0.0f, 0.0f ),
-        mirror ) );
+        *matFloor ) );
 
     // Ceiling
     gis.push_back( createParallelogram(1, context, optix::make_float3( 0.0f, 2.5f, 0.0f ),
         optix::make_float3( 2.5f, 0.0f, 0.0f ),
         optix::make_float3( 0.0f, 0.0f, 2.5f ),
-        diffuseWhite ) );
+        *matCeiling ) );
 
     // Back wall
     gis.push_back( createParallelogram(2, context,optix::make_float3( 0.0f, 0.0f, 2.5f),
         optix::make_float3( 0.0f, 2.5f, 0.0f),
         optix::make_float3( 2.5f, 0.0f, 0.0f),
-        diffuseWhite));
+        *matBackWall));
 
     // Right wall
     gis.push_back( createParallelogram(3, context, optix::make_float3( 0.0f, 0.0f, 0.0f ),
         optix::make_float3( 0.0f, 2.5f, 0.0f ),
         optix::make_float3( 0.0f, 0.0f, 2.5f ),
-        diffuseGreen ) );
+        *matRightWall ) );
 
     // Left wall
     gis.push_back( createParallelogram(4, context, optix::make_float3( 2.5f, 0.0f, 0.0f ),
         optix::make_float3( 0.0f, 0.0f, 2.5f ),
         optix::make_float3( 0.0f, 2.5f, 0.0f ),
-        diffuseRed ) );
+        *matLeftWall ) );
 
-    //// Short block
-    //gis.push_back( createParallelogram(5, context, 
-    //    optix::make_float3( 130.0f, 165.0f, 65.0f) / 220.f,
-    //    optix::make_float3( -48.0f, 0.0f, 160.0f) / 220.f,
-    //    optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(6, context, 
-    //    optix::make_float3( 290.0f, 0.0f, 114.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-    //    optix::make_float3( -50.0f, 0.0f, 158.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(7, context, 
-    //    optix::make_float3( 130.0f, 0.0f, 65.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-    //    optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(8, context, 
-    //    optix::make_float3( 82.0f, 0.0f, 225.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-    //    optix::make_float3( 48.0f, 0.0f, -160.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(9, context,
-    //    optix::make_float3( 240.0f, 0.0f, 272.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
-    //    optix::make_float3( -158.0f, 0.0f, -47.0f) / 220.f,
-    //    diffuseWhite));
-    //    
-    //// Tall block
-    //gis.push_back( createParallelogram(10, context, 
-    //    optix::make_float3( 423.0f, 340.0f, 247.0f) / 220.f,
-    //    optix::make_float3( -158.0f, 0.0f, 49.0f) / 220.f,
-    //    optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(11, context, 
-    //    optix::make_float3( 423.0f, 0.0f, 247.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
-    //    optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(12, context, 
-    //    optix::make_float3( 472.0f, 0.0f, 406.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
-    //    optix::make_float3( -158.0f, 0.0f, 50.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(13, context, 
-    //    optix::make_float3( 314.0f, 0.0f, 456.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
-    //    optix::make_float3( -49.0f, 0.0f, -160.0f) / 220.f,
-    //    diffuseWhite ) );
-    //gis.push_back( createParallelogram(14, context, 
-    //    optix::make_float3( 265.0f, 0.0f, 296.0f) / 220.f,
-    //    optix::make_float3( 0.0f, 340.1f, 0.0f) / 220.f,
-    //    optix::make_float3( 158.0f, 0.0f, -49.0f) / 220.f,
-    //    diffuseWhite ) );
-        
-    // Light
-    DiffuseEmitter emitter = DiffuseEmitter(m_sceneLights[0].power, Vector3(1));
-    emitter.setInverseArea(m_sceneLights[0].inverseArea);
-    for(int i = 0; i < m_sceneLights.size(); i++)
+
+    if ((m_config & Config::Blocks) != 0)
     {
-        gis.push_back(createParallelogram(15 + i, context, m_sceneLights[i].position, m_sceneLights[i].v1, m_sceneLights[i].v2, emitter));
+        // Short block
+        gis.push_back( createParallelogram(5, context, 
+            optix::make_float3( 130.0f, 165.0f, 65.0f) / 220.f,
+            optix::make_float3( -48.0f, 0.0f, 160.0f) / 220.f,
+            optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
+            *matShortBlock ) );
+        gis.push_back( createParallelogram(6, context, 
+            optix::make_float3( 290.0f, 0.0f, 114.0f) / 220.f,
+            optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+            optix::make_float3( -50.0f, 0.0f, 158.0f) / 220.f,
+            *matShortBlock ) );
+        gis.push_back( createParallelogram(7, context, 
+            optix::make_float3( 130.0f, 0.0f, 65.0f) / 220.f,
+            optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+            optix::make_float3( 160.0f, 0.0f, 49.0f) / 220.f,
+            *matShortBlock ) );
+        gis.push_back( createParallelogram(8, context, 
+            optix::make_float3( 82.0f, 0.0f, 225.0f) / 220.f,
+            optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+            optix::make_float3( 48.0f, 0.0f, -160.0f) / 220.f,
+            *matShortBlock ) );
+        gis.push_back( createParallelogram(9, context,
+            optix::make_float3( 240.0f, 0.0f, 272.0f) / 220.f,
+            optix::make_float3( 0.0f, 165.0f, 0.0f) / 220.f,
+            optix::make_float3( -158.0f, 0.0f, -47.0f) / 220.f,
+            *matShortBlock));
+        
+        // Tall block
+        gis.push_back( createParallelogram(10, context, 
+            optix::make_float3( 423.0f, 340.0f, 247.0f) / 220.f,
+            optix::make_float3( -158.0f, 0.0f, 49.0f) / 220.f,
+            optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
+            *matTallBlock ) );
+        gis.push_back( createParallelogram(11, context, 
+            optix::make_float3( 423.0f, 0.0f, 247.0f) / 220.f,
+            optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
+            optix::make_float3( 49.0f, 0.0f, 159.0f) / 220.f,
+            *matTallBlock ) );
+        gis.push_back( createParallelogram(12, context, 
+            optix::make_float3( 472.0f, 0.0f, 406.0f) / 220.f,
+            optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
+            optix::make_float3( -158.0f, 0.0f, 50.0f) / 220.f,
+            *matTallBlock ) );
+        gis.push_back( createParallelogram(13, context, 
+            optix::make_float3( 314.0f, 0.0f, 456.0f) / 220.f,
+            optix::make_float3( 0.0f, 340.0f, 0.0f) / 220.f,
+            optix::make_float3( -49.0f, 0.0f, -160.0f) / 220.f,
+            *matTallBlock ) );
+        gis.push_back( createParallelogram(14, context, 
+            optix::make_float3( 265.0f, 0.0f, 296.0f) / 220.f,
+            optix::make_float3( 0.0f, 340.1f, 0.0f) / 220.f,
+            optix::make_float3( 158.0f, 0.0f, -49.0f) / 220.f,
+            *matTallBlock ) );
     }
 
-    Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
-    //Mirror mirror = Mirror(optix::make_float3(0.7f,0.7f,1.f));
-    //Diffuse diff(optix::make_float3(0.f,1.f,0.f));
+    // Area light
+    if ((m_config & Config::LightArea) != 0)
+    {
+        emitter.setInverseArea(m_sceneLights[0].inverseArea);
+        for(int i = 0; i < m_sceneLights.size(); i++)
+        {
+            gis.push_back(createParallelogram(15 + i, context, m_sceneLights[i].position, 
+                m_sceneLights[i].v1, m_sceneLights[i].v2, emitter));
+        }
+    }    
 
-    //SphereInstance sphere = SphereInstance(glass, Sphere(Vector3(0.75f, 0.5f, 0.75f), 0.5f));
-    //gis.push_back(sphere.getOptixGeometryInstance(context));
 
-    SphereInstance sphere = SphereInstance(mirror, Sphere(Vector3(0.75f, 0.5f, 0.75f), 0.5f));
-    gis.push_back(sphere.getOptixGeometryInstance(context));
+    // Large sphere
+    if ((m_config & Config::LargeMirrorSphere) != 0 || (m_config & Config::LargeGlassSphere) != 0)
+    {
+        Material *matLargeSphere = &mirror;
+        if ((m_config & Config::LargeGlassSphere) != 0)
+            matLargeSphere = &glass;
 
-    //SphereInstance sphere2 = SphereInstance(glass, Sphere(Vector3(450, 50, 300), 50));
-    //gis.push_back(sphere2.getOptixGeometryInstance(context));
+        float radius = 0.8;
+        SphereInstance sphere = SphereInstance(*matLargeSphere, Sphere(Vector3(1.25f, radius, 1.25f), radius));
+        gis.push_back(sphere.getOptixGeometryInstance(context));
+    }
+    
+    // Small glass sphere right
+    if ((m_config & Config::SmallMirrorSphere))
+    {
+        float radius = 0.5;
+        SphereInstance sphere = SphereInstance(glass, Sphere(Vector3(1.25f - 0.535714269f, radius, 1.25f), radius));
+        gis.push_back(sphere.getOptixGeometryInstance(context));
+    }
+
+    // Small mirror sphere left
+    if ((m_config & Config::SmallGlassSphere))
+    {
+        float radius = 0.5;
+        SphereInstance sphere = SphereInstance(mirror, Sphere(Vector3(1.25f + 0.535714269f, radius, 1.25f), radius));
+        gis.push_back(sphere.getOptixGeometryInstance(context));
+    }
 
     // Create geometry group
     optix::GeometryGroup geometry_group = context->createGeometryGroup();
