@@ -135,9 +135,9 @@ RT_PROGRAM void closestHitPhoton()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vertex Connection and Merging
-#define OPTIX_PRINTF_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 rtDeclareVariable(Camera,     camera, , );
 rtDeclareVariable(float2,     pixelSizeFactor, , );
