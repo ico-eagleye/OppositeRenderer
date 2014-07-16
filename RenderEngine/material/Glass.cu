@@ -253,11 +253,11 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
  // Light subpath program
 RT_PROGRAM void vcmClosestHitLight()
 {
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;      
     
-    bool isHitFromOutside = hitFromOutside(ray.direction, worldShadingNormal);
-    float3 N = isHitFromOutside ? worldShadingNormal : -worldShadingNormal;
+    bool isHitFromOutside = hitFromOutside(ray.direction, worldGeometricNormal);
+    float3 N = isHitFromOutside ? worldGeometricNormal : -worldGeometricNormal;
     IndexOfRefractions ior = getIndexOfRefractions(isHitFromOutside, indexOfRefraction);
 
     rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
@@ -294,16 +294,12 @@ rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
 {
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;      
     
-    bool isHitFromOutside = hitFromOutside(ray.direction, worldShadingNormal);
-    float3 N = isHitFromOutside ? worldShadingNormal : -worldShadingNormal;
+    bool isHitFromOutside = hitFromOutside(ray.direction, worldGeometricNormal);
+    float3 N = isHitFromOutside ? worldGeometricNormal : -worldGeometricNormal;
     IndexOfRefractions ior = getIndexOfRefractions(isHitFromOutside, indexOfRefraction);
-
-    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "HitLG -        normal W % 14f % 14f % 14f \n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
-    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "HitLG -  incident dir W % 14f % 14f % 14f \n", ray.direction.x, ray.direction.y, ray.direction.z);
-    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "HitLG -     costThetaIn % 14f hitFromOutside %d \n", optix::dot(worldShadingNormal, ray.direction), isHitFromOutside);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
     rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);

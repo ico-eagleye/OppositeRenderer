@@ -114,8 +114,7 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
  // Light subpath program
 RT_PROGRAM void vcmClosestHitLight()
 {
-    // vmarz TODO make sure shading normals used correctly
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;      
     
     rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
@@ -128,12 +127,12 @@ RT_PROGRAM void vcmClosestHitLight()
     if (isZero(Kr))
         return;
     
+    LightBSDF lightBsdf = LightBSDF(worldGeometricNormal, -ray.direction);
     FresnelNoOp fresnelNoOp;
     SpecularReflection reflection(Kr, &fresnelNoOp );
-    LightBSDF lightBsdf = LightBSDF(worldShadingNormal, -ray.direction);
     lightBsdf.AddBxDF(&reflection);
 
-    lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, lightBsdf, ray.direction, tHit, maxPathLen,
+    lightHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
         lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
         camera, pixelSizeFactor,
         _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
@@ -153,7 +152,7 @@ rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
 {
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
@@ -167,12 +166,12 @@ RT_PROGRAM void vcmClosestHitCamera()
     if (isZero(Kr))
         return;
     
+    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
     FresnelNoOp fresnelNoOp;
     SpecularReflection reflection(Kr, &fresnelNoOp );
-    CameraBSDF cameraBsdf = CameraBSDF(worldShadingNormal, -ray.direction);
     cameraBsdf.AddBxDF(&reflection);
 
-    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
+    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
          misVcWeightFactor, misVmWeightFactor, 
          _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING

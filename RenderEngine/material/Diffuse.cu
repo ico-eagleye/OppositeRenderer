@@ -75,7 +75,7 @@ RT_PROGRAM void closestHitRadiance()
     radiancePrd.normal = worldShadingNormal;
     radiancePrd.position = hitPoint;
     radiancePrd.lastTHit = tHit;
-    radiancePrd.depth++; // vmarz: using for debugging (was already defined in struct)
+    radiancePrd.depth++; 
     if(radiancePrd.flags & PRD_PATH_TRACING)
     {
         float2 sample = getRandomUniformFloat2(&radiancePrd.randomState);
@@ -170,8 +170,7 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
  // Light subpath program
 RT_PROGRAM void vcmClosestHitLight()
 {
-    // vmarz TODO make sure shading normals used correctly
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;      
     
     rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
@@ -181,11 +180,13 @@ RT_PROGRAM void vcmClosestHitLight()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
+    // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
+    // see [Veach PhD section 5.3]
+    LightBSDF lightBsdf = LightBSDF(worldGeometricNormal, -ray.direction);
     Lambertian lambertian = Lambertian(Kd);
-    LightBSDF lightBsdf = LightBSDF(worldShadingNormal, -ray.direction);
     lightBsdf.AddBxDF(&lambertian);
 
-    lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, lightBsdf, ray.direction, tHit, maxPathLen,
+    lightHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
         lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
         camera, pixelSizeFactor,
         _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
@@ -205,12 +206,16 @@ rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
 {
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
+    // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
+    // see [Veach PhD section 5.3]
+    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
     Lambertian lambertian = Lambertian(Kd);
-    CameraBSDF cameraBsdf = CameraBSDF(worldShadingNormal, -ray.direction);
     cameraBsdf.AddBxDF(&lambertian);
+
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - incident Kd     % 14f % 14f % 14f\n", Kd.x, Kd.y, Kd.z);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
     rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);
@@ -220,7 +225,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
-    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
+    cameraHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
          misVcWeightFactor, misVmWeightFactor, 
          _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING

@@ -21,6 +21,7 @@
 
 using namespace optix;
 
+rtDeclareVariable(float3, geometricNormal, attribute geometricNormal, ); 
 rtDeclareVariable(float3, shadingNormal, attribute shadingNormal, ); 
 rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 rtDeclareVariable(float, tHit, rtIntersectionDistance, );
@@ -97,27 +98,18 @@ RT_PROGRAM void vcmClosestHitCamera()
 #ifdef CONNECT_LIGHT_S0_DISABLED
     return;
 #endif
-
-    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
     float lightPickProb = 1.f / lights.size();
   
-    float cosAtLight = maxf(0.f, dot(worldShadingNormal, -ray.direction));
+    float cosAtLight = maxf(0.f, dot(worldGeometricNormal, -ray.direction));
     if (cosAtLight == 0.f) 
         return;
 
     float directPdfA = inverseArea;
-    float emissionPdfW = CosHemispherePdfW(worldShadingNormal, -ray.direction) * inverseArea;
+    float emissionPdfW = CosHemispherePdfW(worldGeometricNormal, -ray.direction) * inverseArea;
 
-    //OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit1   prd.col % 14f % 14f % 14f \n", 
-    //    subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
-    //if (IS_DEBUG_ID(subpathPrd.launchIndex)) 
-    //    rtPrintf( "conDE- Emit1   prd.col % 14f % 14f % 14f \n", subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
     connectLightSourceS0(subpathPrd, Lemit, directPdfA, emissionPdfW, lightPickProb, vcmUseVC, vcmUseVM); 
-    //OPTIX_PRINTFID(subpathPrd.launchIndex, subpathPrd.depth, "conDE- Emit2   prd.col % 14f % 14f % 14f \n", 
-    //    subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
-    //if (IS_DEBUG_ID(subpathPrd.launchIndex)) 
-    //    rtPrintf( "conDE- Emit2   prd.col % 14f % 14f % 14f \n", subpathPrd.color.x, subpathPrd.color.y, subpathPrd.color.z);
 }
 

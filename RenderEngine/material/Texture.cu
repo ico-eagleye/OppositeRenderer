@@ -211,24 +211,13 @@ rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
  // Light subpath program
 RT_PROGRAM void vcmClosestHitLight()
 {
-    float3 worldShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shadingNormal));
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
-
-    float3 normal = worldShadingNormal;
-    if(hasNormals)
-    {
-        float3 worldTangent = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, tangent));
-        float3 worldBitangent = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, bitangent));
-        normal = getNormalMappedNormal(worldShadingNormal, worldTangent, worldBitangent, 
-                        tex2D(normalMapSampler, textureCoordinate.x, textureCoordinate.y));
-    }
 
     float4 texColor4 = tex2D( diffuseSampler, textureCoordinate.x, textureCoordinate.y );
     float3 texColor = make_float3(texColor4.x, texColor4.y, texColor4.z);
     
-    DifferentialGeometry dgShading;
-    dgShading.SetFromNormal(normal);    
-    LightBSDF lightBsdf = LightBSDF(dgShading, geometricNormal, -ray.direction);
+    LightBSDF lightBsdf = LightBSDF(geometricNormal, -ray.direction);
     Lambertian lambertian = Lambertian(texColor);
     lightBsdf.AddBxDF(&lambertian);
 
@@ -239,7 +228,7 @@ RT_PROGRAM void vcmClosestHitLight()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
-    lightHit( sceneRootObject, subpathPrd, hitPoint, normal, lightBsdf, ray.direction, tHit, maxPathLen,
+    lightHit( sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
               lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
               camera, pixelSizeFactor,
               _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
@@ -259,25 +248,14 @@ rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
 {
-    float3 worldShadingNormal = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shadingNormal));
+    float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
-
-    float3 normal = worldShadingNormal;
-    if(hasNormals)
-    {
-        float3 worldTangent = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, tangent));
-        float3 worldBitangent = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, bitangent));
-        normal = getNormalMappedNormal(worldShadingNormal, worldTangent, worldBitangent, 
-                        tex2D(normalMapSampler, textureCoordinate.x, textureCoordinate.y));
-    }
 
     float4 texColor4 = tex2D( diffuseSampler, textureCoordinate.x, textureCoordinate.y );
     float3 texColor = make_float3(texColor4.x, texColor4.y, texColor4.z);
-
+    
+    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
     Lambertian lambertian = Lambertian(texColor);
-    DifferentialGeometry dgShading;
-    dgShading.SetFromNormal(normal);
-    CameraBSDF cameraBsdf = CameraBSDF(dgShading, geometricNormal, -ray.direction);
     cameraBsdf.AddBxDF(&lambertian);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
@@ -288,7 +266,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
-    cameraHit( sceneRootObject, subpathPrd, hitPoint, normal, cameraBsdf, ray.direction, tHit, maxPathLen,
+    cameraHit( sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
                misVcWeightFactor, misVmWeightFactor, 
                _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING

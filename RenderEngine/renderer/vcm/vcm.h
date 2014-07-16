@@ -359,9 +359,8 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
 #if !VCM_UNIFORM_VERTEX_SAMPLING
             //uint3 pathVertIdx = make_uint3(launchIndex, aLightPrd.depth-1); // getting this ?? 1072693248 0 0 or 1072693248 1 0
             uint3 pathVertIdx = make_uint3(aLightPrd.launchIndex.x, aLightPrd.launchIndex.y, aLightPrd.depth-1);
-            //OPTIX_PRINTF("%d %d - d %d - Hit L- Store VertIdx %u v.pathLen %d pathVertIdx %u %u %u\n",
-            //    launchIndex.x, launchIndex.y, aLightPrd.depth, vertIdx, lightVertex.pathLen, 
-            //    pathVertIdx.x, pathVertIdx.y, pathVertIdx.z);
+            OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L- Store VertIdx %u v.pathLen %d pathVertIdx %u %u %u\n",
+                vertIdx, lightVertex.pathLen, pathVertIdx.x, pathVertIdx.y, pathVertIdx.z);
             aLightSubpathVertexIndexBuffer[pathVertIdx] = vertIdx;
 #endif
         }
@@ -386,7 +385,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
 #endif
 
     // Terminate if path would become too long after scattering (e.g. +2 for next hit and connection)
-    if (!aLightVertexCountEstimatePass && aMaxPathLen < aLightPrd.depth + 2)
+    if (aMaxPathLen < aLightPrd.depth + 2)
     {
         aLightPrd.done = true;
         return;
@@ -581,7 +580,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
         return;
 
     float bsdfDirPdfW, bsdfRevPdfW, cosToLight;
-    float3 bsdfFactor = aCameraBsdf.vcmF(dirToLight, cosToLight, &bsdfDirPdfW, &bsdfRevPdfW);
+    float3 bsdfFactor = aCameraBsdf.vcmF(dirToLight, cosToLight, &bsdfDirPdfW, &bsdfRevPdfW, &aCameraPrd.launchIndex);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-      bsdfFactor % 14f % 14f % 14f \n", bsdfFactor.x, bsdfFactor.y, bsdfFactor.z);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-      dirToLight % 14f % 14f % 14f      distance % 14f \n", dirToLight.x, dirToLight.y, dirToLight.z, distance);
 
@@ -807,16 +806,14 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         // failing on launch index and loop variable, rtTrace crashing within the loop etc.
         // update: It seems it was caused multiple uses of std::printf
         uint lightSubpathLen = aLightSubpathLengthBuffer[launchIndex];
-        //OPTIX_PRINTF("%d %d - d %d - Hit C-  conn lightSubpathLen %u \n", 
-        //    launchIndex.x, launchIndex.y, aCameraPrd.depth, lightSubpathLen);
+        OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- lghtSubpathLen %u \n", lightSubpathLen);
         for (uint i = 0; i < lightSubpathLen; ++i)
         {
             uint3 pathVertIdx = make_uint3(launchIndex.x, launchIndex.y, i);
-            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "%u %u - d %u - Hit C- %u conn pathVertIdx %u %u %u \n",
-                launchIndex.x, launchIndex.y, aCameraPrd.depth, i, pathVertIdx.x, pathVertIdx.y, pathVertIdx.z);
+            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- %u conn pathVertIdx %u %u %u \n",
+                i, pathVertIdx.x, pathVertIdx.y, pathVertIdx.z);
             uint vertIdx = aLightSubpathVertexIndexBuffer[pathVertIdx];
-            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "%u %u - d %u - Hit C- %u conn vertIdx %u \n",
-                launchIndex.x, launchIndex.y, aCameraPrd.depth, i, vertIdx);
+            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- %u conn vertIdx %u \n", i, vertIdx);
             LightVertex lightVertex = aLightVertexBuffer[vertIdx];
             connectVertices(aSceneRootObject, lightVertex, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
             OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Ver%u color % 14f % 14f % 14f \n",
