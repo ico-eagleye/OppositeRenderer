@@ -89,13 +89,17 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     m_pgram_bounding_box = context->createProgramFromPTXFile( "parallelogram.cu.ptx", "bounds" );
     m_pgram_intersection = context->createProgramFromPTXFile( "parallelogram.cu.ptx", "intersect" );
 
+    //m_sphere_bounding_box = context->createProgramFromPTXFile( "sphere.cu.ptx", "boundingBox" );
+    //m_sphere_intersection = context->createProgramFromPTXFile( "sphere.cu.ptx", "intersect" );
+
     // create geometry instances
     QVector<optix::GeometryInstance> gis;
 
     Diffuse diffuseWhite = Diffuse(make_float3( 0.8f ));
     Diffuse diffuseGreen = Diffuse(make_float3( 0.05f, 0.8f, 0.05f ));
     Diffuse diffuseRed = Diffuse(make_float3( 1.f, 0.05f, 0.05f ));
-    Mirror mirror = Mirror(make_float3(0.7f,0.7f,1.f));
+    //Mirror mirror = Mirror(make_float3(0.7f,0.7f,1.f));
+    Mirror mirror = Mirror(make_float3(1.f,1.f,1.f));
 
     // Cornell box size in SmallVCM 2.56004
     // Floor
@@ -187,7 +191,6 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     //    diffuseWhite ) );
         
     // Light
-
     DiffuseEmitter emitter = DiffuseEmitter(m_sceneLights[0].power, Vector3(1));
     emitter.setInverseArea(m_sceneLights[0].inverseArea);
     for(int i = 0; i < m_sceneLights.size(); i++)
@@ -195,21 +198,18 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
         gis.push_back(createParallelogram(15 + i, context, m_sceneLights[i].position, m_sceneLights[i].v1, m_sceneLights[i].v2, emitter));
     }
 
-    //Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
+    Glass glass = Glass(1.5, optix::make_float3(1.f,1.f,1.f));
     //Mirror mirror = Mirror(optix::make_float3(0.7f,0.7f,1.f));
     //Diffuse diff(optix::make_float3(0.f,1.f,0.f));
 
-    // Participating Tests
+    //SphereInstance sphere = SphereInstance(glass, Sphere(Vector3(0.75f, 0.5f, 0.75f), 0.5f));
+    //gis.push_back(sphere.getOptixGeometryInstance(context));
 
-    /*#if ENABLE_PARTICIPATING_MEDIA
-    ParticipatingMedium partmedium = ParticipatingMedium(0.001, 0.00);
-    AABInstance participatingMediumCube (partmedium, AAB(Vector3(-1), Vector3(556.0f, 548.85f, 559.2f)-1));
-    gis.push_back(participatingMediumCube.getOptixGeometryInstance(context));
-    SphereInstance sphere = SphereInstance(glass, Sphere(Vector3(250, 370, 250), 50));
+    SphereInstance sphere = SphereInstance(mirror, Sphere(Vector3(0.75f, 0.5f, 0.75f), 0.5f));
     gis.push_back(sphere.getOptixGeometryInstance(context));
-#endif
-    SphereInstance sphere2 = SphereInstance(glass, Sphere(Vector3(450, 50, 300), 50));
-    gis.push_back(sphere2.getOptixGeometryInstance(context));*/
+
+    //SphereInstance sphere2 = SphereInstance(glass, Sphere(Vector3(450, 50, 300), 50));
+    //gis.push_back(sphere2.getOptixGeometryInstance(context));
 
     // Create geometry group
     optix::GeometryGroup geometry_group = context->createGeometryGroup();
@@ -217,12 +217,12 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     for (int i = 0; i < gis.size(); ++i )
         geometry_group->setChild( i, gis[i] );
 
-    geometry_group->setAcceleration(context->createAcceleration("NoAccel", "NoAccel")); // Bvh Sbvh Trbvh NoAccel
+    geometry_group->setAcceleration(context->createAcceleration("NoAccel", "NoAccel")); // Bvh Sbvh Trbvh NoAccel // Bvh BvhCompact NoAccel
 
     optix::Group gro = context->createGroup();
     gro->setChildCount(1);
     gro->setChild(0, geometry_group);
-    optix::Acceleration acceleration = context->createAcceleration("NoAccel", "NoAccel"); // Bvh BvhCompact NoAccel
+    optix::Acceleration acceleration = context->createAcceleration("NoAccel", "NoAccel"); 
     gro->setAcceleration(acceleration);
 
     return gro;

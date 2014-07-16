@@ -123,7 +123,7 @@ public:
             optix::float3 Rperp = optix::make_float3(
                 ((ei * cosi) - (et * cost)) /
                 ((ei * cosi) + (et * cost)));
-            return (Rparl*Rparl + Rperp*Rperp) / 2.0f;
+            return (Rparl*Rparl + Rperp*Rperp) * 0.5f;
         }
     }
 

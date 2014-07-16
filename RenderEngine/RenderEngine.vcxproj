@@ -392,7 +392,12 @@
       <Keep Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</Keep>
       <Keep Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</Keep>
     </CudaCompile>
-    <CudaCompile Include="material\Glass.cu" />
+    <CudaCompile Include="material\Glass.cu">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
     <CudaCompile Include="material\ParticipatingMedium.cu" />
     <CudaCompile Include="renderer\ppm\DirectRadianceEstimation.cu" />
     <CudaCompile Include="renderer\ppm\Output.cu" />

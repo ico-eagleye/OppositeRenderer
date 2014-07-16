@@ -182,7 +182,7 @@ RT_PROGRAM void vcmClosestHitLight()
 #endif
 
     Lambertian lambertian = Lambertian(Kd);
-    VcmBSDF lightBsdf = VcmBSDF(worldShadingNormal, -ray.direction);
+    LightBSDF lightBsdf = LightBSDF(worldShadingNormal, -ray.direction);
     lightBsdf.AddBxDF(&lambertian);
 
     lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, lightBsdf, ray.direction, tHit, maxPathLen,
@@ -209,7 +209,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
     Lambertian lambertian = Lambertian(Kd);
-    VcmBSDF cameraBsdf = VcmBSDF(worldShadingNormal, -ray.direction);
+    CameraBSDF cameraBsdf = CameraBSDF(worldShadingNormal, -ray.direction);
     cameraBsdf.AddBxDF(&lambertian);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);

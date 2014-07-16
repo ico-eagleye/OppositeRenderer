@@ -4,7 +4,11 @@
  * file that was distributed with this source code.
 */
 
-#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTFC_DEF
+#define OPTIX_PRINTFCID_DEF
 
 #include <optix.h>
 #include <optix_device.h>
@@ -16,27 +20,27 @@
 #include "renderer/RayType.h"
 #include "renderer/RadiancePRD.h"
 #include "renderer/ppm/PhotonPRD.h"
+#include "renderer/vcm/vcm.h"
+#include "renderer/vcm/LightVertex.h"
+#include "renderer/vcm/SubpathPRD.h"
+#include "renderer/Light.h"
+
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
 
 using namespace optix;
 
-//
 // Scene wide variables
-//
-
 rtDeclareVariable(rtObject, sceneRootObject, , );
 
-//
 // Ray generation program
-//
-
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 
-//
 // Closest hit material
-//
-
-rtDeclareVariable(float3, Ks, , );
-rtDeclareVariable(float3, Kd, , );
+rtDeclareVariable(float3, Kr, , );
 rtDeclareVariable(float, indexOfRefraction, , );
 rtDeclareVariable(float3, geometricNormal, attribute geometricNormal, ); 
 rtDeclareVariable(float3, shadingNormal, attribute shadingNormal, ); 
@@ -182,7 +186,7 @@ RT_PROGRAM void closestHitPhoton()
         newRayDirection = refractionDirection;
     }
 
-    OPTIX_PRINTFI(photonPrd.depth, "Photon hit glass %s (%s) %s P(%.2f %.2f %.2f)\n", isHitFromOutside ? "outside" : "inside",
+    OPTIX_PRINTFID(launchIndex, photonPrd.depth, "Photon hit glass %s (%s) %s P(%.2f %.2f %.2f)\n", isHitFromOutside ? "outside" : "inside",
         willTravelInsideGlass(isHitFromOutside, isReflected)  ? "will travel inside" : "will travel outside", isReflected ? "reflect":"refract", hitPoint.x, hitPoint.y, hitPoint.z);
 
     photonPrd.depth++;
@@ -206,4 +210,124 @@ RT_PROGRAM void anyHitPhoton()
         //rtPrintf("Ignore int' tHit=%.4f", tHit);
         rtIgnoreIntersection();
     }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Vertex Connection and Merging
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
+
+rtDeclareVariable(Camera,     camera, , );
+rtDeclareVariable(float2,     pixelSizeFactor, , );
+rtDeclareVariable(SubpathPRD, subpathPrd, rtPayload, );
+rtDeclareVariable(uint,       lightVertexCountEstimatePass, , );
+rtDeclareVariable(uint,       maxPathLen, , );
+
+rtBuffer<LightVertex>  lightVertexBuffer;
+rtBuffer<uint>         lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
+rtBuffer<uint, 2>      lightSubpathLengthBuffer;
+
+rtDeclareVariable(int, lightVertexBufferId, , );            // rtBufferId<LightVertex>
+rtDeclareVariable(int, lightVertexBufferIndexBufferId, , ); // rtBufferId<uint>
+rtDeclareVariable(int, lightSubpathLengthBufferId, , );     // rtBufferId<uint, 2>
+rtDeclareVariable(int, outputBufferId, , );                 // rtBufferId<float3, 2>
+
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+rtBuffer<uint, 3>       lightSubpathVertexIndexBuffer;
+rtDeclareVariable(int,  lightSubpathVertexIndexBufferId, , ); // rtBufferId<uint, 3>
+#else
+rtDeclareVariable(float, vertexPickPdf, , );                // used for uniform vertex sampling
+#endif
+
+
+rtDeclareVariable(float, lightSubpathCount, , );
+rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
+rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
+
+
+ // Light subpath program
+RT_PROGRAM void vcmClosestHitLight()
+{
+    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;      
+    
+    bool isHitFromOutside = hitFromOutside(ray.direction, worldShadingNormal);
+    float3 N = isHitFromOutside ? worldShadingNormal : -worldShadingNormal;
+    IndexOfRefractions ior = getIndexOfRefractions(isHitFromOutside, indexOfRefraction);
+
+    rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
+    rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
+    rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+    rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
+#endif
+
+    if (isZero(Kr))
+        return;
+    
+    SpecularTransmission transmission(Kr, ior.n1 , ior.n2);
+    LightBSDF lightBsdf = LightBSDF(N, -ray.direction);
+    lightBsdf.AddBxDF(&transmission);
+
+    lightHit(sceneRootObject, subpathPrd, hitPoint, N, lightBsdf, ray.direction, tHit, maxPathLen,
+        lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
+        camera, pixelSizeFactor,
+        _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+        _lightSubpathVertexIndexBufferId
+#else
+        &vertexPickPdf
+#endif
+        );
+}
+
+
+//rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
+rtDeclareVariable(float, averageLightSubpathLength, , );
+rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint, 1>
+
+ // Camra subpath program
+RT_PROGRAM void vcmClosestHitCamera()
+{
+    float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    float3 hitPoint = ray.origin + tHit*ray.direction;      
+    
+    bool isHitFromOutside = hitFromOutside(ray.direction, worldShadingNormal);
+    float3 N = isHitFromOutside ? worldShadingNormal : -worldShadingNormal;
+    IndexOfRefractions ior = getIndexOfRefractions(isHitFromOutside, indexOfRefraction);
+
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "HitLG -        normal W % 14f % 14f % 14f \n", worldShadingNormal.x, worldShadingNormal.y, worldShadingNormal.z);
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "HitLG -  incident dir W % 14f % 14f % 14f \n", ray.direction.x, ray.direction.y, ray.direction.z);
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "HitLG -     costThetaIn % 14f hitFromOutside %d \n", optix::dot(worldShadingNormal, ray.direction), isHitFromOutside);
+
+    rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
+    rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);
+    rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
+    rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+    rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
+#endif
+
+    if (isZero(Kr))
+        return;
+    
+    SpecularTransmission transmission(Kr, ior.n1 , ior.n2);
+    CameraBSDF cameraBsdf = CameraBSDF(N, -ray.direction);
+    cameraBsdf.AddBxDF(&transmission);
+
+    cameraHit(sceneRootObject, subpathPrd, hitPoint, N, cameraBsdf, ray.direction, tHit, maxPathLen,
+         misVcWeightFactor, misVmWeightFactor, 
+         _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+#if !VCM_UNIFORM_VERTEX_SAMPLING
+         _lightSubpathVertexIndexBufferId
+#else
+         averageLightSubpathLength,
+         &vertexPickPdf
+#endif
+        );
 }

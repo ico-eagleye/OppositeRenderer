@@ -10,10 +10,10 @@
 bool Glass::m_optixMaterialIsCreated = false;
 optix::Material Glass::m_optixMaterial;
 
-Glass::Glass( float indexOfRefraction, const Vector3 & Ks )
+Glass::Glass( float indexOfRefraction, const Vector3 & Kr )
 {
     this->indexOfRefraction = indexOfRefraction;
-    this->Ks = Ks;
+    this->Kr = Kr;
 }
 
 optix::Material Glass::getOptixMaterial(optix::Context & context)
@@ -26,6 +26,8 @@ optix::Material Glass::getOptixMaterial(optix::Context & context)
         optix::Program photonClosestProgram = context->createProgramFromPTXFile( "Glass.cu.ptx", "closestHitPhoton");
         optix::Program photonAnyHitProgram = context->createProgramFromPTXFile( "Glass.cu.ptx", "anyHitPhoton");
 
+        //vcmClosestHitLight
+
         m_optixMaterial->setClosestHitProgram(RayType::RADIANCE, radianceClosestProgram);
         //m_optixMaterial->setAnyHitProgram(RayType::RADIANCE, radianceAnyHitProgram );
         m_optixMaterial->setClosestHitProgram(RayType::RADIANCE_IN_PARTICIPATING_MEDIUM, radianceClosestProgram);
@@ -35,6 +37,9 @@ optix::Material Glass::getOptixMaterial(optix::Context & context)
         //m_optixMaterial->setAnyHitProgram(RayType::PHOTON, photonAnyHitProgram);
         m_optixMaterial->setClosestHitProgram(RayType::PHOTON_IN_PARTICIPATING_MEDIUM, photonClosestProgram);
        // m_optixMaterial->setAnyHitProgram(RayType::PHOTON_IN_PARTICIPATING_MEDIUM, photonAnyHitProgram);
+
+        m_optixMaterial->setClosestHitProgram(RayType::LIGHT_VCM, context->createProgramFromPTXFile( "Glass.cu.ptx", "vcmClosestHitLight"));
+        m_optixMaterial->setClosestHitProgram(RayType::CAMERA_VCM, context->createProgramFromPTXFile( "Glass.cu.ptx", "vcmClosestHitCamera"));
 
         this->registerMaterialWithShadowProgram(context, m_optixMaterial);
         m_optixMaterialIsCreated = true;
@@ -49,6 +54,6 @@ optix::Material Glass::getOptixMaterial(optix::Context & context)
 void Glass::registerGeometryInstanceValues(optix::GeometryInstance & instance )
 {
     instance["indexOfRefraction"]->setFloat(this->indexOfRefraction);
-    instance["Kd"]->setFloat( 0, 0 , 0 );
-    instance["Ks"]->setFloat(this->Ks);
+    //instance["Kd"]->setFloat( 0, 0 , 0 );
+    instance["Kr"]->setFloat(this->Kr);
 }

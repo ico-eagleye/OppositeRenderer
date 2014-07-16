@@ -24,9 +24,9 @@
     if (bxdf->type() & BxDF::Lambertian) \
         lvalue op reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__); \
     else if (bxdf->type() & BxDF::SpecularReflection) \
-        lvalue op reinterpret_cast<const SpecularReflection *>(bxdf)->function(__VA_ARGS__);
-    //else if (bxdf->type() & BxDF::SpecularTransmission) \
-    //    lvalue op reinterpret_cast<const SpecularTransmission *>(bxdf)->function(__VA_ARGS__); \
+        lvalue op reinterpret_cast<const SpecularReflection *>(bxdf)->function(__VA_ARGS__); \
+    else if (bxdf->type() & BxDF::SpecularTransmission) \
+        lvalue op reinterpret_cast<const SpecularTransmission *>(bxdf)->function(__VA_ARGS__);
 
 //#define CAST_BXDF_TO_SUBTYPE(pointerVariable, bxdf) \
 //    if (bxdf->type() & BxDF::Lambertian) \
@@ -189,13 +189,17 @@ public:
     // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
+    //
+    // Last parameter aRadianceFromCamera used for VCM to handle specular transmission, since in that
+    // case radiance "flows" from camera and light particle weights/importance from light source
     RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWorldWo,
                                        optix::float3       * oWorldWi, 
                                        const optix::float3 & aSample,
                                        float               * oPdfW,
                                        float               * oCosThetaWi = NULL,
                                        BxDF::Type            aSampleType = BxDF::All,
-                                       BxDF::Type          * oSampledType = NULL ) const
+                                       BxDF::Type          * oSampledType = NULL,
+                                       const bool            aRadianceFromCamera = false ) const
     {
         // Count matched components.
         //unsigned int nMatched = nBxDFs(aSampleType);
@@ -229,7 +233,7 @@ public:
         optix::float3 f = optix::make_float3(0.0f);
         optix::float3 wi;
         optix::float2 s = optix::make_float2(aSample.y, aSample.z);
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, =, bxdf, sampleF, wo, &wi, s, oPdfW);
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, =, bxdf, sampleF, wo, &wi, s, oPdfW, aRadianceFromCamera);
         
         // Rejected.
         if (*oPdfW == 0.0f)
@@ -246,7 +250,7 @@ public:
         // If not specular, sum all non-specular BxDF's probability.
         if (!(bxdf->type() & BxDF::Specular) && nMatched > 1) 
         {
-            for (unsigned int i = 0; i < _nBxDFs; i++) // vmarz original condition was i<1
+            for (unsigned int i = 0; i < _nBxDFs; i++)
             {
                 if (i == index) continue; // index of bxdf used for direction sampling, skip computing pdf
                 if (bxdfAt(i)->matchFlags(aSampleType))
@@ -323,7 +327,7 @@ protected:
 
 
 
-
+template<bool DirFixIsLight>
 class VcmBSDF : public BSDF
 {
 private:
@@ -333,9 +337,9 @@ public:
     RT_FUNCTION VcmBSDF() : BSDF() { }
 
     RT_FUNCTION VcmBSDF( const DifferentialGeometry aDiffGeomShading,
-                                        const optix::float3      & aWorldGeometricNormal,
-                                        const optix::float3      & aIncidentDir ) : 
-                               BSDF( aDiffGeomShading, aWorldGeometricNormal )
+                         const optix::float3      & aWorldGeometricNormal,
+                         const optix::float3      & aIncidentDir ) : 
+                BSDF( aDiffGeomShading, aWorldGeometricNormal )
     {
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
@@ -356,13 +360,14 @@ public:
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
     RT_FUNCTION optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
-                                                         const optix::float3 & aSample,
-                                                         float               * oPdfW,
-                                                         float               * oCosThetaOut, //= NULL,
-                                                         BxDF::Type            aSampleType = BxDF::All,
-                                                         BxDF::Type          * oSampledType = NULL ) const
+                                          const optix::float3 & aSample,
+                                          float               * oPdfW,
+                                          float               * oCosThetaOut, //= NULL,
+                                          BxDF::Type            aSampleType = BxDF::All,
+                                          BxDF::Type          * oSampledType = NULL ) const
     {
-        return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, oPdfW, oCosThetaOut, aSampleType, oSampledType);
+        return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, 
+            oPdfW, oCosThetaOut, aSampleType, oSampledType, DirFixIsLight);
     }
 
 
@@ -476,6 +481,9 @@ public:
     }
 
 };
+
+typedef VcmBSDF<false> CameraBSDF;
+typedef VcmBSDF<true>  LightBSDF;
 
 #undef OPTIX_PRINTF_ENABLED
 #undef OPTIX_PRINTFI_ENABLED

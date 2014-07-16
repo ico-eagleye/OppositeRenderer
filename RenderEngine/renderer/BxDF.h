@@ -61,7 +61,7 @@ public:
     // Evaluates brdf, returns pdf if oPdf is not NULL
     RT_FUNCTION optix::float3 f( const optix::float3 & aWo,
                                  const optix::float3 & aWi,
-                                 float * oPdf = NULL ) const
+                                 float               * oPdf = NULL ) const
     {
         if (*oPdf != NULL) *oPdf = 0.f;
         return optix::make_float3(0.0f);
@@ -76,7 +76,8 @@ public:
     RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
-                                       float               * oPdf ) const
+                                       float               * oPdf,
+                                       const bool            aRadianceFromCamera = false ) const
     {
         *oWi = localReflect(aWo);
         *oPdf = 0.f;
@@ -122,8 +123,8 @@ public:
     // Evaluation for VCM returning also reverse pdfs, default implementation of "virtual" functions
     RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
                                     const optix::float3 & aWi,
-                                    float * oDirectPdf = NULL,
-                                    float * oReversePdf = NULL) const
+                                    float               * oDirectPdf = NULL,
+                                    float               * oReversePdf = NULL ) const
     {
         if (*oDirectPdf != NULL) *oDirectPdf = 0.f;
         if (*oReversePdf != NULL) *oReversePdf = 0.f;
@@ -165,7 +166,7 @@ public:
 
     RT_FUNCTION float pdf( const optix::float3 & aWo,
                            const optix::float3 & aWi,
-                           const bool aEvalReverse = false ) const
+                           const bool            aEvalReverse = false ) const
     {
         if (localIsSameHemisphere(aWo, aWi))
         {
@@ -180,7 +181,8 @@ public:
     RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
-                                       float               * oPdfW ) const
+                                       float               * oPdfW,
+                                       const bool            aRadianceFromCamera = false ) const
     {
         if (aWo.z < EPS_COSINE)
         {
@@ -217,8 +219,8 @@ public:
     // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
     RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
                                     const optix::float3 & aWi,
-                                    float * oDirectPdfW = NULL,
-                                    float * oReversePdfW = NULL) const
+                                    float               * oDirectPdfW = NULL,
+                                    float               * oReversePdfW = NULL) const
     {
         using namespace optix;
         if(aWo.z < EPS_COSINE || aWi.z < EPS_COSINE)
@@ -233,6 +235,8 @@ public:
         return _reflectance * M_1_PIf;
     }
 };
+
+
 
 
 class SpecularReflection : public BxDF {
@@ -276,15 +280,20 @@ public:
         return 0.0f;
     }
 
-    RT_FUNCTION optix::float3 sampleF(
-        const optix::float3 & wo, optix::float3 * wi,
-        const optix::float2 & sample, float * prob) const
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
+                                       optix::float3       * oWi,
+                                       const optix::float2 & aSample,
+                                       float               * oPdfW,
+                                       const bool            aRadianceFromCamera = false ) const
     {
-        *wi = optix::make_float3(-wo.x, -wo.y, wo.z);
-        *prob = 1.0f;
+        *oWi = optix::make_float3(-aWo.x, -aWo.y, aWo.z);
+        *oPdfW = 1.0f;
         optix::float3 F;
-        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(F, =, fresnel(), evaluate, localCosTheta(wo));
-        F = F * _reflectance / fabsf(localCosTheta(*wi));
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(F, =, fresnel(), evaluate, localCosTheta(aWo));
+
+        // BSDF is multiplied by cosThetaOut when computing throughput to scattered direction. It shouldn't
+        // be done for specular reflection, hence predivide here to cancel it out
+        F = F * _reflectance / fabsf(localCosTheta(*oWi));
         return F;
     }
 
@@ -292,6 +301,7 @@ private:
     optix::float3  _reflectance;
     char           _fresnel[MAX_FRESNEL_SIZE];
 };
+
 
 
 
@@ -317,19 +327,31 @@ public:
         return 0.0f;
     }
 
-    RT_FUNCTION optix::float3 sampleF(
-        const optix::float3 & wo, optix::float3 * wi,
-        const optix::float2 & sample, float * prob) const
+    RT_FUNCTION float reflectProbability() const
+    {
+        return 0.f;
+    }
+
+    RT_FUNCTION float transmitProbability() const
+    {
+        return 1.f;
+    }
+
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
+                                       optix::float3       * oWi,
+                                       const optix::float2 & aSample,
+                                       float               * oPdfW,
+                                       const bool            aRadianceFromCamera = false ) const
     {
         using namespace optix;
         
-        // Figure out which $\eta$ is incident and which is transmitted
-        bool entering = localCosTheta(wo) > 0.0f;
+        // Figure out which eta is incident and which is transmitted
+        bool entering = localCosTheta(aWo) > 0.0f;
         float ei = fresnel()->eta_i, et = fresnel()->eta_t;
         if (!entering) swap(ei, et);
 
         // Compute transmitted ray direction
-        float sini2 = localSinThetaSquared(wo);
+        float sini2 = localSinThetaSquared(aWo);
         float eta = ei / et;
         float sint2 = eta * eta * sini2;
 
@@ -338,10 +360,19 @@ public:
         float cost = sqrtf(fmaxf(0.f, 1.f - sint2));
         if (entering) cost = -cost;
         float sintOverSini = eta;
-        *wi = make_float3(sintOverSini * -wo.x, sintOverSini * -wo.y, cost);
-        *prob = 1.f;
-        float3 F = fresnel()->evaluate(localCosTheta(wo));
-        return (make_float3(1.f) - F) * m_transmittance / fabsf(localCosTheta(*wi));
+        *oWi = make_float3(sintOverSini * -aWo.x, sintOverSini * -aWo.y, cost);
+        *oPdfW = 1.f;
+
+        // reflection/refraction coefficients
+        float3 F = fresnel()->evaluate(localCosTheta(aWo));
+        float3 R = make_float3(1.f) - F;
+
+        // aRadianceFromCamera used for VCM when radiance flows from camera and particle importance/weights from light.
+        // etas are swapped, hence the scaling
+        if (aRadianceFromCamera)
+            return /*(ei*ei)/(et*et) * */ R * m_transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
+        else
+            return /*(ei*ei)/(et*et) * */ R * m_transmittance / fabsf(localCosTheta(*oWi));
     }
 
 private:

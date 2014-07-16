@@ -130,7 +130,7 @@ RT_PROGRAM void vcmClosestHitLight()
     
     FresnelNoOp fresnelNoOp;
     SpecularReflection reflection(Kr, &fresnelNoOp );
-    VcmBSDF lightBsdf = VcmBSDF(worldShadingNormal, -ray.direction);
+    LightBSDF lightBsdf = LightBSDF(worldShadingNormal, -ray.direction);
     lightBsdf.AddBxDF(&reflection);
 
     lightHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, lightBsdf, ray.direction, tHit, maxPathLen,
@@ -169,7 +169,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     
     FresnelNoOp fresnelNoOp;
     SpecularReflection reflection(Kr, &fresnelNoOp );
-    VcmBSDF cameraBsdf = VcmBSDF(worldShadingNormal, -ray.direction);
+    CameraBSDF cameraBsdf = CameraBSDF(worldShadingNormal, -ray.direction);
     cameraBsdf.AddBxDF(&reflection);
 
     cameraHit(sceneRootObject, subpathPrd, hitPoint, worldShadingNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
