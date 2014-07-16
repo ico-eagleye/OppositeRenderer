@@ -100,6 +100,9 @@
     <ClCompile Include="renderer\OptixRenderer_CPUKdTree.cpp">
       <Filter>renderer</Filter>
     </ClCompile>
+    <ClCompile Include="material\Glossy.cpp">
+      <Filter>material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="select.h" />
@@ -293,6 +296,9 @@
     <ClInclude Include="renderer\device_common.h">
       <Filter>renderer</Filter>
     </ClInclude>
+    <ClInclude Include="material\Glossy.h">
+      <Filter>material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="material">
@@ -408,6 +414,9 @@
     </CudaCompile>
     <CudaCompile Include="geometry_instance\parallelogram.cu">
       <Filter>geometry_instance</Filter>
+    </CudaCompile>
+    <CudaCompile Include="material\Glossy.cu">
+      <Filter>material</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

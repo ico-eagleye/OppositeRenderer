@@ -257,6 +257,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="material\Glossy.h" />
     <ClInclude Include="math\AAB.h" />
     <ClInclude Include="math\DifferentialGeometry.h" />
     <ClInclude Include="math\Sphere.h" />
@@ -327,6 +328,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clientserver\RenderServerRenderRequestDetails.cpp" />
+    <ClCompile Include="material\Glossy.cpp" />
     <ClCompile Include="math\AAB.cpp" />
     <ClCompile Include="math\Sphere.cpp" />
     <ClCompile Include="scene\CornellSmall.cpp" />
@@ -376,13 +378,24 @@
     <CudaCompile Include="geometry_instance\Sphere.cu" />
     <CudaCompile Include="geometry_instance\TriangleMesh.cu" />
     <CudaCompile Include="material\DiffuseEmitter.cu" />
+    <CudaCompile Include="material\Glossy.cu">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
     <CudaCompile Include="material\Mirror.cu">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
-    <CudaCompile Include="material\Texture.cu" />
+    <CudaCompile Include="material\Texture.cu">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
     <CudaCompile Include="renderer\ppm\IndirectRadianceEstimation.cu" />
     <CudaCompile Include="material\Diffuse.cu">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-use_fast_math %(AdditionalOptions)</AdditionalOptions>
