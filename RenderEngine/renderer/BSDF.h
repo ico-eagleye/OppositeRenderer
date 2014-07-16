@@ -15,10 +15,12 @@
 #include <device_functions.h>
 #include "renderer/vcm/config_vcm.h"
 
+// having printfs enabled here sometimes cause weird errors like "insn->isMove() || insn->isLoad() || insn->isAdd()"
+// have seen that with inlining problems
 #define OPTIX_PRINTF_ENABLED 0
-#define OPTIX_PRINTFI_ENABLED 1
+#define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFC_ENABLED 1
+#define OPTIX_PRINTFC_ENABLED 0
 
 #define CALL_BXDF_CONST_VIRTUAL_FUNCTION(lvalue, op, bxdf, function, ...) \
     if (bxdf->type() & BxDF::Lambertian) \
@@ -26,7 +28,9 @@
     else if (bxdf->type() & BxDF::SpecularReflection) \
         lvalue op reinterpret_cast<const SpecularReflection *>(bxdf)->function(__VA_ARGS__); \
     else if (bxdf->type() & BxDF::SpecularTransmission) \
-        lvalue op reinterpret_cast<const SpecularTransmission *>(bxdf)->function(__VA_ARGS__);
+        lvalue op reinterpret_cast<const SpecularTransmission *>(bxdf)->function(__VA_ARGS__); \
+    else if (bxdf->type() & BxDF::Phong) \
+        lvalue op reinterpret_cast<const Phong *>(bxdf)->function(__VA_ARGS__);
 
 //#define CAST_BXDF_TO_SUBTYPE(pointerVariable, bxdf) \
 //    if (bxdf->type() & BxDF::Lambertian) \
@@ -115,7 +119,8 @@ public:
         // to make sure the weight of sample never rise
         _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
         _nBxDFs++;
-        //OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
+        //if (launchIndex != NULL)
+        //    OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
         return 1;
     }
 

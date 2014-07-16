@@ -6,6 +6,7 @@
 #include "renderer/device_common.h"
 #include "renderer/reflection.h"
 #include "renderer/helpers/samplers.h"
+#include "math/DifferentialGeometry.h"
 #include "config.h"
 
 
@@ -36,7 +37,8 @@ public:
         // BxDF types
         Lambertian            = 1 << 5,
         SpecularReflection    = 1 << 6,
-        SpecularTransmission  = 1 << 7
+        SpecularTransmission  = 1 << 7,
+        Phong                 = 1 << 8
     };
 
 private:
@@ -238,8 +240,127 @@ public:
 
 
 
+#define EPS_PHONG 1e-3f
 
-class SpecularReflection : public BxDF {
+class Phong : public BxDF 
+{
+    //private:
+public:
+    optix::float3  _reflectance;
+    float          _exponent;
+
+public:
+    RT_FUNCTION Phong( const optix::float3 & aReflectance, const float aExponent ) :
+        BxDF(BxDF::Type( BxDF::Phong | BxDF::Reflection | BxDF::Glossy )),
+        _reflectance(aReflectance), _exponent(aExponent) {  }
+
+    RT_FUNCTION float reflectProbability() const
+    {
+        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+    }
+
+    RT_FUNCTION float transmitProbability() const
+    {
+        return 0.f;
+    }
+
+    // Evaluates brdf, returns pdf if oPdf is not NULL
+    RT_FUNCTION optix::float3 f( const optix::float3 & aWo,
+                                 const optix::float3 & aWi,
+                                 float * oPdfW = NULL  ) const
+    {
+        using namespace optix;
+
+        const float3 reflLocalDirIn = localReflect(aWo);
+        const float dot_R_Wi = dot(reflLocalDirIn, aWi);
+
+        if (dot_R_Wi <= EPS_PHONG)
+            return make_float3(0.f);
+
+        if (oPdfW)
+            *oPdfW = powerCosHemispherePdfW(reflLocalDirIn, aWi, _exponent);
+
+        float3 rho = _reflectance * (_exponent + 2.f) * 0.5f * M_1_PIf;
+        return rho * powf(dot_R_Wi, _exponent);
+    }
+
+    RT_FUNCTION float pdf( const optix::float3 & aWo, // dirFix for VCN
+                           const optix::float3 & aWi, // dirGen
+                           const bool            aEvalReverse = false ) const
+    {
+        using namespace optix;
+        const float3 reflLocalDirIn = localReflect(aWo);
+        const float dot_R_Wi = dot(reflLocalDirIn, aWi);
+
+        if (dot_R_Wi <= EPS_PHONG)
+            return 0.f;
+
+        return powerCosHemispherePdfW(reflLocalDirIn, aWi, _exponent);
+    }
+
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
+                                       optix::float3       * oWi,
+                                       const optix::float2 & aSample,
+                                       float               * oPdfW,
+                                       const bool            aRadianceFromCamera = false ) const
+    {
+        using namespace optix;
+
+        *oWi = samplePowerCosHemisphereW(aSample, _exponent, NULL);
+        
+        // Comment from SmallVCN:
+        // Due to numeric issues in MIS, we actually need to compute all pdfs
+        // exactly the same way all the time!!!
+        const float3 reflLocalDirIn = localReflect(aWo);
+        {
+            DifferentialGeometry dg;
+            dg.SetFromNormal(reflLocalDirIn);
+            *oWi = dg.ToWorld(*oWi);   // sampled dir transformed to local frame
+        }
+
+        const float dot_R_Wi = dot(reflLocalDirIn, *oWi);
+        
+        if (dot_R_Wi <= EPS_PHONG)
+            return make_float3(0.f);
+
+        if (oPdfW)
+            *oPdfW = pdf(aWo, *oWi);
+
+        float3 rho = _reflectance * (_exponent + 2.f) * 0.5f * M_1_PIf;
+        return rho * powf(dot_R_Wi, _exponent);
+    }
+
+    RT_FUNCTION optix::float3 rho( unsigned int  aNSamples,
+                                   const float * aSamples1,
+                                   const float * aSamples2 ) const
+    {
+        return _reflectance * (_exponent + 2.f) * 0.5f * M_1_PIf;
+    }
+
+
+    // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float               * oDirectPdfW = NULL,
+                                    float               * oReversePdfW = NULL ) const
+    {
+        using namespace optix;
+        float pdf;
+        float3 f = this->f(aWo, aWi, &pdf);        
+        if (oDirectPdfW)  *oDirectPdfW = pdf;
+        if (oReversePdfW)  *oReversePdfW = pdf;
+        return f;
+    }
+};
+
+
+
+class SpecularReflection : public BxDF 
+{
+private:
+    optix::float3  _reflectance;
+    char           _fresnel[MAX_FRESNEL_SIZE];
+
 public:
     RT_FUNCTION SpecularReflection(const optix::float3 & aReflectance, Fresnel * aFresnel) :
         BxDF(BxDF::Type(BxDF::SpecularReflection | BxDF::Reflection | BxDF::Specular)),
@@ -262,7 +383,7 @@ public:
 
     RT_FUNCTION float reflectProbability() const
     {
-        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
     RT_FUNCTION float transmitProbability() const
@@ -296,10 +417,6 @@ public:
         F = F * _reflectance / fabsf(localCosTheta(*oWi));
         return F;
     }
-
-private:
-    optix::float3  _reflectance;
-    char           _fresnel[MAX_FRESNEL_SIZE];
 };
 
 
@@ -307,6 +424,10 @@ private:
 
 class SpecularTransmission : public BxDF 
 {
+private:
+    optix::float3      m_transmittance;
+    FresnelDielectric  m_fresnel;
+
 public:
     RT_FUNCTION SpecularTransmission(const optix::float3 & transmittance, float ei, float et) :
         BxDF(BxDF::Type(BxDF::SpecularTransmission | BxDF::Transmission | BxDF::Specular)),
@@ -374,11 +495,7 @@ public:
         else
             return /*(ei*ei)/(et*et) * */ R * m_transmittance / fabsf(localCosTheta(*oWi));
     }
-
-private:
-    optix::float3      m_transmittance;
-    FresnelDielectric  m_fresnel;
 };
 
 
-static const unsigned int  MAX_BXDF_SIZE  = sizeof(SpecularTransmission);
+static const unsigned int  MAX_BXDF_SIZE  = sizeof(SpecularReflection);

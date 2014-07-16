@@ -31,9 +31,11 @@
 #include "renderer/BxDF.h"
 #include "renderer/BSDF.h"
 
-#define OPTIX_PRINTF_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
+#define OPTIX_PRINTFC_ENABLED 0
+#define OPTIX_PRINTFCID_ENABLED 0
 
 using namespace optix;
 
@@ -51,7 +53,6 @@ rtBuffer<Photon, 1> photons;
 rtBuffer<Hitpoint, 2> raytracePassOutputBuffer;
 rtDeclareVariable(rtObject, sceneRootObject, , );
 rtDeclareVariable(uint, maxPhotonDepositsPerEmitted, , );
-rtDeclareVariable(float3, Kd, , );
 
 #if ACCELERATION_STRUCTURE == ACCELERATION_STRUCTURE_STOCHASTIC_HASH
 rtDeclareVariable(uint3, photonsGridSize, , );
@@ -61,10 +62,13 @@ rtDeclareVariable(unsigned int, photonsSize,,);
 rtBuffer<unsigned int, 1> photonsHashTableCount;
 #endif
 
+rtDeclareVariable(float3, Kd, , );
+rtDeclareVariable(float3, Ks, , );
+rtDeclareVariable(float, exponent, , );
 
-/*
+// TODO Implement coorectly PT and PPM here, now behave as it was Diffuse
+
 // Radiance Program
-*/
 RT_PROGRAM void closestHitRadiance()
 {
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -83,9 +87,8 @@ RT_PROGRAM void closestHitRadiance()
     }
 }
 
-/*
+
 // Photon Program
-*/
 RT_PROGRAM void closestHitPhoton()
 {
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
@@ -133,11 +136,9 @@ RT_PROGRAM void closestHitPhoton()
 
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vertex Connection and Merging
-#define OPTIX_PRINTF_ENABLED 0
-#define OPTIX_PRINTFI_ENABLED 0
-#define OPTIX_PRINTFID_ENABLED 0
 
 rtDeclareVariable(Camera,     camera, , );
 rtDeclareVariable(float2,     pixelSizeFactor, , );
@@ -161,7 +162,6 @@ rtDeclareVariable(int,  lightSubpathVertexIndexBufferId, , ); // rtBufferId<uint
 rtDeclareVariable(float, vertexPickPdf, , );                // used for uniform vertex sampling
 #endif
 
-
 rtDeclareVariable(float, lightSubpathCount, , );
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
@@ -183,8 +183,16 @@ RT_PROGRAM void vcmClosestHitLight()
     // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
     // see [Veach PhD section 5.3]
     LightBSDF lightBsdf = LightBSDF(worldGeometricNormal, -ray.direction);
-    Lambertian lambertian(Kd);
-    lightBsdf.AddBxDF(&lambertian);
+    Lambertian lamb(Kd);
+    lightBsdf.AddBxDF(&lamb);
+    Phong phong(Ks, exponent);
+    lightBsdf.AddBxDF(&phong);
+    
+    const Phong* ph = reinterpret_cast<const Phong*>(lightBsdf.bxdfAt(1));
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C -        phong Kr  % 14f % 14f % 14f\n",  ph->_reflectance.x, ph->_reflectance.y, ph->_reflectance.z);
+    
+    const Lambertian* la = reinterpret_cast<const Lambertian*>(lightBsdf.bxdfAt(0));
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C -   lambertian Kd     % 14f % 14f % 14f\n", la->_reflectance.x, la->_reflectance.y, la->_reflectance.z);
 
     lightHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
         lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
@@ -212,10 +220,12 @@ RT_PROGRAM void vcmClosestHitCamera()
     // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
     // see [Veach PhD section 5.3]
     CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
-    Lambertian lambertian(Kd);
-    cameraBsdf.AddBxDF(&lambertian);
+    Lambertian lamb(Kd);
+    cameraBsdf.AddBxDF(&lamb);
+    Phong phong(Ks, exponent);
+    cameraBsdf.AddBxDF(&phong);    
 
-    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - incident Kd     % 14f % 14f % 14f\n", Kd.x, Kd.y, Kd.z);
+    //OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - incident Kr     % 14f % 14f % 14f\n", Kr.x, Kr.y, Kr.z);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
     rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);

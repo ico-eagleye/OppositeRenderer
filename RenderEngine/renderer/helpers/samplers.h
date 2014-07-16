@@ -89,47 +89,42 @@ RT_FUNCTION float CosHemispherePdfW(const optix::float3  &aNormal, const optix::
 }
 
 
+RT_FUNCTION float powerCosHemispherePdfW( const optix::float3 & aNormal,
+                                          const optix::float3 & aDirection,
+                                          const float           aPower )
+{
+    const float cosTheta = optix::fmaxf(0.f, optix::dot(aNormal, aDirection));
+    return (aPower + 1.f) * powf(cosTheta, aPower) * (M_1_PIf * 0.5f);
+}
+
+RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamples,
+                                                     const float           aPower,
+                                                     float               * oPdfW )
+{
+    using namespace optix;
+    const float term1 = 2.f * M_1_PIf * aSamples.x;
+    const float term2 = powf(aSamples.y, 1.f / (aPower + 1.f));
+    const float term3 = sqrt(1.f - term2 * term2);
+
+    if (oPdfW)
+    {
+        *oPdfW = (aPower + 1.f) * powf(term2, aPower) * (0.5f * M_1_PIf);
+    }
+
+    return make_float3( cosf(term1) * term3, sinf(term1) * term3, term2);
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // Utilities for converting PDF between Area (A) and Solid angle (W)
 // WtoA = PdfW * cosine / distance_squared
 // AtoW = PdfA * distance_squared / cosine
-RT_FUNCTION float PdfWtoA( const float aPdfW,
-                                              const float aDist,
-                                              const float aCosThere )
+RT_FUNCTION float pdfWtoA( const float aPdfW, const float aDist, const float aCosThere )
 {
     return aPdfW * std::abs(aCosThere) / sqr(aDist);
 }
 
-RT_FUNCTION float PdfAtoW( const float aPdfA,
-                                              const float aDist,
-                                              const float aCosThere )
+RT_FUNCTION float pdfAtoW( const float aPdfA, const float aDist, const float aCosThere )
 {
     return aPdfA * sqr(aDist) / std::abs(aCosThere);
 }
-
-// vmarz REMOVE
-// <Sampling code from Optix SDK>
-//Create ONB from normalized vector
-RT_FUNCTION static void createONB( 
-    const optix::float3& n, optix::float3& U, optix::float3& V)
-{
-  using namespace optix;
-
-  U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
-  if ( dot(U, U) < 1.e-3f )
-      U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
-  U = normalize( U );
-  V = cross( n, U );
-}
-
-
-optix::float3 __device__ __inline__ sampleHemisphereCosOptix(optix::float3 normal, optix::float2 rnd)
-{
-    using namespace optix;
-    float3 p;
-    cosine_sample_hemisphere(rnd.x, rnd.y, p);
-    float3 v1, v2;
-    createONB(normal, v1, v2);
-    return v1 * p.x + v2 * p.y + normal * p.z;  
-}
-// </Sampling code from Optix SDK>

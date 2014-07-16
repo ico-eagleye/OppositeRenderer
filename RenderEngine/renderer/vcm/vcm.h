@@ -216,8 +216,8 @@ RT_FUNCTION void sampleScattering( SubpathPRD                   & aSubpathPrd,
     }
 
     //next event
-    float bsdfDirPdfW;
-    float cosThetaOut;
+    float bsdfDirPdfW = 0.f;
+    float cosThetaOut = 0.f;
     float3 bsdfSample = getRandomUniformFloat3(&aSubpathPrd.randomState);
     BxDF::Type sampledEvent;
     float3 bsdfFactor = aBsdf.vcmSampleF(&aSubpathPrd.direction, bsdfSample, &bsdfDirPdfW, &cosThetaOut, BxDF::All, &sampledEvent); // CUDA 6 fails here
@@ -470,8 +470,8 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
         return;
 
     // Convert solid angle pdfs to area pdfs
-    const float cameraBsdfDirPdfA = PdfWtoA(cameraBsdfDirPdfW, distance, cameraCosTheta);
-    const float lightBsdfDirPdfA = PdfWtoA(lightBsdfDirPdfW, distance, lightCosTheta);
+    const float cameraBsdfDirPdfA = pdfWtoA(cameraBsdfDirPdfW, distance, cameraCosTheta);
+    const float lightBsdfDirPdfA = pdfWtoA(lightBsdfDirPdfW, distance, lightCosTheta);
 
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  - camBsdfDirPdfA = (camBsdfDirPdfW *       cosLight) / sqr (      distance) \n");
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  - % 14f = (% 14f * % 14f) / sqr (% 14f) \n",
