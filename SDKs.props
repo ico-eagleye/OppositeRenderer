@@ -5,8 +5,8 @@
     <QTDIR32>C:\Qt\5.2.1\msvc2010_opengl</QTDIR32>
     <!-- <QTDIR32>C:\Qt\5.3\msvc2010_opengl</QTDIR32> -->
     
-    <!-- <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER> -->
-    <OPTIX_USE_VER>3.5.1</OPTIX_USE_VER>
+    <OPTIX_USE_VER>3.6.0</OPTIX_USE_VER>
+    <!-- <OPTIX_USE_VER>3.5.1</OPTIX_USE_VER> -->
     <!-- <CUDA_USE_VER>6.0</CUDA_USE_VER> -->
     <CUDA_USE_VER>5.5</CUDA_USE_VER>
     
