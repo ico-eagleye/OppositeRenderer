@@ -226,7 +226,6 @@ RT_PROGRAM void vcmClosestHitLight()
     float4 texColor4 = tex2D( diffuseSampler, textureCoordinate.x, textureCoordinate.y );
     float3 texColor = make_float3(texColor4.x, texColor4.y, texColor4.z);
     
-    Lambertian lambertian = Lambertian(texColor);
     DifferentialGeometry dgShading;
     dgShading.SetFromNormal(normal);    
     LightBSDF lightBsdf = LightBSDF(dgShading, geometricNormal, -ray.direction);
