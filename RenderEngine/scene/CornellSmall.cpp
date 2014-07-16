@@ -272,7 +272,7 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     }
     
     // Small glass sphere right
-    if ((m_config & Config::SmallMirrorSphere))
+    if ((m_config & Config::SmallGlassSphere))
     {
         float radius = 0.5;
         SphereInstance sphere = SphereInstance(glass, Sphere(Vector3(1.25f - 0.535714269f, radius, 1.25f), radius));
@@ -280,7 +280,7 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     }
 
     // Small mirror sphere left
-    if ((m_config & Config::SmallGlassSphere))
+    if ((m_config & Config::SmallMirrorSphere))
     {
         float radius = 0.5;
         SphereInstance sphere = SphereInstance(mirror, Sphere(Vector3(1.25f + 0.535714269f, radius, 1.25f), radius));
