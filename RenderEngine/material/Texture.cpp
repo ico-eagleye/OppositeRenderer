@@ -70,6 +70,8 @@ optix::Material Texture::getOptixMaterial(optix::Context & context)
         m_optixMaterial->setClosestHitProgram(RayType::RADIANCE_IN_PARTICIPATING_MEDIUM, radianceProgram);
         m_optixMaterial->setClosestHitProgram(RayType::PHOTON, photonProgram);
         m_optixMaterial->setClosestHitProgram(RayType::PHOTON_IN_PARTICIPATING_MEDIUM, photonProgram);
+        m_optixMaterial->setClosestHitProgram(RayType::LIGHT_VCM, context->createProgramFromPTXFile( "Texture.cu.ptx", "vcmClosestHitLight"));
+        m_optixMaterial->setClosestHitProgram(RayType::CAMERA_VCM, context->createProgramFromPTXFile( "Texture.cu.ptx", "vcmClosestHitCamera"));
         m_optixMaterial->validate();
         this->registerMaterialWithShadowProgram(context, m_optixMaterial);
         m_optixMaterialIsCreated = true;
