@@ -59,5 +59,6 @@
     <Message Importance="High" Text="OptixLibDir     : '$(OptixLibDir)'" />
     <Message Importance="High" Text="QTDIR           : '$(QTDIR)'" />
     <Message Importance="High" Text="QTDIR32         : '$(QTDIR32)'" />
+    <Message Importance="High" Text="Assimp          : '$(ASSIMP_PATH)'" />
   </Target> 
 </Project>
