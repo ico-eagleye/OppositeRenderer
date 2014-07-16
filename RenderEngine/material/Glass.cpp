@@ -10,10 +10,11 @@
 bool Glass::m_optixMaterialIsCreated = false;
 optix::Material Glass::m_optixMaterial;
 
-Glass::Glass( float indexOfRefraction, const Vector3 & Kr )
+Glass::Glass( float indexOfRefraction, const Vector3 & Kr, const Vector3 & Kt )
 {
     this->indexOfRefraction = indexOfRefraction;
     this->Kr = Kr;
+    this->Kt = Kt;
 }
 
 optix::Material Glass::getOptixMaterial(optix::Context & context)
@@ -56,4 +57,5 @@ void Glass::registerGeometryInstanceValues(optix::GeometryInstance & instance )
     instance["indexOfRefraction"]->setFloat(this->indexOfRefraction);
     //instance["Kd"]->setFloat( 0, 0 , 0 );
     instance["Kr"]->setFloat(this->Kr);
+    instance["Kt"]->setFloat(this->Kt);
 }

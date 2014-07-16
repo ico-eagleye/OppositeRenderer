@@ -41,6 +41,7 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 
 // Closest hit material
 rtDeclareVariable(float3, Kr, , );
+rtDeclareVariable(float3, Kt, , );
 rtDeclareVariable(float, indexOfRefraction, , );
 rtDeclareVariable(float3, geometricNormal, attribute geometricNormal, ); 
 rtDeclareVariable(float3, shadingNormal, attribute shadingNormal, ); 
@@ -267,12 +268,28 @@ RT_PROGRAM void vcmClosestHitLight()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
-    if (isZero(Kr))
+    bool krBlack = isZero(Kr);
+    bool ktBlack = isZero(Kt);
+    if (krBlack && ktBlack)
+    {
+        subpathPrd.done = true;
         return;
-    
-    SpecularTransmission transmission(Kr, ior.n1 , ior.n2);
+    }
+
     LightBSDF lightBsdf = LightBSDF(N, -ray.direction);
-    lightBsdf.AddBxDF(&transmission);
+
+    if (!ktBlack)
+    {
+        SpecularTransmission transmission(Kt, ior.n1 , ior.n2);    
+        lightBsdf.AddBxDF(&transmission);
+    }
+
+    if (!krBlack)
+    {
+        FresnelDielectric fresnel(ior.n1 , ior.n2);
+        SpecularReflection reflection(Kr, &fresnel); 
+        lightBsdf.AddBxDF(&reflection);
+    }
 
     lightHit(sceneRootObject, subpathPrd, hitPoint, N, lightBsdf, ray.direction, tHit, maxPathLen,
         lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
@@ -309,12 +326,28 @@ RT_PROGRAM void vcmClosestHitCamera()
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
 
-    if (isZero(Kr))
+    bool krBlack = isZero(Kr);
+    bool ktBlack = isZero(Kt);
+    if (krBlack && ktBlack)
+    {
+        subpathPrd.done = true;
         return;
-    
-    SpecularTransmission transmission(Kr, ior.n1 , ior.n2);
+    }
+
     CameraBSDF cameraBsdf = CameraBSDF(N, -ray.direction);
-    cameraBsdf.AddBxDF(&transmission);
+
+    if (!ktBlack)
+    {
+        SpecularTransmission transmission(Kt, ior.n1 , ior.n2);    
+        cameraBsdf.AddBxDF(&transmission);
+    }
+
+    if (!krBlack)
+    {;
+        FresnelDielectric fresnel(ior.n1 , ior.n2);
+        SpecularReflection reflection(Kr, &fresnel); 
+        cameraBsdf.AddBxDF(&reflection);
+    }
 
     cameraHit(sceneRootObject, subpathPrd, hitPoint, N, cameraBsdf, ray.direction, tHit, maxPathLen,
          misVcWeightFactor, misVmWeightFactor, 

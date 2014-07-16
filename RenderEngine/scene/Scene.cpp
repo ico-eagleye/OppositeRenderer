@@ -232,7 +232,7 @@ void Scene::loadSceneMaterials()
         if(material->Get(AI_MATKEY_REFRACTI, indexOfRefraction) == AI_SUCCESS && indexOfRefraction > 1.0f)
         {
             //printf("\tGlass: IOR: %g\n", indexOfRefraction);
-            Material* material = new Glass(indexOfRefraction, optix::make_float3(1,1,1));
+            Material* material = new Glass(indexOfRefraction, optix::make_float3(1,1,1), optix::make_float3(1,1,1));
             m_materials.push_back(material);
             continue;
         }

@@ -116,7 +116,7 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
 
     Mirror mirror = Mirror(optix::make_float3(1.f,1.f,1.f));
     Glossy glossyWhite = Glossy(optix::make_float3(.1f,.1f,.1f), optix::make_float3(.7f,.7f,.7f), 90.f);
-    Glass glass = Glass(1.6, optix::make_float3(1.f,1.f,1.f));
+    Glass glass = Glass(1.6, optix::make_float3(1.f,1.f,1.f), optix::make_float3(1.f,1.f,1.f) );
     DiffuseEmitter emitter = DiffuseEmitter(m_sceneLights[0].power, Vector3(1));
 
     // Set up materials
