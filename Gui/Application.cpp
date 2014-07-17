@@ -32,17 +32,12 @@ Application::Application(QApplication & qApplication) :
     
     m_outputSettingsModel.setWidth(512);
     m_outputSettingsModel.setHeight(512);
-    //m_outputSettingsModel.setWidth(128);
-    //m_outputSettingsModel.setHeight(128);
-    //m_outputSettingsModel.setWidth(2);
-    //m_outputSettingsModel.setHeight(2);
-    //m_outputSettingsModel.setWidth(10);
-    //m_outputSettingsModel.setHeight(10);
     m_outputSettingsModel.setGamma(2.2f);
     m_PPMSettingsModel.setPPMInitialRadius(0.20);
     //m_sceneManager.setScene("Cornell");
-    m_sceneManager.setScene("CornellSmall");
-
+    //m_sceneManager.setScene("CornellSmall");
+    //m_sceneManager.setScene("CornellSmallLightUpwards");
+    
     connect(&m_outputSettingsModel, SIGNAL(resolutionUpdated()), this, SLOT(onOutputSettingsUpdated()));
     connect(&m_PPMSettingsModel, SIGNAL(updated()), this, SLOT(onPPMSettingsUpdated()));
 
