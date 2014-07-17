@@ -459,6 +459,12 @@ protected:
             return optix::make_float3(0.0f);
         }
 
+        if (matchedBxdfPickProbSum == 0.f) 
+        {
+            *oPdfW = 0.0f;
+            return optix::make_float3(0.0f);
+        }
+
         // Transform.
         optix::float3 wo = _diffGemetry.ToLocal(aWorldWo);
 
@@ -572,8 +578,7 @@ public:
         {
             return make_float3(0.f);
         }
-
-        oCosThetaGen = abs(localDirGen.z);
+        oCosThetaGen = localDirGen.z;
 
         // Calculate f.
         if (dot(_geometricNormal, aWorldDirGen) * dot(_geometricNormal, worldDirFix) >= 0.0f)  
@@ -581,10 +586,13 @@ public:
         else
             aSampleType = BxDF::Type(aSampleType & ~BxDF::Reflection);        // ignore BRDF
         
+        float matchedBxdfPickProbSum = sumContProb(aSampleType);
+        if (matchedBxdfPickProbSum == 0.f) return optix::make_float3(0.0f);
+
         // Sum all matched BxDF's f and probability
         float3 f = optix::make_float3(0.0f);
         float dPdfW, rPdfW;
-        int numMatched = 0;
+        //int numMatched = 0;
 
         for (unsigned int i = 0; i < _nBxDFs; ++i)
         {
@@ -592,28 +600,31 @@ public:
             {
                 dPdfW = rPdfW = 0.f;
                 CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, +=, bxdfAt(i), vcmF, _localDirFix, localDirGen, &dPdfW, &rPdfW);
+                // scale by bxdf picking probability
+                dPdfW *= _bxdfPickProb[i] / matchedBxdfPickProbSum;
+                rPdfW *= _bxdfPickProb[i] / matchedBxdfPickProbSum;
                 if (oDirectPdfW) *oDirectPdfW += dPdfW;
                 if (oReversePdfW) *oReversePdfW += rPdfW;
-                numMatched++;
+                //numMatched++;
                 if (dbgLaunchIndex)
                 {
-                    OPTIX_PRINTFI( (*dbgLaunchIndex), "vcmF  -           dPdfW % 14f          rPdfW % 14f \n",
-                        dPdfW, rPdfW );
+                    OPTIX_PRINTFI( (*dbgLaunchIndex), "vcmF  -           dPdfW % 14f          rPdfW % 14f \n", dPdfW, rPdfW );
                 }
+
             }
         }
 
-        if (1 < numMatched)
-        {
-            if (oDirectPdfW) *oDirectPdfW /= static_cast<float>(numMatched);
-            if (oReversePdfW) *oReversePdfW /= static_cast<float>(numMatched);
-        }
+        //if (1 < numMatched)
+        //{
+        //    if (oDirectPdfW) *oDirectPdfW /= static_cast<float>(numMatched);
+        //    if (oReversePdfW) *oReversePdfW /= static_cast<float>(numMatched);
+        //}
         //OPTIX_PRINTF("vcmF - _nBxDFs %d numMatched %d f %f %f %f \n", _nBxDFs, numMatched, f.x, f.y, f.z);
-        if (dbgLaunchIndex)
-        {
-            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14u     numMatched % 14d \n", _nBxDFs, numMatched);            
-            OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -          bsdf F % 14f % 14f % 14f \n", f.x, f.y, f.z);
-        }
+        //if (dbgLaunchIndex)
+        //{
+        //    OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -         _nBxDFs % 14u     numMatched % 14d \n", _nBxDFs, numMatched);            
+        //    OPTIX_PRINTFI((*dbgLaunchIndex), "vcmF  -          bsdf F % 14f % 14f % 14f \n", f.x, f.y, f.z);
+        //}
 
         return f;
     }
