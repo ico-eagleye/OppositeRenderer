@@ -318,8 +318,8 @@ public:
         //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
         //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
         float rrContProb = 0.f;
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, reflectProbability, _localDirFix); // TODO rename scatterReflectance
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, transmitProbability, _localDirFix); 
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, continuationProb, _localDirFix); // TODO rename scatterReflectance
+
         // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
         // to make sure the weight of sample never rise
         _continuationProb = optix::fminf(1.f, _continuationProb + rrContProb);
@@ -377,16 +377,23 @@ protected:
 
 public:
     // Evaulates pdf for given direction, returns reverse pdf if aEvalRevPdf == true
-    // Specular BxDFs are ignored
-    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, bool aEvalRevPdf ) const
+    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, bool aEvalRevPdf, BxDF::Type aSampleType = BxDF::AllType) const
     {      
-        optix::float3 wo = _diffGemetry.ToLocal(oWorldDirGen);
+        optix::float3 wi = _diffGemetry.ToLocal(oWorldDirGen);
+
+        float matchedBxdfPickProbSum = sumContProb(aSampleType);
+        if (matchedBxdfPickProbSum == 0.f) return 0.f;
 
         float pdf = 0.f;
         for(int i=0; i < _nBxDFs; i++)
         {
-            if ( !(bxdfAt(i)->type() & BxDF::Specular) )
-                CALL_BXDF_CONST_VIRTUAL_FUNCTION(pdf, +=, bxdfAt(i), pdf, _localDirFix, wo, true);
+            if (bxdfAt(i)->matchFlags(aSampleType))
+            {
+                float compPdf = 0.f;
+                CALL_BXDF_CONST_VIRTUAL_FUNCTION(compPdf, +=, bxdfAt(i), pdf, _localDirFix, wi, true);
+                // scale by bxdf picking probability
+                pdf += compPdf *_bxdfPickProb[i] / matchedBxdfPickProbSum;
+            }
         }
         return pdf;
     }
