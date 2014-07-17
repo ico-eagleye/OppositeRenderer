@@ -57,9 +57,9 @@ public:
     RT_FUNCTION FresnelNoOp() : Fresnel(NoOp) {  }
 
 public:
-    RT_FUNCTION optix::float3 evaluate(float) const
+    RT_FUNCTION float evaluate(float) const
     {
-        return optix::make_float3(1.0f);
+        return 1.0f;
     }
 
 };
@@ -97,7 +97,7 @@ public:
     RT_FUNCTION FresnelDielectric(float ei, float et) : Fresnel(Fresnel::Dielectric),
         eta_i(ei), eta_t(et) {  }
 
-    RT_FUNCTION optix::float3 evaluate(float cosi) const 
+    RT_FUNCTION float evaluate(float cosi) const 
     {
         using namespace optix;
 
@@ -111,18 +111,21 @@ public:
 
         // Compute _sint_ using Snell's law
         float sint = ei/et * sqrtf(fmaxf(0.0f, 1.0f - cosi*cosi));
-        if (sint >= 1.0f) {
+        if (sint >= 1.0f)
+        {
             // Handle total internal reflection
-            return optix::make_float3(1.0f);
-        } else {
+            return 1.0f;
+        }
+        else 
+        {
             cosi = fabsf(cosi);
             float cost = sqrtf(fmaxf(0.0f, 1.0f - sint*sint));
-            optix::float3 Rparl = optix::make_float3(
+            float Rparl = 
                 ((et * cosi) - (ei * cost)) /
-                ((et * cosi) + (ei * cost)));
-            optix::float3 Rperp = optix::make_float3(
+                ((et * cosi) + (ei * cost));
+            float Rperp = 
                 ((ei * cosi) - (et * cost)) /
-                ((ei * cosi) + (et * cost)));
+                ((ei * cosi) + (et * cost));
             return (Rparl*Rparl + Rperp*Rperp) * 0.5f;
         }
     }
