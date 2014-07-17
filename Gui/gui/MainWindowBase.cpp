@@ -287,7 +287,7 @@ void MainWindowBase::onActionOpenBuiltInSceneCornellSmallSmallSpheres()
 
 void MainWindowBase::onActionOpenBuiltInSceneCornellSmallUpwardsLight()
 {
-    loadSceneByName(QString("CornellSmall"));
+    loadSceneByName(QString("CornellSmallLightUpwards"));
 }
 
 void MainWindowBase::onRenderRestart()

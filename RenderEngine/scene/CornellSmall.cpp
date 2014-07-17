@@ -22,11 +22,19 @@
 
 void CornellSmall::initialize()
 {
-    if ((m_config & Config::LightArea) != 0)
+    if ( ((m_config & Config::LightArea) != 0) || 
+         ((m_config & Config::LightAreaUpwards) != 0) )
     {
         optix::float3 anchor = optix::make_float3( 1.f, 2.499f, 1.f);
         optix::float3 v1 = optix::make_float3( 0.5f, 0.0f, 0.0f);
         optix::float3 v2 = optix::make_float3( 0.0f, 0.0f, 0.5f);
+        if ((m_config & Config::LightAreaUpwards) != 0)
+        {
+            optix::float3 t = v1;
+            v1 = v2;
+            v2 = t;
+            anchor -= optix::make_float3( 0.0f, .1f, 0.f);
+        }
         //optix::float3 power = optix::make_float3( 0.5e6f, 0.4e6f, 0.2e6f );
         //optix::float3 power = optix::make_float3( 0.75f * 5.f );
         //optix::float3 power = optix::make_float3( M_PIf );
@@ -248,7 +256,8 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
     }
 
     // Area light
-    if ((m_config & Config::LightArea) != 0)
+    if ( ((m_config & Config::LightArea) != 0) || 
+         ((m_config & Config::LightAreaUpwards) != 0) )
     {
         emitter.setInverseArea(m_sceneLights[0].inverseArea);
         for(int i = 0; i < m_sceneLights.size(); i++)

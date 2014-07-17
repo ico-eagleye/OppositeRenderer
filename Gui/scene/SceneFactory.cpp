@@ -38,6 +38,10 @@ IScene* SceneFactory::getSceneByName( const char* name )
         return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | CornellSmall::FloorGlossy |
                                 CornellSmall::LightPointStrong | CornellSmall::SmallGlassSphere | CornellSmall::SmallMirrorSphere);
     }
+    else if (strcmp(name, "CornellSmallLightUpwards") == 0)
+    {
+        return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | CornellSmall::LightAreaUpwards );
+    }
     else
     {
         return Scene::createFromFile(name);
