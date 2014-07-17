@@ -667,7 +667,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 #pragma endregion PROGRESSIVE PHOTON MAPPING
 
         }
-        else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
+        else if (renderMethod == RenderMethod::VCM_BIDIRECTIONAL_PATH_TRACING)
         {
             const unsigned int cameraSubPathCount = m_width * m_height;
             const unsigned int lightSubPathCount = m_lightPassLaunchWidth * m_lightPassLaunchHeight;

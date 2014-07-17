@@ -154,7 +154,7 @@ void MainWindowBase::onChangeRenderMethodPT()
 
 void MainWindowBase::onChangeRenderMethodVCM()
 {
-    m_application.setRenderMethod(RenderMethod::BIDIRECTIONAL_PATH_TRACING);
+    m_application.setRenderMethod(RenderMethod::VCM_BIDIRECTIONAL_PATH_TRACING);
     if (m_application.getSceneManager().getStatus() == SceneManagerStatus::HAS_SCENE)
         emit renderRestart();
 }
@@ -218,7 +218,7 @@ void MainWindowBase::onRenderMethodChanged()
     }
     else
     {
-        str = "Bidirectional Path Tracing";
+        str = "VCM Bidirectional Path Tracing";
     }
 
     m_statusbar_renderMethodLabel->setText(QString("Render method: ") + str);
