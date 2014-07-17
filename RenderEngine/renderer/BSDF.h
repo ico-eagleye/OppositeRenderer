@@ -27,9 +27,14 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
-
-// BSDF, BxDF, Fresnel code is partially based on pbrt, idea of "fake virtual" functions via macros
-// borrowed from https://github.com/LittleCVR/MaoPPM
+/* 
+ * Copyright (c) 2014 Opposite Renderer
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+ *
+ * BSDF, BxDF, Fresnel code is partially based on pbrt, idea of "fake virtual" functions via macros
+ * borrowed from https://github.com/LittleCVR/MaoPPM
+*/
 
 #pragma once
 
