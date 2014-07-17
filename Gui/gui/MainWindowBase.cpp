@@ -275,6 +275,11 @@ void MainWindowBase::onActionOpenBuiltInSceneCornellSmall()
     loadSceneByName(QString("CornellSmall"));
 }
 
+void MainWindowBase::onActionOpenBuiltInSceneCornellSmallNoBlocks()
+{
+    loadSceneByName(QString("CornellSmallNoBlocks"));
+}
+
 void MainWindowBase::onActionOpenBuiltInSceneCornellSmallLargeSphere()
 {
     loadSceneByName(QString("CornellSmallLargeSphere"));
