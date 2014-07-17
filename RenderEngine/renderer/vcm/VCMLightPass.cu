@@ -130,6 +130,7 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     aLightPrd.dVM = 0.f;
     aLightPrd.dVCM = 0.f;
     aLightPrd.done = false;
+    aLightPrd.isSpecularPath = true;
     aLightPrd.randomState = randomStates[launchIndex];
     lightSubpathLengthBuffer[launchIndex] = 0u;
 

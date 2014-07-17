@@ -145,6 +145,7 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     aCameraPrd.dVC = 0;
     aCameraPrd.dVM = 0;
     aCameraPrd.dVCM = 0;
+    aCameraPrd.isSpecularPath = true;
 #if VCM_UNIFORM_VERTEX_SAMPLING
     aCameraPrd.dVC_unif_vert = 0;
 #endif
