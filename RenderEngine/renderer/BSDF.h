@@ -263,7 +263,7 @@ public:
 class VcmBSDF : public BSDF
 {
 private:
-    float         _bxdfPickProb [MAX_N_BXDFS]; // unscaled component continuation probabilities
+    float         _bxdfPickProb [MAX_N_BXDFS]; // unscaled component picking probabilities
     float         _continuationProb;           // Russian roulette probability
     bool          _dirFixIsLight;  // true if _localDirFix represents light incident direction
     optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to fixed incident dir stored 
@@ -317,16 +317,18 @@ public:
         //Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
         //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
         //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
-
-        // setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
-        float pickProb = 0.f;
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability, _localDirFix); // TODO rename scatterReflectance
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability, _localDirFix); 
-        _bxdfPickProb[_nBxDFs] = pickProb;
-
+        float rrContProb = 0.f;
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, reflectProbability, _localDirFix); // TODO rename scatterReflectance
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, transmitProbability, _localDirFix); 
         // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
         // to make sure the weight of sample never rise
-        _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
+        _continuationProb = optix::fminf(1.f, _continuationProb + rrContProb);
+
+        // setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
+        float albedo = 0.f;
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(albedo, +=, pBxDF, albedo, _localDirFix);
+        _bxdfPickProb[_nBxDFs] = albedo;
+
         _nBxDFs++;
         //if (launchIndex != NULL)
         //    OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
