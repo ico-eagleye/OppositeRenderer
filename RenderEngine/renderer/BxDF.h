@@ -261,7 +261,10 @@ public:
         const float dot_R_Wi = dot(reflLocalDirIn, aWi);
 
         if (dot_R_Wi <= EPS_PHONG)
+        {
+            if (oPdfW) *oPdfW = 0.f;
             return make_float3(0.f);
+        }
 
         if (oPdfW)
             *oPdfW = powerCosHemispherePdfW(reflLocalDirIn, aWi, _exponent);
@@ -293,7 +296,7 @@ public:
         using namespace optix;
 
         *oWi = samplePowerCosHemisphereW(aSample, _exponent, NULL);
-        
+
         // Comment from SmallVCN:
         // Due to numeric issues in MIS, we actually need to compute all pdfs
         // exactly the same way all the time!!!
@@ -307,7 +310,10 @@ public:
         const float dot_R_Wi = dot(reflLocalDirIn, *oWi);
         
         if (dot_R_Wi <= EPS_PHONG)
+        {
+            if (oPdfW) *oPdfW = 0.f;
             return make_float3(0.f);
+        }
 
         if (oPdfW)
             *oPdfW = pdf(aWo, *oWi);
@@ -330,8 +336,7 @@ public:
                                     float               * oDirectPdfW = NULL,
                                     float               * oReversePdfW = NULL ) const
     {
-        using namespace optix;
-        float pdf;
+        float pdf = 0.f;
         float3 f = this->f(aWo, aWi, &pdf);        
         if (oDirectPdfW)  *oDirectPdfW = pdf;
         if (oReversePdfW)  *oReversePdfW = pdf;
@@ -407,6 +412,18 @@ public:
         // BSDF is multiplied by cosThetaOut when computing throughput to scattered direction. It shouldn't
         // be done for specular reflection, hence predivide here to cancel it out
         return R * _reflectance / fabsf(localCosTheta(*oWi));
+    }
+
+    // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float               * oDirectPdfW = NULL,
+                                    float               * oReversePdfW = NULL ) const
+    {
+        float pdf = 0.f;      
+        if (oDirectPdfW)  *oDirectPdfW = pdf;
+        if (oReversePdfW)  *oReversePdfW = pdf;
+        return optix::make_float3(0.f);
     }
 };
 
@@ -491,6 +508,18 @@ public:
             return /*(ei*ei)/(et*et) * */ T * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
         else
             return /*(ei*ei)/(et*et) * */ T * _transmittance / fabsf(localCosTheta(*oWi));
+    }
+
+    // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float               * oDirectPdfW = NULL,
+                                    float               * oReversePdfW = NULL ) const
+    {
+        float pdf = 0.f;      
+        if (oDirectPdfW)  *oDirectPdfW = pdf;
+        if (oReversePdfW)  *oReversePdfW = pdf;
+        return optix::make_float3(0.f);
     }
 };
 
