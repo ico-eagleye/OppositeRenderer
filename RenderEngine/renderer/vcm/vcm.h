@@ -57,7 +57,7 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
 #define OPTIX_PRINTFCID_ENABLED 0
 RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
-                                  const LightBSDF       & aLightBsdf,
+                                  const VcmBSDF         & aLightBsdf,
                                   const optix::float3   & aLightHitpoint,
                                   const float           & aLightSubpathCount,
                                   const float             aMisVmWeightFactor,
@@ -196,14 +196,13 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
 
 
 #define OPTIX_PRINTFID_ENABLED 0
-template<bool tLightSample>
 RT_FUNCTION void sampleScattering( SubpathPRD                   & aSubpathPrd,
                                    const optix::float3          & aHitPoint, 
-                                   const VcmBSDF<tLightSample>  & aBsdf,
+                                   const VcmBSDF                & aBsdf,
                                    const float                    aMisVcWeightFactor,
                                    const float                    aMisVmWeightFactor )
 {
-    OPTIX_PRINTFID(aSubpathPrd.launchIndex, aSubpathPrd.depth, "Hit   - sampleScattering()  light? %d \n", tLightSample);
+    OPTIX_PRINTFID(aSubpathPrd.launchIndex, aSubpathPrd.depth, "Hit   - sampleScattering()  light? %d \n", aBsdf.dirFixIsLight());
 
     // Russian Roulette
     float contProb = aBsdf.continuationProb();
@@ -234,8 +233,8 @@ RT_FUNCTION void sampleScattering( SubpathPRD                   & aSubpathPrd,
     bool isSpecularEvent = BxDF::matchFlags(sampledEvent, BxDF::Specular);
     if (!isSpecularEvent)       // evaluate pdf for non-specular event, otherwise it is the same as direct pdf
         bsdfRevPdfW = aBsdf.pdf(aSubpathPrd.direction, true);
-    aSubpathPrd.isSpecularPath = (aSubpathPrd.isSpecularPath ||isSpecularEvent);
-
+    aSubpathPrd.isSpecularPath = (aSubpathPrd.isSpecularPath && isSpecularEvent);
+    OPTIX_PRINTFID(aSubpathPrd.launchIndex, aSubpathPrd.depth, "Hit   -prd.specularPath % 14d   sampledEvent % 14d \n", aSubpathPrd.isSpecularPath, sampledEvent);
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;
 
@@ -271,7 +270,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            SubpathPRD                   & aLightPrd,
                            const optix::float3          & aHitPoint, 
                            const optix::float3          & aWorldNormal,
-                           const LightBSDF              & aLightBsdf,
+                           const VcmBSDF                & aLightBsdf,
                            const optix::float3            aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                            const float                    aRayTHit,
                            const optix::uint              aMaxPathLen,
@@ -401,7 +400,7 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
 RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
                                   const LightVertex     & aLightVertex,
                                   SubpathPRD            & aCameraPrd,
-                                  const CameraBSDF      & aCameraBsdf,
+                                  const VcmBSDF         & aCameraBsdf,
                                   const optix::float3   & aCameraHitpoint,
                                   const float             aMisVmWeightFactor,
                                   const float const     * aVertexPickPdf = NULL )
@@ -548,7 +547,7 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
 RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootObject,
                                        const rtBufferId<Light, 1>   alightsBuffer,
                                        SubpathPRD                 & aCameraPrd,
-                                       const CameraBSDF           & aCameraBsdf,
+                                       const VcmBSDF              & aCameraBsdf,
                                        const optix::float3        & aCameraHitpoint,
                                        const float                  aMisVmWeightFactor,
                                        const float const          * aVertexPickPdf = NULL)
@@ -711,7 +710,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
                             const optix::float3                & aWorldNormal,
-                            const CameraBSDF                   & aCameraBsdf,
+                            const VcmBSDF                      & aCameraBsdf,
                             const optix::float3                  aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                             const float                          aRayTHit,
                             optix::uint                          aMaxPathLen,

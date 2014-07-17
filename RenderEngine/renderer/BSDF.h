@@ -207,21 +207,21 @@ public:
                                        const bool            aRadianceFromCamera = false ) const
     {
         // Count matched components.
-        //unsigned int nMatched = nBxDFs(aSampleType);
-        //if (nMatched == 0)
-        //{
-        //    *oPdfW = 0.0f;
-        //    if (oSampledType) *oSampledType = BxDF::Null;
-        //    return optix::make_float3(0.0f);
-        //}
+        unsigned int nMatched = nBxDFs(aSampleType);
+        if (nMatched == 0)
+        {
+            *oPdfW = 0.0f;
+            if (oSampledType) *oSampledType = BxDF::Null;
+            return optix::make_float3(0.0f);
+        }
 
-        //float matchedSumContProb = sumContProb(aSampleType);
+        float matchedSumContProb = sumContProb(aSampleType);
 
-        // Sample BxDF.
-        //unsigned int index = optix::min(nMatched-1,
-        //        static_cast<unsigned int>(floorf(aSmple.x * static_cast<float>(nMatched))));
-        unsigned int index = 0;
-        unsigned int nMatched = sampleBxDF(aSample.x, aSampleType, &index);
+        //Sample BxDF.
+        unsigned int index = optix::min(nMatched-1,
+        static_cast<unsigned int>(floorf(aSample.x * static_cast<float>(nMatched))));
+        //unsigned int index = 0;
+        //unsigned int nMatched = sampleBxDF(aSample.x, aSampleType, &index);
 
         const BxDF * bxdf = bxdfAt(index, aSampleType);
         if (bxdf == NULL)
@@ -332,10 +332,10 @@ protected:
 
 
 
-template<bool DirFixIsLight>
 class VcmBSDF : public BSDF
 {
 private:
+    bool          _dirFixIsLight;  // true if _localDirFix represents light incident direction
     optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to fixed incident dir stored 
                                    // at hit point opposed to "gen" for generated
 public:
@@ -343,21 +343,25 @@ public:
 
     RT_FUNCTION VcmBSDF( const DifferentialGeometry aDiffGeomShading,
                          const optix::float3      & aWorldGeometricNormal,
-                         const optix::float3      & aIncidentDir ) : 
-                BSDF( aDiffGeomShading, aWorldGeometricNormal )
+                         const optix::float3      & aIncidentDir,
+                         const bool                 aIncidentDirIsLight ) : 
+                BSDF( aDiffGeomShading, aWorldGeometricNormal ) , _dirFixIsLight(aIncidentDirIsLight)
     {
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
 
     // For simple case when not differentiating between geometric and shading normal,
     // generates tangent and bitangent
-    RT_FUNCTION VcmBSDF( const optix::float3 & aWorldNormal,
-                                        const optix::float3 & aIncidentDir ) : BSDF(aWorldNormal)
+    RT_FUNCTION VcmBSDF( const optix::float3 & aWorldGeometricNormal,
+                         const optix::float3 & aIncidentDir,
+                         const bool            aIncidentDirIsLight  ) : BSDF(aWorldGeometricNormal) , _dirFixIsLight(aIncidentDirIsLight)
     {
         _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
     }
 
     RT_FUNCTION int isValid() const { return EPS_COSINE < _localDirFix.z; }
+
+    RT_FUNCTION bool dirFixIsLight() const { return _dirFixIsLight; }
 
     RT_FUNCTION optix::float3 localDirFix() const { return _localDirFix; }
 
@@ -372,7 +376,7 @@ public:
                                           BxDF::Type          * oSampledType = NULL ) const
     {
         return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, 
-            oPdfW, oCosThetaOut, aSampleType, oSampledType, DirFixIsLight);
+            oPdfW, oCosThetaOut, aSampleType, oSampledType, _dirFixIsLight);
     }
 
 
@@ -487,8 +491,6 @@ public:
 
 };
 
-typedef VcmBSDF<false> CameraBSDF;
-typedef VcmBSDF<true>  LightBSDF;
 
 #undef OPTIX_PRINTF_ENABLED
 #undef OPTIX_PRINTFI_ENABLED

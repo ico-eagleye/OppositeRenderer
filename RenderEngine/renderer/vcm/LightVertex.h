@@ -9,7 +9,7 @@ struct LightVertex
 {
     optix::float3   hitPoint;
     optix::float3   throughput;
-    LightBSDF       bsdf;
+    VcmBSDF         bsdf;
     optix::uint2    launchIndex;    // for debug TODO remove
     optix::uint     pathLen;
     float           dVCM;

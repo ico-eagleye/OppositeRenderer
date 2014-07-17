@@ -409,13 +409,12 @@ public:
     {
         *oWi = optix::make_float3(-aWo.x, -aWo.y, aWo.z);
         *oPdfW = 1.0f;
-        optix::float3 F;
+        float F;
         CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(F, =, fresnel(), evaluate, localCosTheta(aWo));
 
         // BSDF is multiplied by cosThetaOut when computing throughput to scattered direction. It shouldn't
         // be done for specular reflection, hence predivide here to cancel it out
-        F = F * _reflectance / fabsf(localCosTheta(*oWi));
-        return F;
+        return F * _reflectance / fabsf(localCosTheta(*oWi));
     }
 };
 
@@ -485,8 +484,8 @@ public:
         *oPdfW = 1.f;
 
         // reflection/refraction coefficients
-        float3 F = fresnel()->evaluate(localCosTheta(aWo));
-        float3 R = make_float3(1.f) - F;
+        float F = fresnel()->evaluate(localCosTheta(aWo));
+        float R = 1.f - F;
 
         // aRadianceFromCamera used for VCM when radiance flows from camera and particle importance/weights from light.
         // etas are swapped, hence the scaling

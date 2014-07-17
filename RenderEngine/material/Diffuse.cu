@@ -182,7 +182,7 @@ RT_PROGRAM void vcmClosestHitLight()
 
     // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
     // see [Veach PhD section 5.3]
-    LightBSDF lightBsdf = LightBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF lightBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, true);
     Lambertian lambertian(Kd);
     lightBsdf.AddBxDF(&lambertian);
 
@@ -211,7 +211,7 @@ RT_PROGRAM void vcmClosestHitCamera()
 
     // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
     // see [Veach PhD section 5.3]
-    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF cameraBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, false);
     Lambertian lambertian(Kd);
     cameraBsdf.AddBxDF(&lambertian);
 

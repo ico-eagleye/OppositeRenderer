@@ -276,7 +276,7 @@ RT_PROGRAM void vcmClosestHitLight()
         return;
     }
 
-    LightBSDF lightBsdf = LightBSDF(N, -ray.direction);
+    VcmBSDF lightBsdf = VcmBSDF(N, -ray.direction, true);
 
     if (!ktBlack)
     {
@@ -334,7 +334,7 @@ RT_PROGRAM void vcmClosestHitCamera()
         return;
     }
 
-    CameraBSDF cameraBsdf = CameraBSDF(N, -ray.direction);
+    VcmBSDF cameraBsdf = VcmBSDF(N, -ray.direction, false);
 
     if (!ktBlack)
     {

@@ -127,7 +127,7 @@ RT_PROGRAM void vcmClosestHitLight()
     if (isZero(Kr))
         return;
     
-    LightBSDF lightBsdf = LightBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF lightBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, true);
     FresnelNoOp fresnelNoOp;
     SpecularReflection reflection(Kr, &fresnelNoOp );
     lightBsdf.AddBxDF(&reflection);
@@ -166,7 +166,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     if (isZero(Kr))
         return;
     
-    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF cameraBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, false);
     FresnelNoOp fresnelNoOp;
     SpecularReflection reflection(Kr, &fresnelNoOp );
     cameraBsdf.AddBxDF(&reflection);
