@@ -487,7 +487,7 @@ protected:
         // Otherwise.
         if (oSampledType) *oSampledType = bxdf->type();
         *oWorldWi = _diffGemetry.ToWorld(wi);
-        if (oCosThetaWi) *oCosThetaWi = wi.z;
+        if (oCosThetaWi) *oCosThetaWi = fabsf(wi.z);
 
         // If not specular, sum all non-specular BxDF's probability.
         if (!(bxdf->type() & BxDF::Specular) && nMatched > 1) 
