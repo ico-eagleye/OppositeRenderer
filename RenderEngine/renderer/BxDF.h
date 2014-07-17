@@ -94,13 +94,7 @@ public:
     }
 
     // for Russian Roulette continuation prob computation
-    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
-    {
-        return 0.f;
-    }
-
-    // for Russian Roulette continuation prob computation
-    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
         return 0.f;
     }
@@ -197,15 +191,9 @@ public:
     }
 
     // for Russian Roulette continuation prob computation
-    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
         return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
-    }
-
-    // for Russian Roulette continuation prob computation
-    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
-    {
-        return 0.f;
     }
 
     // for bxdf sampling probability
@@ -251,15 +239,9 @@ public:
         _reflectance(aReflectance), _exponent(aExponent) {  }
 
     // for Russian Roulette continuation prob computation
-    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
         return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
-    }
-
-    // for Russian Roulette continuation prob computation
-    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
-    {
-        return 0.f;
     }
 
     // for bxdf sampling probability
@@ -386,17 +368,11 @@ public:
     }
 
     // for Russian Roulette continuation prob computation
-    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
         float R;
         CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
         return R * optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
-    }
-
-    // for Russian Roulette continuation prob computation
-    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
-    {
-        return 0.f;
     }
 
     // for bxdf sampling probability
@@ -464,13 +440,7 @@ public:
     }
 
     // for Russian Roulette continuation prob computation
-    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
-    {
-        return 0.f;
-    }
-
-    // for Russian Roulette continuation prob computation
-    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
         float R;
         CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
