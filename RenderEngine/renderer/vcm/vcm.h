@@ -534,9 +534,8 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
     contrib *= aCameraPrd.throughput * aLightVertex.throughput;
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  -   Thp wei cntrb % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
 
-
     // TODO try early occlusion check
-    if (isOccluded(aSceneRootObject, aCameraHitpoint, direction, distance)) // CRASH HERE
+    if (isOccluded(aSceneRootObject, aCameraHitpoint, direction, distance))
     {
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "conn  - OCCLUDED\n");
         return;
@@ -791,7 +790,6 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         float lastVertConnectProb = averageLightSubpathLength - (uint)averageLightSubpathLength;
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C - CONNECT     num % 14u   lastVertProb % 14f \n", 
             numlightVertexConnections, lastVertConnectProb);
-        //for (int i = 0; i < vcmNumlightVertexConnections; i++)
         for (int i = 0; i < numlightVertexConnections; i++)
         {
             // For last vertex do russian roulette

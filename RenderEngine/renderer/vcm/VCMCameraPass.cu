@@ -157,7 +157,6 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     
     aCameraPrd.origin = camera.eye;
     aCameraPrd.direction = normalize(d.x*camera.camera_u + d.y*camera.camera_v + camera.lookdir);
-    //modifyRayForDepthOfField(camera, rayOrigin, rayDirection, radiancePrd.randomState);     // vmarz TODO add ?
 
     // pdf conversion factor from area on image plane to solid angle on ray
     float cosAtCamera = dot(normalize(camera.lookdir), aCameraPrd.direction);

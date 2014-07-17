@@ -335,8 +335,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     memset(bufferHost, 0, sizeof(optix::uint));
     m_lightVertexBufferIndexBuffer->unmap();
 
-    // Size is set in light pass length estimate pass \\ TODO use same dimensions for estimate?
-    m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u, 1u );
+    // Size is set in light pass length estimate pass
+    m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 0u, 0u );
     m_context["lightSubpathLengthBuffer"]->set(m_lightSubpathLengthBuffer);
     m_context["lightSubpathLengthBufferId"]->setInt(m_lightSubpathLengthBuffer->getId());
 
@@ -373,7 +373,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
     m_randomStatesBuffer->setFormat( RT_FORMAT_USER );
     m_randomStatesBuffer->setElementSize( sizeof( RandomState ) );
-    m_randomStatesBuffer->setSize( PHOTON_LAUNCH_WIDTH, PHOTON_LAUNCH_HEIGHT ); // vmarz TODO Use max(screen,photon)
+    m_randomStatesBuffer->setSize( std::max(PHOTON_LAUNCH_WIDTH, m_width), std::max(PHOTON_LAUNCH_HEIGHT, m_height) );
     m_context["randomStates"]->set(m_randomStatesBuffer);
     
     // Light sources buffer
@@ -681,7 +681,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 
             // MIS weight constant [tech. rep. (20)]
             // etaVCM = (nVM / nVC) * PI * r2
-            const float etaVCM = (float(lightSubpathsMerged) / lightSubpathsConnected) * M_PIf * ppmRadiusSquared; // vmarz TODO check initial radius, seems big
+            const float etaVCM = (float(lightSubpathsMerged) / lightSubpathsConnected) * M_PIf * ppmRadiusSquared;
             const float misVmWeightFactor = m_vcmUseVM ? vcmMis(etaVCM)       : 0.f;
             const float misVcWeightFactor = m_vcmUseVC ? vcmMis(1.f / etaVCM) : 0.f;
 
@@ -827,7 +827,7 @@ void OptixRenderer::resizeBuffers(unsigned int width, unsigned int height)
     m_raytracePassOutputBuffer->setSize( width, height );
     m_directRadianceBuffer->setSize( width, height );
     m_indirectRadianceBuffer->setSize( width, height );
-    m_randomStatesBuffer->setSize(max(PHOTON_LAUNCH_WIDTH, (unsigned int)1280), max(PHOTON_LAUNCH_HEIGHT,  (unsigned int)768));
+    m_randomStatesBuffer->setSize(max(PHOTON_LAUNCH_WIDTH, (unsigned int)width), max(PHOTON_LAUNCH_HEIGHT,  (unsigned int)height));
     initializeRandomStates();
     m_width = width;
     m_height = height;

@@ -354,7 +354,7 @@ public:
         //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
         //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
         float rrContProb = 0.f;
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, continuationProb, _localDirFix); // TODO rename scatterReflectance
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(rrContProb, +=, pBxDF, continuationProb, _localDirFix);
 
         // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
         // to make sure the weight of sample never rise
