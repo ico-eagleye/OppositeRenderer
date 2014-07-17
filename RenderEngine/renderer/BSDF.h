@@ -86,32 +86,12 @@ public:
     // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
     RT_FUNCTION int AddBxDF(const BxDF * bxdf)//, uint2 * launchIndex = NULL)
     {
-        //OPTIX_PRINTF("AddBxDF - passed BxDF 0x%X\n", sizeof(BxDF * ), (optix::optix_size_t) bxdf);
         if (_nBxDFs == MAX_N_BXDFS) return 0;
         
         // get BxDF list address
         BxDF *pBxDF = reinterpret_cast<BxDF *>(&_bxdfList[_nBxDFs * MAX_BXDF_SIZE]);
-        //OPTIX_PRINTF("AddBxDF - this 0x%X BxDF count %d target address 0x%X \n", (optix::optix_size_t) this, _nBxDFs, (optix::optix_size_t) pBxDF);
         memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
-        
-        ////Lambertian *lamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(bxdf));
-        ////Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
-        ////OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
-        ////OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
-
-        //// setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
-        //float pickProb = 0.f;
-        //CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
-        //CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
-        //_bxdfPickProb[_nBxDFs] = pickProb;
-
-        //// Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
-        //// to make sure the weight of sample never rise
-        //_continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
-        //_nBxDFs++;
-        ////if (launchIndex != NULL)
-        ////    OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
-        //return 1;
+        return 1;
     }
 
     RT_FUNCTION const BxDF * bxdfAt(const optix::uint & aIndex) const
@@ -340,8 +320,8 @@ public:
 
         // setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
         float pickProb = 0.f;
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability, _localDirFix); // TODO rename scatterReflectance
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability, _localDirFix); 
         _bxdfPickProb[_nBxDFs] = pickProb;
 
         // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
@@ -354,22 +334,22 @@ public:
     }
 
 protected:
-    RT_FUNCTION unsigned int sampleBxDF(float sample, BxDF::Type aType, unsigned int * bxdfIndex) const
+    RT_FUNCTION unsigned int sampleBxDF(float sample, BxDF::Type aType, unsigned int & oBxdfIndex, float & oMatchedPickProbSum) const
     {
         unsigned int nMatched = nBxDFs(aType);
         if (nMatched == 0) return 0;
 
-        float matchedSumContProb = sumContProb(aType);
+        oMatchedPickProbSum = sumContProb(aType);
         float contProbPrev = 0.f;
         float contProb = 0.f;
         for (unsigned int i = 0; i < _nBxDFs; ++i)
         {
             if (bxdfAt(i)->matchFlags(aType))
             {
-                float contProb = _bxdfPickProb[i] / matchedSumContProb;
+                float contProb = _bxdfPickProb[i] / oMatchedPickProbSum;
                 if (sample < contProbPrev + contProb)
                 {
-                    *bxdfIndex = i;
+                    oBxdfIndex = i;
                     break;
                 }
                 contProbPrev += contProb;
@@ -394,21 +374,6 @@ protected:
     }
 
 public:
-    // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
-    // Following typical conventions Wo corresponds to light outgoing direction, 
-    // Wi is sampled incident direction
-    RT_FUNCTION optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
-                                          const optix::float3 & aSample,
-                                          float               * oPdfW,
-                                          float               * oCosThetaOut, //= NULL,
-                                          BxDF::Type            aSampleType = BxDF::All,
-                                          BxDF::Type          * oSampledType = NULL ) const
-    {
-        return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, 
-            oPdfW, oCosThetaOut, aSampleType, oSampledType, _dirFixIsLight);
-    }
-
-
     // Evaulates pdf for given direction, returns reverse pdf if aEvalRevPdf == true
     // Specular BxDFs are ignored
     RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, bool aEvalRevPdf ) const
@@ -424,9 +389,135 @@ public:
         return pdf;
     }
 
+    // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
+    // Following typical conventions Wo corresponds to light outgoing direction, 
+    // Wi is sampled incident direction
+    RT_FUNCTION optix::float3 vcmSampleF( optix::float3       * oWorldDirGen,
+                                          const optix::float3 & aSample,
+                                          float               * oPdfW,
+                                          float               * oCosThetaOut, //= NULL,
+                                          BxDF::Type            aSampleType = BxDF::All,
+                                          BxDF::Type          * oSampledType = NULL ) const
+    {
+        return sampleF(_diffGemetry.ToWorld(_localDirFix), oWorldDirGen, aSample, 
+            oPdfW, oCosThetaOut, aSampleType, oSampledType, _dirFixIsLight);
+    }
+
+protected:
+    // sampleF() below is pretty much exactly the same code as in parent class BSDF, moved here since cannot call
+    // child class "fake virtual" function cause pointer points to incomplete type at compile time.
+    // The only difference is that in this one bxdfs are sampled based on their relative reflectance (e.g. more contribution,
+    // more likely to be picked)
+
+    // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
+    // Following typical conventions Wo corresponds to light outgoing direction, 
+    // Wi is sampled incident direction
+    //
+    // Last parameter aRadianceFromCamera used for VCM to handle specular transmission, since in that
+    // case radiance "flows" from camera and light particle weights/importance from light source
+    RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWorldWo,
+                                       optix::float3       * oWorldWi, 
+                                       const optix::float3 & aSample,
+                                       float               * oPdfW,
+                                       float               * oCosThetaWi = NULL,
+                                       BxDF::Type            aSampleType = BxDF::All,
+                                       BxDF::Type          * oSampledType = NULL,
+                                       const bool            aRadianceFromCamera = false ) const
+    {
+        // Count matched components.
+        //unsigned int nMatched = nBxDFs(aSampleType);
+        //if (nMatched == 0)
+        //{
+        //    *oPdfW = 0.0f;
+        //    if (oSampledType) *oSampledType = BxDF::Null;
+        //    return optix::make_float3(0.0f);
+        //}
+
+        ////Sample BxDF.
+        //unsigned int index = optix::min(nMatched-1,
+        //    static_cast<unsigned int>(floorf(aSample.x * static_cast<float>(nMatched))));
+
+        unsigned int index = 0;
+        float matchedBxdfPickProbSum = 0.f;
+        unsigned int nMatched = sampleBxDF(aSample.x, aSampleType, index, matchedBxdfPickProbSum);
+
+        //const BxDF * bxdf = bxdfAt(index, aSampleType);
+        const BxDF * bxdf = bxdfAt(index);
+        if (bxdf == NULL)
+        {
+            *oPdfW = 0.0f;
+            if (oSampledType) *oSampledType = BxDF::Null;
+            return optix::make_float3(0.0f);
+        }
+
+        // Transform.
+        optix::float3 wo = _diffGemetry.ToLocal(aWorldWo);
+
+        // Sample f.
+        optix::float3 f = optix::make_float3(0.0f);
+        optix::float3 wi;
+        optix::float2 s = optix::make_float2(aSample.y, aSample.z);
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, =, bxdf, sampleF, wo, &wi, s, oPdfW, aRadianceFromCamera);
+
+        // scale by pick prob
+        *oPdfW *= _bxdfPickProb[index] / matchedBxdfPickProbSum;
+
+        // Rejected.
+        if (*oPdfW == 0.0f)
+        {
+            if (oSampledType) *oSampledType = BxDF::Null;
+            return optix::make_float3(0.0f);
+        }
+
+        // Otherwise.
+        if (oSampledType) *oSampledType = bxdf->type();
+        *oWorldWi = _diffGemetry.ToWorld(wi);
+        if (oCosThetaWi) *oCosThetaWi = wi.z;
+
+        // If not specular, sum all non-specular BxDF's probability.
+        if (!(bxdf->type() & BxDF::Specular) && nMatched > 1) 
+        {
+            for (unsigned int i = 0; i < _nBxDFs; i++)
+            {
+                if (i == index) continue; // index of bxdf used for direction sampling, skip computing pdf
+                if (bxdfAt(i)->matchFlags(aSampleType))
+                {
+                    float compPdf = 0.f;
+                    CALL_BXDF_CONST_VIRTUAL_FUNCTION(compPdf, +=, bxdfAt(i), pdf, wo, wi);
+                    // scale by bxdf picking probability
+                    *oPdfW += compPdf *(_bxdfPickProb[index] / matchedBxdfPickProbSum);
+                }
+            }
+        }
+
+        // Remember to divide component count. // vmarz: Don't do since scaling by bxdf pick prob in loop above
+        //if (nMatched > 1)
+        //    *oPdfW /= static_cast<float>(nMatched);
+
+        // If not specular, sum all f.
+        if (!(bxdf->type() & BxDF::Specular))
+        {
+            // Cannot use localIsSameHemisphere(wo, *wi) here,
+            // do not confuse with the geometric normal and the shading normal.
+            if (optix::dot(_geometricNormal, *oWorldWi) * optix::dot(_geometricNormal, aWorldWo) >= 0.0f) 
+                aSampleType = BxDF::Type(aSampleType & ~BxDF::Transmission);      // ignore BTDF
+            else                                                                 
+                aSampleType = BxDF::Type(aSampleType & ~BxDF::Reflection);        // ignore BRDF
+
+            for (unsigned int i = 0; i < _nBxDFs; ++i)
+            {
+                if (i == index) continue; // index of bxdf used for direction sampling, skip computing f again
+                if (bxdfAt(i)->matchFlags(aSampleType))
+                    CALL_BXDF_CONST_VIRTUAL_FUNCTION(f, +=, bxdfAt(i), f, wo, wi);
+            }
+        }
+
+        return f;
+    }
+
+public:
 #define OPTIX_PRINTFI_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
-
     // Estimates bsdf factor for directions oWorldWi and aWorldWi and pdfs.
     // In typical conventions as when tracing from camera Wo corresponds to light outgoing direction, Wi to 
     // generated incident direction.

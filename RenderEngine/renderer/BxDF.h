@@ -86,25 +86,6 @@ public:
         return optix::make_float3(0.0f);
     }
 
-    //#define BxDF_rho \
-    //__device__ __forceinline__ optix::float3 rho(unsigned int nSamples, \
-    //        const float * samples1, const float * samples2) const \
-    //{ \
-    //    optix::float3 r = optix::make_float3(0.0f); \
-    //    for (unsigned int i = 0; i < nSamples; ++i) \
-    //    { \
-    //        optix::float3 wo, wi; \
-    //        wo = sampleUniformSphere(optix::make_float2(samples1[2*i], samples1[2*i+1])); \
-    //        float pdf_o = (2.0f * M_PIf), pdf_i = 0.f; \
-    //        optix::float3 f = sampleF(wo, &wi, \
-    //            optix::make_float2(samples2[2*i], samples2[2*i+1]), &pdf_i); \
-    //        if (pdf_i > 0.0f) \
-    //            r += f * fabsf(cosTheta(wi)) * fabsf(cosTheta(wo)) / (pdf_o * pdf_i); \
-    //    } \
-    //    return r / (M_PIf*nSamples); \
-    //}
-
-
     RT_FUNCTION optix::float3 rho( unsigned int  aNSamples,
                                    const float * aSamples1, 
                                    const float * aSamples2 ) const
@@ -112,12 +93,20 @@ public:
         return optix::make_float3(0.0f);
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
     {
         return 0.f;
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
+    {
+        return 0.f;
+    }
+
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
     {
         return 0.f;
     }
@@ -207,15 +196,22 @@ public:
         return _reflectance;
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
     {
-        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
-        //return optix::luminanceCIE(_reflectance);  // using luminance causes noise in the image
+        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
     {
         return 0.f;
+    }
+
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
+    {
+        return optix::luminanceCIE(_reflectance);
     }
 
     // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
@@ -254,14 +250,22 @@ public:
         BxDF(BxDF::Type( BxDF::Phong | BxDF::Reflection | BxDF::Glossy )),
         _reflectance(aReflectance), _exponent(aExponent) {  }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
     {
-        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
     {
         return 0.f;
+    }
+
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
+    {
+        return optix::luminanceCIE(_reflectance);
     }
 
     // Evaluates brdf, returns pdf if oPdf is not NULL
@@ -381,14 +385,26 @@ public:
         return reinterpret_cast<const Fresnel *>(_fresnel);
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
     {
-        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return R * optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
     {
         return 0.f;
+    }
+
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
+    {
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return R * optix::luminanceCIE(_reflectance);
     }
 
     RT_FUNCTION optix::float3 f( const optix::float3 & /* wo */, const optix::float3 & /* wi */, float * oPdfW = NULL) const
@@ -424,17 +440,17 @@ public:
 class SpecularTransmission : public BxDF 
 {
 private:
-    optix::float3      m_transmittance;
-    FresnelDielectric  m_fresnel;
+    optix::float3      _transmittance;
+    FresnelDielectric  _fresnel;
 
 public:
     RT_FUNCTION SpecularTransmission(const optix::float3 & transmittance, float ei, float et) :
         BxDF(BxDF::Type(BxDF::SpecularTransmission | BxDF::Transmission | BxDF::Specular)),
-        m_transmittance(transmittance), m_fresnel(ei, et) {  }
+        _transmittance(transmittance), _fresnel(ei, et) {  }
 
 public:
-    RT_FUNCTION FresnelDielectric * fresnel() { return &m_fresnel; }
-    RT_FUNCTION const FresnelDielectric * fresnel() const { return &m_fresnel; }
+    RT_FUNCTION FresnelDielectric * fresnel() { return &_fresnel; }
+    RT_FUNCTION const FresnelDielectric * fresnel() const { return &_fresnel; }
 
 public:
     RT_FUNCTION optix::float3 f( const optix::float3 & wo , const optix::float3 &  wi, float * oPdfW = NULL ) const
@@ -447,14 +463,26 @@ public:
         return 0.0f;
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float reflectProbability( const optix::float3 & aWo ) const
     {
         return 0.f;
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float transmitProbability( const optix::float3 & aWo ) const
     {
-        return 1.f;
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return 1.f - R;
+    }
+
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
+    {
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return (1.f - R) * optix::luminanceCIE(_transmittance);
     }
 
     RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
@@ -490,9 +518,9 @@ public:
         // aRadianceFromCamera used for VCM when radiance flows from camera and particle importance/weights from light.
         // etas are swapped, hence the scaling
         if (aRadianceFromCamera)
-            return /*(ei*ei)/(et*et) * */ R * m_transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
+            return /*(ei*ei)/(et*et) * */ R * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
         else
-            return /*(ei*ei)/(et*et) * */ R * m_transmittance / fabsf(localCosTheta(*oWi));
+            return /*(ei*ei)/(et*et) * */ R * _transmittance / fabsf(localCosTheta(*oWi));
     }
 };
 
