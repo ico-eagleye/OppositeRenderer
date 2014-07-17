@@ -46,8 +46,6 @@ protected:
     optix::float3         _geometricNormal;
     unsigned int          _nBxDFs;
     char                  _bxdfList [MAX_N_BXDFS * MAX_BXDF_SIZE];
-    float                 _bxdfPickProb [MAX_N_BXDFS]; // unscaled component continuation probabilities
-    float                 _continuationProb;           // Russian roulette probability
 
 public:
     RT_FUNCTION BSDF() {  }
@@ -57,10 +55,7 @@ public:
         _geometricNormal = aWorldGeometricNormal;
         _diffGemetry = aDiffGeomShading;
         _nBxDFs = 0;
-        // nvcc give fails without clear error when trying to memset all at once
         memset(_bxdfList, 0, MAX_N_BXDFS * MAX_BXDF_SIZE);
-        memset(_bxdfPickProb, 0, MAX_N_BXDFS * sizeof(float));
-        _continuationProb = 0.f;
     }
 
     // For simple case when not differentiating between geometric and shading normal,
@@ -71,8 +66,6 @@ public:
         _geometricNormal = aWorldNormal;
         _nBxDFs = 0;
         memset(_bxdfList, 0, MAX_N_BXDFS * MAX_BXDF_SIZE);
-        memset(_bxdfPickProb, 0, MAX_N_BXDFS * sizeof(float));
-        _continuationProb = 0.f;
     }
 
     RT_FUNCTION unsigned int nBxDFs() const { return _nBxDFs; }
@@ -90,9 +83,6 @@ public:
         return count;
     }
 
-    // Continuation probability for Russian roulette
-    RT_FUNCTION float continuationProb() const { return _continuationProb; }
-
     // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
     RT_FUNCTION int AddBxDF(const BxDF * bxdf)//, uint2 * launchIndex = NULL)
     {
@@ -104,24 +94,24 @@ public:
         //OPTIX_PRINTF("AddBxDF - this 0x%X BxDF count %d target address 0x%X \n", (optix::optix_size_t) this, _nBxDFs, (optix::optix_size_t) pBxDF);
         memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
         
-        //Lambertian *lamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(bxdf));
-        //Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
-        //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
-        //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
+        ////Lambertian *lamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(bxdf));
+        ////Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
+        ////OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
+        ////OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
 
-        // setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
-        float pickProb = 0.f;
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
-        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
-        _bxdfPickProb[_nBxDFs] = pickProb;
+        //// setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
+        //float pickProb = 0.f;
+        //CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
+        //CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
+        //_bxdfPickProb[_nBxDFs] = pickProb;
 
-        // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
-        // to make sure the weight of sample never rise
-        _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
-        _nBxDFs++;
-        //if (launchIndex != NULL)
-        //    OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
-        return 1;
+        //// Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
+        //// to make sure the weight of sample never rise
+        //_continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
+        //_nBxDFs++;
+        ////if (launchIndex != NULL)
+        ////    OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
+        //return 1;
     }
 
     RT_FUNCTION const BxDF * bxdfAt(const optix::uint & aIndex) const
@@ -132,7 +122,7 @@ public:
     RT_FUNCTION const BxDF * bxdfAt(const optix::uint & aIndex, BxDF::Type aType) const
     {
         optix::uint count = aIndex;
-        for (unsigned int i = 0; i < nBxDFs(); ++i) 
+        for (unsigned int i = 0; i < _nBxDFs; ++i) 
         {
             if (bxdfAt(i)->matchFlags(aType))
             {
@@ -215,8 +205,6 @@ public:
             return optix::make_float3(0.0f);
         }
 
-        float matchedSumContProb = sumContProb(aSampleType);
-
         //Sample BxDF.
         unsigned int index = optix::min(nMatched-1,
         static_cast<unsigned int>(floorf(aSample.x * static_cast<float>(nMatched))));
@@ -288,6 +276,83 @@ public:
         return f;
     }
 
+};  /* -----  end of class BSDF  ----- */
+
+
+
+class VcmBSDF : public BSDF
+{
+private:
+    float         _bxdfPickProb [MAX_N_BXDFS]; // unscaled component continuation probabilities
+    float         _continuationProb;           // Russian roulette probability
+    bool          _dirFixIsLight;  // true if _localDirFix represents light incident direction
+    optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to fixed incident dir stored 
+                                   // at hit point opposed to "gen" for generated
+public:
+    RT_FUNCTION VcmBSDF() : BSDF() { }
+
+    RT_FUNCTION VcmBSDF( const DifferentialGeometry aDiffGeomShading,
+                         const optix::float3      & aWorldGeometricNormal,
+                         const optix::float3      & aIncidentDir,
+                         const bool                 aIncidentDirIsLight ) : 
+                BSDF( aDiffGeomShading, aWorldGeometricNormal ) , _dirFixIsLight(aIncidentDirIsLight)
+    {
+        _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
+        memset(_bxdfPickProb, 0, MAX_N_BXDFS * sizeof(float));
+        _continuationProb = 0.f;
+    }
+
+    // For simple case when not differentiating between geometric and shading normal,
+    // generates tangent and bitangent
+    RT_FUNCTION VcmBSDF( const optix::float3 & aWorldGeometricNormal,
+                         const optix::float3 & aIncidentDir,
+                         const bool            aIncidentDirIsLight  ) : BSDF(aWorldGeometricNormal) , _dirFixIsLight(aIncidentDirIsLight)
+    {
+        _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
+        memset(_bxdfPickProb, 0, MAX_N_BXDFS * sizeof(float));
+        _continuationProb = 0.f;
+    }
+
+    RT_FUNCTION int isValid() const { return EPS_COSINE < _localDirFix.z; }
+
+    RT_FUNCTION bool dirFixIsLight() const { return _dirFixIsLight; }
+
+    RT_FUNCTION optix::float3 localDirFix() const { return _localDirFix; }
+
+    // Continuation probability for Russian roulette
+    RT_FUNCTION float continuationProb() const { return _continuationProb; }
+
+    // Add BxDF. Returns 0 if failed, e.g. MAX_N_BXDFS reached
+    RT_FUNCTION int AddBxDF(const BxDF * bxdf)//, uint2 * launchIndex = NULL)
+    {
+        //OPTIX_PRINTF("AddBxDF - passed BxDF 0x%X\n", sizeof(BxDF * ), (optix::optix_size_t) bxdf);
+        if (_nBxDFs == MAX_N_BXDFS) return 0;
+
+        // get BxDF list address
+        BxDF *pBxDF = reinterpret_cast<BxDF *>(&_bxdfList[_nBxDFs * MAX_BXDF_SIZE]);
+        //OPTIX_PRINTF("AddBxDF - this 0x%X BxDF count %d target address 0x%X \n", (optix::optix_size_t) this, _nBxDFs, (optix::optix_size_t) pBxDF);
+        memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
+
+        //Lambertian *lamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(bxdf));
+        //Lambertian *newLamb = reinterpret_cast<Lambertian*>(const_cast<BxDF*>(pBxDF));
+        //OPTIX_PRINTF("AddBxDF - bxdf %8.6f %8.6f %8.6f\n", lamb->_reflectance.x, lamb->_reflectance.y, lamb->_reflectance.z);
+        //OPTIX_PRINTF("AddBxDF - set bxdf %8.6f %8.6f %8.6f\n", newLamb->_reflectance.x, newLamb->_reflectance.y, newLamb->_reflectance.z);
+
+        // setting pick probability unweighted by other BxDFs, weighted during sampling based sampled BxDF types
+        float pickProb = 0.f;
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, reflectProbability);
+        CALL_BXDF_CONST_VIRTUAL_FUNCTION(pickProb, +=, pBxDF, transmitProbability); 
+        _bxdfPickProb[_nBxDFs] = pickProb;
+
+        // Setting continuation probability explicitly (instead of using arbitrary values) for russian roulette 
+        // to make sure the weight of sample never rise
+        _continuationProb = optix::fminf(1.f, _continuationProb + pickProb);
+        _nBxDFs++;
+        //if (launchIndex != NULL)
+        //    OPTIX_PRINTFI((*launchIndex), "aBxDF-        _nBxDFs % 14d      _contProb % 14f PickProb[nBxD] % 14f      BxDF type %d \n", _nBxDFs, _continuationProb, _bxdfPickProb[_nBxDFs], pBxDF->type() );
+        return 1;
+    }
+
 protected:
     RT_FUNCTION unsigned int sampleBxDF(float sample, BxDF::Type aType, unsigned int * bxdfIndex) const
     {
@@ -328,43 +393,7 @@ protected:
         return contProb;
     }
 
-};  /* -----  end of class BSDF  ----- */
-
-
-
-class VcmBSDF : public BSDF
-{
-private:
-    bool          _dirFixIsLight;  // true if _localDirFix represents light incident direction
-    optix::float3 _localDirFix;    // following convention in SmallVCM, "fix" is corresponds to fixed incident dir stored 
-                                   // at hit point opposed to "gen" for generated
 public:
-    RT_FUNCTION VcmBSDF() : BSDF() { }
-
-    RT_FUNCTION VcmBSDF( const DifferentialGeometry aDiffGeomShading,
-                         const optix::float3      & aWorldGeometricNormal,
-                         const optix::float3      & aIncidentDir,
-                         const bool                 aIncidentDirIsLight ) : 
-                BSDF( aDiffGeomShading, aWorldGeometricNormal ) , _dirFixIsLight(aIncidentDirIsLight)
-    {
-        _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
-    }
-
-    // For simple case when not differentiating between geometric and shading normal,
-    // generates tangent and bitangent
-    RT_FUNCTION VcmBSDF( const optix::float3 & aWorldGeometricNormal,
-                         const optix::float3 & aIncidentDir,
-                         const bool            aIncidentDirIsLight  ) : BSDF(aWorldGeometricNormal) , _dirFixIsLight(aIncidentDirIsLight)
-    {
-        _localDirFix = _diffGemetry.ToLocal(aIncidentDir);
-    }
-
-    RT_FUNCTION int isValid() const { return EPS_COSINE < _localDirFix.z; }
-
-    RT_FUNCTION bool dirFixIsLight() const { return _dirFixIsLight; }
-
-    RT_FUNCTION optix::float3 localDirFix() const { return _localDirFix; }
-
     // Return bsdf factor for sampled direction oWorldWi. Returns pdf in and sampled BxDF.
     // Following typical conventions Wo corresponds to light outgoing direction, 
     // Wi is sampled incident direction
