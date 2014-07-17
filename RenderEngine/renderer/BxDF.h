@@ -353,7 +353,7 @@ public:
         _reflectance(aReflectance) 
     {
         Fresnel *fresnel = reinterpret_cast<Fresnel *>(&_fresnel);
-        memcpy(fresnel, aFresnel, MAX_FRESNEL_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
+        memcpy(fresnel, aFresnel, MAX_FRESNEL_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway        
     }
 
 public:
@@ -401,12 +401,12 @@ public:
     {
         *oWi = optix::make_float3(-aWo.x, -aWo.y, aWo.z);
         *oPdfW = 1.0f;
-        float F;
-        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(F, =, fresnel(), evaluate, localCosTheta(aWo));
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
 
         // BSDF is multiplied by cosThetaOut when computing throughput to scattered direction. It shouldn't
         // be done for specular reflection, hence predivide here to cancel it out
-        return F * _reflectance / fabsf(localCosTheta(*oWi));
+        return R * _reflectance / fabsf(localCosTheta(*oWi));
     }
 };
 
@@ -482,15 +482,15 @@ public:
         *oPdfW = 1.f;
 
         // reflection/refraction coefficients
-        float F = fresnel()->evaluate(localCosTheta(aWo));
-        float R = 1.f - F;
+        float R = fresnel()->evaluate(localCosTheta(aWo));
+        float T = 1.f - R;
 
         // aRadianceFromCamera used for VCM when radiance flows from camera and particle importance/weights from light.
         // etas are swapped, hence the scaling
         if (aRadianceFromCamera)
-            return /*(ei*ei)/(et*et) * */ R * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
+            return /*(ei*ei)/(et*et) * */ T * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
         else
-            return /*(ei*ei)/(et*et) * */ R * _transmittance / fabsf(localCosTheta(*oWi));
+            return /*(ei*ei)/(et*et) * */ T * _transmittance / fabsf(localCosTheta(*oWi));
     }
 };
 
