@@ -1,8 +1,8 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
- */
+*/
 
 #define OPTIX_PRINTF_DEF
 #define OPTIX_PRINTFI_DEF
@@ -182,7 +182,7 @@ RT_PROGRAM void vcmClosestHitLight()
 
     // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
     // see [Veach PhD section 5.3]
-    LightBSDF lightBsdf = LightBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF lightBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, true);
     Lambertian lamb(Kd);
     lightBsdf.AddBxDF(&lamb);
     Phong phong(Ks, exponent);
@@ -219,7 +219,7 @@ RT_PROGRAM void vcmClosestHitCamera()
 
     // use geometric normals, shading normals require additional handling due non-symetry for adjoint/reverse bsdfs
     // see [Veach PhD section 5.3]
-    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF cameraBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, false);
     Lambertian lamb(Kd);
     cameraBsdf.AddBxDF(&lamb);
     Phong phong(Ks, exponent);

@@ -1,3 +1,9 @@
+/* 
+ * Copyright (c) 2014 Opposite Renderer
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+*/
+
 #pragma once
 
 //#define OPTIX_PRINTF_DEF
@@ -126,32 +132,17 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
                                          const float & aBsdfRevPdfW, const float & aMisVcWeightFactor, const float & aMisVmWeightFactor,
                                          BxDF::Type aSampledEvent, const float const * aVertexPickPdf = NULL)
 {
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "updateMisTermsOnScatter(): \n");
     float vertPickPdf = aVertexPickPdf ?  (*aVertexPickPdf) : 1.f;
     const float dVC = aPathPrd.dVC;
     const float dVM = aPathPrd.dVM;
     const float dVCM = aPathPrd.dVCM;
 
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -            dVC % 14f            dVM % 14f           dVCM % 14f \n", dVC, dVM, dVCM);
-
-    //float cosDivBsfPdf = aCosThetaOut / aBsdfDirPdfW;
-    //double cosDivBsfPdfD = double(aCosThetaOut) / aBsdfDirPdfW;
-
-    //if (isNAN(dVC))
-    //{
-    //    OPTIX_PRINTF("%d %d - d %d - MIS - DQNAN aPathPrd.dVC - aCosThetaOut %f  cosDivBsfPdf %f cosDivBsfPdfD %f \n",  aPathPrd.launchIndex.x, aPathPrd.launchIndex.y, aPathPrd.depth, aCosThetaOut, cosDivBsfPdf, cosDivBsfPdfD);
-    //    OPTIX_PRINTF("%d %d - d %d - MIS- DQNAN aPathPrd.dVC - aBsdfDirPdfW %f  cosDivBsfPdf %f cosDivBsfPdfD %f \n",  aPathPrd.launchIndex.x, aPathPrd.launchIndex.y, aPathPrd.depth, aBsdfDirPdfW, cosDivBsfPdf, cosDivBsfPdfD);
-    //}
-
     if (aSampledEvent & BxDF::Specular)
     {
-        OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS S -    bsdfDirPdfW % 14f    bsdfRevPdfW % 14f \n", aBsdfDirPdfW, aBsdfRevPdfW);
-
         aPathPrd.dVCM = 0.f;
         // pdfs must be the same for specular event and so cancel out
         aPathPrd.dVC *= vcmMis(aCosThetaOut); // * (aBsdfRevPdfW / aBsdfDirPdfW)
         aPathPrd.dVM *= vcmMis(aCosThetaOut); // * (aBsdfRevPdfW / aBsdfDirPdfW)
-        OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS S -            dVC % 14f            dVM % 14f           dVCM % 14f \n", dVC, dVM, dVCM);
         return;
     }
 
@@ -165,19 +156,11 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
         aPathPrd.dVC * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM + aMisVmWeightFactor);               
 
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -          U dVC = (   cosThetaOut /    bsdfDirPdfW) * (           dVC *    bsdfRevPdfW +           dVCM + VmWeightFactor) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f) \n", 
-        aPathPrd.dVC, aCosThetaOut, aBsdfDirPdfW, dVC, aBsdfRevPdfW, dVCM, aMisVmWeightFactor);
-
 #if VCM_UNIFORM_VERTEX_SAMPLING
     const float dVC_unif_vert = aPathPrd.dVC_unif_vert;
     aPathPrd.dVC_unif_vert = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
         aPathPrd.dVC_unif_vert * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM + aMisVmWeightFactor / vertPickPdf);
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth,
-        "MIS   - U dVC_unifvert = (   cosThetaOut /    bsdfDirPdfW) * ( dVC_unif_vert *    bsdfRevPdfW +           dVCM + VmWeightFactor /    vertPickPdf) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f / % 14e) \n", 
-        aPathPrd.dVC_unif_vert, aCosThetaOut, aBsdfDirPdfW, dVC_unif_vert, aBsdfRevPdfW, dVCM, aMisVmWeightFactor, vertPickPdf);
 #endif
 
     // dVM = (g_i-1 / pi) * (1 + dVCM_i-1/etaVCM + _p_ro_i-2 * dVM_i-1)
@@ -186,16 +169,10 @@ RT_FUNCTION void updateMisTermsOnScatter(SubpathPRD & aPathPrd, const float & aC
     aPathPrd.dVM = vcmMis(aCosThetaOut / aBsdfDirPdfW) * ( 
         aPathPrd.dVM * vcmMis(aBsdfRevPdfW) +              
         aPathPrd.dVCM * aMisVcWeightFactor * vertPickPdf + 1.f ); // vertPickPdf should divide etaVCM which is inverse in aMisVcWeightFactor
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -          U dVM = (   cosThetaOut /    bsdfDirPdfW) * (           dVM *    bsdfRevPdfW +           dVCM + VcWeightFactor *    vertPickPdf + 1) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (% 14f / % 14f) * (% 14e * % 14f + % 14e + % 14f * % 14f + 1) \n", 
-        aPathPrd.dVM, aCosThetaOut, aBsdfDirPdfW, dVM, aBsdfRevPdfW, dVCM, aMisVcWeightFactor, vertPickPdf);
-
+    
     // dVCM = 1 / pi
     // pi = bsdfDirPdfW * g1 = _p_ro_i * g1 [only for dVCM sqe(dist) terms do not cancel out and are added after tracing]
     aPathPrd.dVCM = vcmMis(1.f / aBsdfDirPdfW);
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -         U dVCM = (1 /    bsdfDirPdfW) \n");
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   - % 14f = (1 / %14f) \n",  dVCM, aBsdfDirPdfW);
-    OPTIX_PRINTFID(aPathPrd.launchIndex, aPathPrd.depth, "MIS   -         U dVC % 14f          U dVM % 14f         U dVCM % 14f \n", aPathPrd.dVC, aPathPrd.dVM, aPathPrd.dVCM);
 }
 
 

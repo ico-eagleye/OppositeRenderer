@@ -54,12 +54,6 @@ const unsigned int OptixRenderer::VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT = 128u;
 // This would be used for uniform vertex sampling
 const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_WIDTH = 512u;
 const unsigned int OptixRenderer::VCM_LIGHT_PASS_LAUNCH_HEIGHT = 512u;
-
-//#define VCM_CAMERA_PASS_LAUNCH_WIDTH 2u
-//#define VCM_CAMERA_PASS_LAUNCH_HEIGHT 2u
-#define DEBUG_VCM_CAMERA_PASS_LAUNCH_WIDTH 1u
-#define DEBUG_VCM_CAMERA_PASS_LAUNCH_HEIGHT 1u
-
 //const unsigned int OptixRenderer::VCM_NUM_LIGHT_PATH_CONNECTIONS = 3u;
 const unsigned int OptixRenderer::VCM_NUM_LIGHT_PATH_CONNECTIONS = 1u;
 
@@ -139,10 +133,6 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_context["emittedPhotonsPerIterationFloat"]->setFloat(float(EMITTED_PHOTONS_PER_ITERATION));
     m_context["photonLaunchWidth"]->setUint(PHOTON_LAUNCH_WIDTH);
     m_context["participatingMedium"]->setUint(0);
-
-    // for VCM
-    // used to scale camera_u and camera_v
-    m_context["pixelSizeFactor"]->setFloat(1.0f, 1.0f);
 
     // An empty scene root node
     optix::Group group = m_context->createGroup();
@@ -308,6 +298,9 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_vcmUseVM = false;
     m_context["vcmUseVC"]->setInt(m_vcmUseVC);
     m_context["vcmUseVM"]->setInt(m_vcmUseVM);
+    
+    // used to scale camera_u and camera_v
+    m_context["pixelSizeFactor"]->setFloat(1.0f, 1.0f);
 
 #if VCM_UNIFORM_VERTEX_SAMPLING
     m_lightPassLaunchWidth = VCM_LIGHT_PASS_LAUNCH_WIDTH;
@@ -335,8 +328,8 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     memset(bufferHost, 0, sizeof(optix::uint));
     m_lightVertexBufferIndexBuffer->unmap();
 
-    // Size is set in light pass length estimate pass \\ TODO use same dimensions for estimate?
-    m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u, 1u );
+    // Size is set in light pass length estimate pass
+    m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 0u, 0u );
     m_context["lightSubpathLengthBuffer"]->set(m_lightSubpathLengthBuffer);
     m_context["lightSubpathLengthBufferId"]->setInt(m_lightSubpathLengthBuffer->getId());
 
@@ -373,7 +366,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_randomStatesBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT|RT_BUFFER_GPU_LOCAL);
     m_randomStatesBuffer->setFormat( RT_FORMAT_USER );
     m_randomStatesBuffer->setElementSize( sizeof( RandomState ) );
-    m_randomStatesBuffer->setSize( PHOTON_LAUNCH_WIDTH, PHOTON_LAUNCH_HEIGHT ); // vmarz TODO Use max(screen,photon)
+    m_randomStatesBuffer->setSize( std::max(PHOTON_LAUNCH_WIDTH, m_width), std::max(PHOTON_LAUNCH_HEIGHT, m_height) );
     m_context["randomStates"]->set(m_randomStatesBuffer);
     
     // Light sources buffer
@@ -388,11 +381,10 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     createGpuDebugBuffers();
 
 #if ENABLE_RENDER_DEBUG_EXCEPTIONS
-    m_context->setPrintEnabled(true); // vmarz: needed for rtPrint calls in cuda kernels (note: printf doesn't need this)
+    m_context->setPrintEnabled(true);
     m_context->setPrintBufferSize(10000000u); 
     m_context->setExceptionEnabled(RTexception::RT_EXCEPTION_ALL , true); // vmarz: only stack overflow exception enabled by default
 #endif
-    //m_context->setTimeoutCallback()
     
     m_initialized = true;
 
@@ -667,7 +659,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 #pragma endregion PROGRESSIVE PHOTON MAPPING
 
         }
-        else if (renderMethod == RenderMethod::BIDIRECTIONAL_PATH_TRACING)
+        else if (renderMethod == RenderMethod::VCM_BIDIRECTIONAL_PATH_TRACING)
         {
             const unsigned int cameraSubPathCount = m_width * m_height;
             const unsigned int lightSubPathCount = m_lightPassLaunchWidth * m_lightPassLaunchHeight;
@@ -681,7 +673,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 
             // MIS weight constant [tech. rep. (20)]
             // etaVCM = (nVM / nVC) * PI * r2
-            const float etaVCM = (float(lightSubpathsMerged) / lightSubpathsConnected) * M_PIf * ppmRadiusSquared; // vmarz TODO check initial radius, seems big
+            const float etaVCM = (float(lightSubpathsMerged) / lightSubpathsConnected) * M_PIf * ppmRadiusSquared;
             const float misVmWeightFactor = m_vcmUseVM ? vcmMis(etaVCM)       : 0.f;
             const float misVcWeightFactor = m_vcmUseVC ? vcmMis(1.f / etaVCM) : 0.f;
 
@@ -792,10 +784,6 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
         sutilCurrentTime( &end );
         double traceTime = end-traceStartTime;
 
-        // vmarz DEBUG REMOVE
-        float3* buffer = reinterpret_cast<float3*>( m_outputBuffer->map() );
-        m_outputBuffer->unmap();
-
 #if ENABLE_MESH_HITS_COUNTING
         // print scene meshes count
         int sceneNMeshes = m_context["sceneNMeshes"]->getInt();
@@ -827,7 +815,7 @@ void OptixRenderer::resizeBuffers(unsigned int width, unsigned int height)
     m_raytracePassOutputBuffer->setSize( width, height );
     m_directRadianceBuffer->setSize( width, height );
     m_indirectRadianceBuffer->setSize( width, height );
-    m_randomStatesBuffer->setSize(max(PHOTON_LAUNCH_WIDTH, (unsigned int)1280), max(PHOTON_LAUNCH_HEIGHT,  (unsigned int)768));
+    m_randomStatesBuffer->setSize(max(PHOTON_LAUNCH_WIDTH, (unsigned int)width), max(PHOTON_LAUNCH_HEIGHT,  (unsigned int)height));
     initializeRandomStates();
     m_width = width;
     m_height = height;

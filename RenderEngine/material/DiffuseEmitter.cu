@@ -37,9 +37,13 @@ rtDeclareVariable(PhotonPRD, photonPrd, rtPayload, );
 RT_PROGRAM void closestHitRadiance()
 {
     float3 worldShadingNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shadingNormal ) );
+    radiancePrd.flags |= PRD_HIT_EMITTER;
+
+    if (dot(worldShadingNormal, -ray.direction) < 0.f)
+        return;
+
     float3 Le = powerPerArea/M_PIf;
     radiancePrd.radiance += radiancePrd.attenuation*Le;
-    radiancePrd.flags |= PRD_HIT_EMITTER;
     radiancePrd.lastTHit = tHit;
 }
 
@@ -101,11 +105,10 @@ RT_PROGRAM void vcmClosestHitCamera()
     float3 worldGeometricNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometricNormal ) );
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
-    float lightPickProb = 1.f / lights.size();
-  
-    float cosAtLight = maxf(0.f, dot(worldGeometricNormal, -ray.direction));
-    if (cosAtLight == 0.f) 
+    if (dot(worldGeometricNormal, -ray.direction) < 0.f)
         return;
+
+    float lightPickProb = 1.f / lights.size();
 
     float directPdfA = inverseArea;
     float emissionPdfW = CosHemispherePdfW(worldGeometricNormal, -ray.direction) * inverseArea;

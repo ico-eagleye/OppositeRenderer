@@ -159,7 +159,7 @@ void StandaloneRenderManager::fillRenderStatistics()
     }
 }
 
-// TODO this may be called very often for rapid camera changes.
+
 void StandaloneRenderManager::onSequenceNumberIncremented()
 {
     m_nextIterationNumber = 0;

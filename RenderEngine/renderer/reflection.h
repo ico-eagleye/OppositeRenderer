@@ -1,4 +1,40 @@
-// Partially borrowed from https://github.com/LittleCVR/MaoPPM
+/*
+    pbrt source code Copyright(c) 1998-2012 Matt Pharr and Greg Humphreys.
+
+    This file is part of pbrt.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    - Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    - Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+ */
+/* 
+ * Copyright (c) 2014 Opposite Renderer
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+ *
+ * BSDF, BxDF, Fresnel code is partially based on pbrt, idea of "fake virtual" functions via macros
+ * borrowed from https://github.com/LittleCVR/MaoPPM
+*/
 
 #pragma once
 
@@ -57,9 +93,9 @@ public:
     RT_FUNCTION FresnelNoOp() : Fresnel(NoOp) {  }
 
 public:
-    RT_FUNCTION optix::float3 evaluate(float) const
+    RT_FUNCTION float evaluate(float) const
     {
-        return optix::make_float3(1.0f);
+        return 1.0f;
     }
 
 };
@@ -97,7 +133,7 @@ public:
     RT_FUNCTION FresnelDielectric(float ei, float et) : Fresnel(Fresnel::Dielectric),
         eta_i(ei), eta_t(et) {  }
 
-    RT_FUNCTION optix::float3 evaluate(float cosi) const 
+    RT_FUNCTION float evaluate(float cosi) const 
     {
         using namespace optix;
 
@@ -111,18 +147,21 @@ public:
 
         // Compute _sint_ using Snell's law
         float sint = ei/et * sqrtf(fmaxf(0.0f, 1.0f - cosi*cosi));
-        if (sint >= 1.0f) {
+        if (sint >= 1.0f)
+        {
             // Handle total internal reflection
-            return optix::make_float3(1.0f);
-        } else {
+            return 1.0f;
+        }
+        else 
+        {
             cosi = fabsf(cosi);
             float cost = sqrtf(fmaxf(0.0f, 1.0f - sint*sint));
-            optix::float3 Rparl = optix::make_float3(
+            float Rparl = 
                 ((et * cosi) - (ei * cost)) /
-                ((et * cosi) + (ei * cost)));
-            optix::float3 Rperp = optix::make_float3(
+                ((et * cosi) + (ei * cost));
+            float Rperp = 
                 ((ei * cosi) - (et * cost)) /
-                ((ei * cosi) + (et * cost)));
+                ((ei * cosi) + (et * cost));
             return (Rparl*Rparl + Rperp*Rperp) * 0.5f;
         }
     }

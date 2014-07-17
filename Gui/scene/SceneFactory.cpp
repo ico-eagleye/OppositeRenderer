@@ -28,6 +28,10 @@ IScene* SceneFactory::getSceneByName( const char* name )
     {
         return new CornellSmall(CornellSmall::Default);
     }
+    else if (strcmp(name, "CornellSmallNoBlocks") == 0)
+    {
+        return new CornellSmall(CornellSmall::LightArea);
+    }
     else if (strcmp(name, "CornellSmallLargeSphere") == 0)
     {
         return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | CornellSmall::FloorGlossy | 
@@ -37,6 +41,10 @@ IScene* SceneFactory::getSceneByName( const char* name )
     {
         return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | CornellSmall::FloorGlossy |
                                 CornellSmall::LightPointStrong | CornellSmall::SmallGlassSphere | CornellSmall::SmallMirrorSphere);
+    }
+    else if (strcmp(name, "CornellSmallLightUpwards") == 0)
+    {
+        return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | CornellSmall::LightAreaUpwards );
     }
     else
     {

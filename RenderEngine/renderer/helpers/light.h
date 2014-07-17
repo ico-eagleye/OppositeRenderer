@@ -51,10 +51,6 @@ RT_FUNCTION optix::float3 getLightContribution(const Light & light, const optix:
     towardsLight = towardsLight / lightDistance;
     float n_dot_l = maxf(0, optix::dot(rec_normal, towardsLight));
     lightFactor *= n_dot_l / (M_PIf*lightDistance*lightDistance);
-    // vmarz: 
-    // area light: dividing by PI and not 1/area because light source specified in terms of power not radiance 
-    //		P=L*Pi*A for diffuse area light, [PBR 627], Rendering slides
-    // point light: intensity I = P/(4*Pi), radiance L=I/r^2
 
     if(light.lightType == Light::AREA)
     {
@@ -97,11 +93,6 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
     float3 radiance = optix::make_float3(0);
     float2 dirRnd = getRandomUniformFloat2(&aRandomState);
 
-    if (launchIdx)
-    {
-        OPTIX_PRINTFI((*launchIdx), "GenLi -      light type %d \n", aLight.lightType);
-    }
-
     if(aLight.lightType == Light::AREA)
     {
         float2 posRnd = getRandomUniformFloat2(&aRandomState);
@@ -111,21 +102,11 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
         oEmissionPdfW *= aLight.inverseArea; // p0_connect * p1 // for [tech. rep. (31)]
         oDirectPdfA = aLight.inverseArea;    // p0_direct
         radiance = aLight.Lemit * oCosThetaLight;
-        if (launchIdx)
-        {
-            OPTIX_PRINTFI((*launchIdx), "GenLi -     light Lemit % 14f % 14f % 14f\n",
-                aLight.Lemit.x, aLight.Lemit.y, aLight.Lemit.z);
-            //OPTIX_PRINTFID((*launchIdx), "GenLi -        sample x % 14f       sample y % 14f\n",
-            //    dirRnd.x, dirRnd.y);
-        }
     }
     else if(aLight.lightType == Light::POINT)
     {
         oPosition = aLight.position;
         oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
-#if DEBUG_EMIT_DIR_FIXED
-        oDirection = DEBUG_EMIT_DIR;
-#endif
         oDirectPdfA = 1.f;
         oCosThetaLight = 1.f;           // not used for delta lights
         radiance = aLight.intensity;
@@ -149,11 +130,6 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
     using namespace optix;    
     float3 radiance = optix::make_float3(0);
 
-    //if (launchIdx)
-    //{
-    //    OPTIX_PRINTFID((*launchIdx), "illum - light type      %d \n", aLight.lightType);
-    //}
-
     if (aLight.lightType == Light::AREA)
     {
         float2 posRnd = getRandomUniformFloat2(&aRandomState);
@@ -163,15 +139,6 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
         oDirectionToLight /= oDistance;
 
         float cosThetaLight = dot(aLight.normal, -oDirectionToLight);
-        //if (launchIdx)
-        //{
-        //    OPTIX_PRINTFID((*launchIdx), "illum-    light normal % 14f % 14f % 14f \n", 
-        //        aLight.normal.x, aLight.normal.y, aLight.normal.z);
-        //    OPTIX_PRINTFID((*launchIdx), "illum-    dir to point % 14f % 14f % 14f \n",
-        //        -oDirectionToLight.x,-oDirectionToLight.y, -oDirectionToLight.z);
-        //    OPTIX_PRINTFID((*launchIdx), "illum-   cosThetaLight % 14f \n", cosThetaLight);
-        //}
-
         if (cosThetaLight < EPS_COSINE)
             return radiance;
 
@@ -185,9 +152,6 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
             *oEmissionPdfW = aLight.inverseArea * cosThetaLight * M_1_PIf;
 
         radiance = aLight.Lemit;
-        //OPTIX_PRINTFI((*launchIdx), "conLI-      cosAtLight % 14f   emissionPdfW % 14f     directPdfW % 14f \n", cosThetaLight, *oEmissionPdfW, oDirectPdfW);
-        //if (launchIdx)
-        //    OPTIX_PRINTFID((*launchIdx), "illum -       radiance % 14f % 14f % 14f \n", radiance.x, radiance.y, radiance.z);
         return radiance;
     }
     else if(aLight.lightType == Light::POINT)

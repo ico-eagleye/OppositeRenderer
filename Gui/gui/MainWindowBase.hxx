@@ -52,6 +52,7 @@ private slots:
     void onActionOpenBuiltInScene();
     void onActionOpenBuiltInSceneCornell();
     void onActionOpenBuiltInSceneCornellSmall();
+    void onActionOpenBuiltInSceneCornellSmallNoBlocks();
     void onActionOpenBuiltInSceneCornellSmallLargeSphere();
     void onActionOpenBuiltInSceneCornellSmallSmallSpheres();
     void onActionOpenBuiltInSceneCornellSmallUpwardsLight();

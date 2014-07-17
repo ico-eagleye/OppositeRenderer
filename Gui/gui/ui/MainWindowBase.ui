@@ -83,6 +83,7 @@
      </property>
      <addaction name="actionCornell"/>
      <addaction name="actionCornellSmall"/>
+     <addaction name="actionCornellSmall_no_blocks"/>
      <addaction name="actionCornellSmall_large_mirror_sphere"/>
      <addaction name="actionCornellSmall_small_spheres"/>
      <addaction name="actionCornellSmall_upwards_light"/>
@@ -250,6 +251,11 @@
   <action name="actionCornellSmall_upwards_light">
    <property name="text">
     <string>CornellSmall + upwards light</string>
+   </property>
+  </action>
+  <action name="actionCornellSmall_no_blocks">
+   <property name="text">
+    <string>CornellSmall - no blocks</string>
    </property>
   </action>
  </widget>
@@ -527,6 +533,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCornellSmall_no_blocks</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindowBase</receiver>
+   <slot>onActionOpenBuiltInSceneCornellSmallNoBlocks()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onActionAbout()</slot>
@@ -541,6 +563,7 @@
   <slot>onActionOpenBuiltInScene()</slot>
   <slot>onActionOpenBuiltInSceneCornell()</slot>
   <slot>onActionOpenBuiltInSceneCornellSmall()</slot>
+  <slot>onActionOpenBuiltInSceneCornellSmallNoBlocks()</slot>
   <slot>onActionOpenBuiltInSceneCornellSmallLargeSphere()</slot>
   <slot>onActionOpenBuiltInSceneCornellSmallSmallSpheres()</slot>
   <slot>onActionOpenBuiltInSceneCornellSmallUpwardsLight()</slot>

@@ -1,4 +1,8 @@
-// TOLICENSE
+/* 
+ * Copyright (c) 2014 Opposite Renderer
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+*/
 
 #pragma once
 //#include <optix_world.h>
@@ -9,7 +13,7 @@ struct LightVertex
 {
     optix::float3   hitPoint;
     optix::float3   throughput;
-    LightBSDF       bsdf;
+    VcmBSDF         bsdf;
     optix::uint2    launchIndex;    // for debug TODO remove
     optix::uint     pathLen;
     float           dVCM;

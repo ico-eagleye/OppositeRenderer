@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
 */
@@ -145,6 +145,7 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     aCameraPrd.dVC = 0;
     aCameraPrd.dVM = 0;
     aCameraPrd.dVCM = 0;
+    aCameraPrd.isSpecularPath = true;
 #if VCM_UNIFORM_VERTEX_SAMPLING
     aCameraPrd.dVC_unif_vert = 0;
 #endif
@@ -156,7 +157,6 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     
     aCameraPrd.origin = camera.eye;
     aCameraPrd.direction = normalize(d.x*camera.camera_u + d.y*camera.camera_v + camera.lookdir);
-    //modifyRayForDepthOfField(camera, rayOrigin, rayDirection, radiancePrd.randomState);     // vmarz TODO add ?
 
     // pdf conversion factor from area on image plane to solid angle on ray
     float cosAtCamera = dot(normalize(camera.lookdir), aCameraPrd.direction);

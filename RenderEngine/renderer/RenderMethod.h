@@ -10,7 +10,7 @@ namespace RenderMethod
     enum E
     {
         PATH_TRACING,
-        BIDIRECTIONAL_PATH_TRACING,
+        VCM_BIDIRECTIONAL_PATH_TRACING,
         PROGRESSIVE_PHOTON_MAPPING,
         NONE
     };

@@ -217,7 +217,7 @@ RT_PROGRAM void vcmClosestHitLight()
     float4 texColor4 = tex2D( diffuseSampler, textureCoordinate.x, textureCoordinate.y );
     float3 texColor = make_float3(texColor4.x, texColor4.y, texColor4.z);
     
-    LightBSDF lightBsdf = LightBSDF(geometricNormal, -ray.direction);
+    VcmBSDF lightBsdf = VcmBSDF(geometricNormal, -ray.direction, true);
     Lambertian lambertian = Lambertian(texColor);
     lightBsdf.AddBxDF(&lambertian);
 
@@ -254,7 +254,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     float4 texColor4 = tex2D( diffuseSampler, textureCoordinate.x, textureCoordinate.y );
     float3 texColor = make_float3(texColor4.x, texColor4.y, texColor4.z);
     
-    CameraBSDF cameraBsdf = CameraBSDF(worldGeometricNormal, -ray.direction);
+    VcmBSDF cameraBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, false);
     Lambertian lambertian = Lambertian(texColor);
     cameraBsdf.AddBxDF(&lambertian);
 

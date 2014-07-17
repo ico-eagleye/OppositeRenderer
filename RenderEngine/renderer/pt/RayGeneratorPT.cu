@@ -120,7 +120,13 @@ RT_PROGRAM void generateRay()
  
     // Write outputbuffer radiance value
     //outputBuffer[launchIndex] = averageInNewRadiance(finalRadiance, outputBuffer[launchIndex], localIterationNumber);
-    outputBuffer[launchIndex] = localIterationNumber == 0 ? finalRadiance : outputBuffer[launchIndex] + finalRadiance;
+
+    // TODO FIX
+    // something bad happens in few bottom rows in somve scenes (exact straight rows of black pixels)
+    if (!isNaN(finalRadiance))
+    {
+        outputBuffer[launchIndex] = localIterationNumber == 0 ? finalRadiance : outputBuffer[launchIndex] + finalRadiance;
+    }
     randomStates[launchIndex] = radiancePrd.randomState;
 }
 

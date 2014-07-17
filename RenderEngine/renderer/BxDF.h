@@ -1,4 +1,40 @@
-// Partially borrowed from https://github.com/LittleCVR/MaoPPM
+/*
+    pbrt source code Copyright(c) 1998-2012 Matt Pharr and Greg Humphreys.
+
+    This file is part of pbrt.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    - Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    - Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+ */
+/* 
+ * Copyright (c) 2014 Opposite Renderer
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+ *
+ * BSDF, BxDF, Fresnel code is partially based on pbrt, idea of "fake virtual" functions via macros
+ * borrowed from https://github.com/LittleCVR/MaoPPM
+*/
 
 #pragma once
 
@@ -86,25 +122,6 @@ public:
         return optix::make_float3(0.0f);
     }
 
-    //#define BxDF_rho \
-    //__device__ __forceinline__ optix::float3 rho(unsigned int nSamples, \
-    //        const float * samples1, const float * samples2) const \
-    //{ \
-    //    optix::float3 r = optix::make_float3(0.0f); \
-    //    for (unsigned int i = 0; i < nSamples; ++i) \
-    //    { \
-    //        optix::float3 wo, wi; \
-    //        wo = sampleUniformSphere(optix::make_float2(samples1[2*i], samples1[2*i+1])); \
-    //        float pdf_o = (2.0f * M_PIf), pdf_i = 0.f; \
-    //        optix::float3 f = sampleF(wo, &wi, \
-    //            optix::make_float2(samples2[2*i], samples2[2*i+1]), &pdf_i); \
-    //        if (pdf_i > 0.0f) \
-    //            r += f * fabsf(cosTheta(wi)) * fabsf(cosTheta(wo)) / (pdf_o * pdf_i); \
-    //    } \
-    //    return r / (M_PIf*nSamples); \
-    //}
-
-
     RT_FUNCTION optix::float3 rho( unsigned int  aNSamples,
                                    const float * aSamples1, 
                                    const float * aSamples2 ) const
@@ -112,12 +129,14 @@ public:
         return optix::make_float3(0.0f);
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
         return 0.f;
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
     {
         return 0.f;
     }
@@ -207,15 +226,16 @@ public:
         return _reflectance;
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
-        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
-        //return optix::luminanceCIE(_reflectance);  // using luminance causes noise in the image
+        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
     {
-        return 0.f;
+        return optix::luminanceCIE(_reflectance);
     }
 
     // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
@@ -254,14 +274,16 @@ public:
         BxDF(BxDF::Type( BxDF::Phong | BxDF::Reflection | BxDF::Glossy )),
         _reflectance(aReflectance), _exponent(aExponent) {  }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
-        return maxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
     {
-        return 0.f;
+        return optix::luminanceCIE(_reflectance);
     }
 
     // Evaluates brdf, returns pdf if oPdf is not NULL
@@ -275,7 +297,10 @@ public:
         const float dot_R_Wi = dot(reflLocalDirIn, aWi);
 
         if (dot_R_Wi <= EPS_PHONG)
+        {
+            if (oPdfW) *oPdfW = 0.f;
             return make_float3(0.f);
+        }
 
         if (oPdfW)
             *oPdfW = powerCosHemispherePdfW(reflLocalDirIn, aWi, _exponent);
@@ -307,7 +332,7 @@ public:
         using namespace optix;
 
         *oWi = samplePowerCosHemisphereW(aSample, _exponent, NULL);
-        
+
         // Comment from SmallVCN:
         // Due to numeric issues in MIS, we actually need to compute all pdfs
         // exactly the same way all the time!!!
@@ -321,7 +346,10 @@ public:
         const float dot_R_Wi = dot(reflLocalDirIn, *oWi);
         
         if (dot_R_Wi <= EPS_PHONG)
+        {
+            if (oPdfW) *oPdfW = 0.f;
             return make_float3(0.f);
+        }
 
         if (oPdfW)
             *oPdfW = pdf(aWo, *oWi);
@@ -344,8 +372,7 @@ public:
                                     float               * oDirectPdfW = NULL,
                                     float               * oReversePdfW = NULL ) const
     {
-        using namespace optix;
-        float pdf;
+        float pdf = 0.f;
         float3 f = this->f(aWo, aWi, &pdf);        
         if (oDirectPdfW)  *oDirectPdfW = pdf;
         if (oReversePdfW)  *oReversePdfW = pdf;
@@ -367,7 +394,7 @@ public:
         _reflectance(aReflectance) 
     {
         Fresnel *fresnel = reinterpret_cast<Fresnel *>(&_fresnel);
-        memcpy(fresnel, aFresnel, MAX_FRESNEL_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
+        memcpy(fresnel, aFresnel, MAX_FRESNEL_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway        
     }
 
 public:
@@ -381,14 +408,20 @@ public:
         return reinterpret_cast<const Fresnel *>(_fresnel);
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
-        return optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return R * optix::fmaxf(_reflectance.x, maxf(_reflectance.y, _reflectance.z));
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
     {
-        return 0.f;
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return R * optix::luminanceCIE(_reflectance);
     }
 
     RT_FUNCTION optix::float3 f( const optix::float3 & /* wo */, const optix::float3 & /* wi */, float * oPdfW = NULL) const
@@ -409,13 +442,24 @@ public:
     {
         *oWi = optix::make_float3(-aWo.x, -aWo.y, aWo.z);
         *oPdfW = 1.0f;
-        optix::float3 F;
-        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(F, =, fresnel(), evaluate, localCosTheta(aWo));
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
 
         // BSDF is multiplied by cosThetaOut when computing throughput to scattered direction. It shouldn't
         // be done for specular reflection, hence predivide here to cancel it out
-        F = F * _reflectance / fabsf(localCosTheta(*oWi));
-        return F;
+        return R * _reflectance / fabsf(localCosTheta(*oWi));
+    }
+
+    // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float               * oDirectPdfW = NULL,
+                                    float               * oReversePdfW = NULL ) const
+    {
+        float pdf = 0.f;      
+        if (oDirectPdfW)  *oDirectPdfW = pdf;
+        if (oReversePdfW)  *oReversePdfW = pdf;
+        return optix::make_float3(0.f);
     }
 };
 
@@ -425,17 +469,17 @@ public:
 class SpecularTransmission : public BxDF 
 {
 private:
-    optix::float3      m_transmittance;
-    FresnelDielectric  m_fresnel;
+    optix::float3      _transmittance;
+    FresnelDielectric  _fresnel;
 
 public:
     RT_FUNCTION SpecularTransmission(const optix::float3 & transmittance, float ei, float et) :
         BxDF(BxDF::Type(BxDF::SpecularTransmission | BxDF::Transmission | BxDF::Specular)),
-        m_transmittance(transmittance), m_fresnel(ei, et) {  }
+        _transmittance(transmittance), _fresnel(ei, et) {  }
 
 public:
-    RT_FUNCTION FresnelDielectric * fresnel() { return &m_fresnel; }
-    RT_FUNCTION const FresnelDielectric * fresnel() const { return &m_fresnel; }
+    RT_FUNCTION FresnelDielectric * fresnel() { return &_fresnel; }
+    RT_FUNCTION const FresnelDielectric * fresnel() const { return &_fresnel; }
 
 public:
     RT_FUNCTION optix::float3 f( const optix::float3 & wo , const optix::float3 &  wi, float * oPdfW = NULL ) const
@@ -448,14 +492,20 @@ public:
         return 0.0f;
     }
 
-    RT_FUNCTION float reflectProbability() const
+    // for Russian Roulette continuation prob computation
+    RT_FUNCTION float continuationProb( const optix::float3 & aWo ) const
     {
-        return 0.f;
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return 1.f - R;
     }
 
-    RT_FUNCTION float transmitProbability() const
+    // for bxdf sampling probability
+    RT_FUNCTION float albedo( const optix::float3 & aWo ) const
     {
-        return 1.f;
+        float R;
+        CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(R, =, fresnel(), evaluate, localCosTheta(aWo));
+        return (1.f - R) * optix::luminanceCIE(_transmittance);
     }
 
     RT_FUNCTION optix::float3 sampleF( const optix::float3 & aWo,
@@ -485,15 +535,27 @@ public:
         *oPdfW = 1.f;
 
         // reflection/refraction coefficients
-        float3 F = fresnel()->evaluate(localCosTheta(aWo));
-        float3 R = make_float3(1.f) - F;
+        float R = fresnel()->evaluate(localCosTheta(aWo));
+        float T = 1.f - R;
 
         // aRadianceFromCamera used for VCM when radiance flows from camera and particle importance/weights from light.
         // etas are swapped, hence the scaling
         if (aRadianceFromCamera)
-            return /*(ei*ei)/(et*et) * */ R * m_transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
+            return /*(ei*ei)/(et*et) * */ T * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
         else
-            return /*(ei*ei)/(et*et) * */ R * m_transmittance / fabsf(localCosTheta(*oWi));
+            return /*(ei*ei)/(et*et) * */ T * _transmittance / fabsf(localCosTheta(*oWi));
+    }
+
+    // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
+    RT_FUNCTION optix::float3 vcmF( const optix::float3 & aWo,
+                                    const optix::float3 & aWi,
+                                    float               * oDirectPdfW = NULL,
+                                    float               * oReversePdfW = NULL ) const
+    {
+        float pdf = 0.f;      
+        if (oDirectPdfW)  *oDirectPdfW = pdf;
+        if (oReversePdfW)  *oReversePdfW = pdf;
+        return optix::make_float3(0.f);
     }
 };
 

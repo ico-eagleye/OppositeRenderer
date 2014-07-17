@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
 */
@@ -130,6 +130,7 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     aLightPrd.dVM = 0.f;
     aLightPrd.dVCM = 0.f;
     aLightPrd.done = false;
+    aLightPrd.isSpecularPath = true;
     aLightPrd.randomState = randomStates[launchIndex];
     lightSubpathLengthBuffer[launchIndex] = 0u;
 
