@@ -453,7 +453,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     // Comment from SmallVCM
     // Partial eye sub-path MIS weight [tech. rep. (45)].
     //
-    // In front of the sum in the parenthesis we have Mis(ratio), where
+    // In front of the sum in the parenthesis we have vcmMis(ratio), where
     //    ratio = emissionPdfA / directPdfA,
     // with emissionPdfA being the product of the pdfs for choosing the
     // point on the light source and sampling the outgoing direction.
@@ -488,7 +488,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
 RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::float3 &aRadiance, float & aDirectPdfA, 
                                      float & aEmissionPdfW, float aLightPickProb, int aUseVC, int aUseVM)
 {
-    if (aCameraPrd.depth == 1) // first hit, see directly from camera, no weighting needed
+    if (aCameraPrd.depth == 1) // first hit, seen directly from camera, no weighting needed
     {
         aCameraPrd.color += aCameraPrd.throughput * aRadiance;
         return;
@@ -502,8 +502,8 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
     //    return;
     //}
 
-    aDirectPdfA *= aLightPickProb;
-    aEmissionPdfW *= aLightPickProb;
+    aDirectPdfA *= aLightPickProb;  // p0connect in [tech. rep. (43)].
+    aEmissionPdfW *= aLightPickProb;// p0trace in [tech. rep. (43)].
 
     // Partial eye sub-path MIS weight [tech. rep. (43)].
     // If the last hit was specular, then dVCM == 0.
