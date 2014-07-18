@@ -416,7 +416,7 @@ protected:
 
 public:
     // Evaulates pdf for given direction, returns reverse pdf if aEvalRevPdf == true
-    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, BxDF::Type aSampleType = BxDF::AllType, bool aEvalRevPdf = false) const
+    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, BxDF::Type aSampleType = BxDF::All, bool aEvalRevPdf = false ) const
     {      
         optix::float3 wi = _diffGemetry.ToLocal(oWorldDirGen);
 
@@ -431,6 +431,7 @@ public:
             if (bxdfAt(i)->matchFlags(aSampleType))
             {
                 float compPdf = 0.f;
+                CALL_BXDF_CONST_VIRTUAL_FUNCTION(compPdf, +=, bxdfAt(i), pdf, _localDirFix, wi, aEvalRevPdf);
                 // scale by bxdf picking probability
                 pdf += compPdf *_bxdfPickProb[i] / matchedBxdfPickProbSum;
             }
