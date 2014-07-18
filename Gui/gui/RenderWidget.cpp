@@ -268,7 +268,7 @@ void RenderWidget::saveImageAsBMP(const char * fileName)
     std::ofstream bmp(fileName, std::ios::binary);
 
     uint width = m_outputSettingsModel.getWidth();
-    uint height = m_outputSettingsModel.getWidth();
+    uint height = m_outputSettingsModel.getHeight();
 
     BmpHeader header;
     bmp.write("BM", 2);
