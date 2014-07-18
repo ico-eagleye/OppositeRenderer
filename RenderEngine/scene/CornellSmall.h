@@ -27,14 +27,15 @@ public:
         LightAreaUpwards   = 1<<2,
         LightPoint         = 1<<3,
         LightPointStrong   = 1<<4,
-        BackwallBlue       = 1<<5,
-        FloorMirror        = 1<<6,
-        FloorGlossy        = 1<<7,
-        Blocks             = 1<<8,
-        LargeMirrorSphere  = 1<<9,
-        LargeGlassSphere   = 1<<10,
-        SmallMirrorSphere  = 1<<11,
-        SmallGlassSphere   = 1<<12,
+        LightPointDistant  = 1<<5,
+        BackwallBlue       = 1<<6,
+        FloorMirror        = 1<<7,
+        FloorGlossy        = 1<<8,
+        Blocks             = 1<<9,
+        LargeMirrorSphere  = 1<<10,
+        LargeGlassSphere   = 1<<11,
+        SmallMirrorSphere  = 1<<12,
+        SmallGlassSphere   = 1<<13,
         Default            = (LightArea | Blocks)
     };
 

@@ -43,13 +43,20 @@ void CornellSmall::initialize()
         m_sceneLights.push_back(light);
     }
     else if ( ((m_config & Config::LightPoint)       != 0) || 
-              ((m_config & Config::LightPointStrong) != 0) )
+              ((m_config & Config::LightPointStrong) != 0) ||
+              ((m_config & Config::LightPointDistant) != 0) )
     {
         // point light
         optix::float3 anchor = optix::make_float3( 1.25f, 2.25f, 1.25f);
         float power = 30.f;
         if ((m_config & Config::LightPointStrong) != 0)
             power = 70.f;
+        if ((m_config & Config::LightPointDistant) != 0)
+        {
+            power = 200.f;
+            anchor += optix::make_float3( 0.f, 5.f, 0.f);
+        }
+            
         Light light(power, anchor);
         m_sceneLights.push_back(light);
     }
@@ -174,10 +181,13 @@ optix::Group CornellSmall::getSceneRootGroup(optix::Context & context)
         *matFloor ) );
 
     // Ceiling
-    gis.push_back( createParallelogram(1, context, optix::make_float3( 0.0f, 2.5f, 0.0f ),
-        optix::make_float3( 2.5f, 0.0f, 0.0f ),
-        optix::make_float3( 0.0f, 0.0f, 2.5f ),
-        *matCeiling ) );
+    if ((m_config & Config::LightPointDistant) == 0)
+    {
+        gis.push_back( createParallelogram(1, context, optix::make_float3( 0.0f, 2.5f, 0.0f ),
+            optix::make_float3( 2.5f, 0.0f, 0.0f ),
+            optix::make_float3( 0.0f, 0.0f, 2.5f ),
+            *matCeiling ) );
+    }
 
     // Back wall
     gis.push_back( createParallelogram(2, context,optix::make_float3( 0.0f, 0.0f, 2.5f),

@@ -46,6 +46,11 @@ IScene* SceneFactory::getSceneByName( const char* name )
     {
         return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | CornellSmall::LightAreaUpwards );
     }
+    else if (strcmp(name, "CornellSmallPointDistant") == 0)
+    {
+        return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | //CornellSmall::FloorGlossy |
+            CornellSmall::LightPointDistant | CornellSmall::SmallGlassSphere | CornellSmall::SmallMirrorSphere);
+    }
     else
     {
         return Scene::createFromFile(name);
