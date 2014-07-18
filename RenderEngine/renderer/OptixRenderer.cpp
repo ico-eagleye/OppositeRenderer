@@ -692,7 +692,15 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             // Estimate average light subpath length and initialize vertex buffer with appropriate size
             if (!m_lightVertexCountEstimated)
             {
-                m_lightSubpathLengthBuffer->setSize(VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH, VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT);
+                //float estimateWidth = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH;
+                //float estimateHeight = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
+                // For now do estimate on same launch dimensions as main passes since have seen some buffer access
+                // exceptions using distant point light, e.g. too few rays hit the scene in estimate pass.
+                // Should change it to shoot rays towards the scene.
+                unsigned int estimateWidth = m_width;
+                unsigned int estimateHeight = m_height;
+
+                m_lightSubpathLengthBuffer->setSize(estimateWidth, estimateHeight);
 
                 // Transfer any data to the GPU (trigger an empty launch)
                 dbgPrintf("VCM: init empty launch\n");
@@ -701,21 +709,19 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
                 // Estimate light subpath length to initialize light vertex cache (LVC)
                 {
-                    dbgPrintf("OptixEntryPoint::VCM_LIGHT_PASS subpath length estimate launch dim %u x %u\n", 
-                        VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH, VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT);
+                    dbgPrintf("OptixEntryPoint::VCM_LIGHT_PASS subpath length estimate launch dim %u x %u\n", estimateWidth, estimateHeight);
                     m_context["maxPathLen"]->setUint(VCM_MAX_PATH_LENGTH);
                     m_context["lightVertexCountEstimatePass"]->setUint(1u);
                     nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
                     sutilCurrentTime( &t0 );
-                    m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS,
-                        VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH, VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT );
+                    m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, estimateWidth, estimateHeight );
                     sutilCurrentTime( &t1 );
                     dbgPrintf("LVC size estimate launch time: %.4f.\n", t1-t0);
                 }
 
                 // get average path length / vertex count
                 optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathLengthBuffer->map());
-                const unsigned int subpathEstimateCount = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH * VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
+                const unsigned int subpathEstimateCount = estimateWidth * estimateHeight;
                 unsigned long long sumPathLengths = 0;
                 unsigned int maxLen = 0;
 
@@ -731,8 +737,11 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 dbgPrintf("LVC estimate. paths: %u  vertices: %llu  avgLen: %f  maxLen: %u\n",
                     subpathEstimateCount, sumPathLengths, avgSubpathLength, maxLen);
 
-                // init light vertex buffer based on average length + ~10% extra
-                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength) / 0.8f;
+                // Init light vertex buffer based on average length.
+                // Estimate currently is inaccurate in case when with distance light source so add big safety margin,
+                // if it happens to be bigger than allowed length then just use that one instead
+                avgSubpathLength = std::min(avgSubpathLength / 0.6f, float(VCM_MAX_PATH_LENGTH-1));
+                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength);
                 m_lightVertexBuffer->setSize(vertBufSize);
                 dbgPrintf("Vertex buffer size set to: %u \n", vertBufSize);
                 
