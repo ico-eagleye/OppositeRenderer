@@ -176,9 +176,9 @@ RT_PROGRAM void closestHitPhoton()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vertex Connection and Merging
-#define OPTIX_PRINTF_ENABLED 1
-#define OPTIX_PRINTFI_ENABLED 1
-#define OPTIX_PRINTFID_ENABLED 1
+#define OPTIX_PRINTF_ENABLED 0
+#define OPTIX_PRINTFI_ENABLED 0
+#define OPTIX_PRINTFID_ENABLED 0
 
 rtDeclareVariable(Camera,     camera, , );
 rtDeclareVariable(float2,     pixelSizeFactor, , );
@@ -257,6 +257,8 @@ RT_PROGRAM void vcmClosestHitCamera()
     VcmBSDF cameraBsdf = VcmBSDF(worldGeometricNormal, -ray.direction, false);
     Lambertian lambertian = Lambertian(texColor);
     cameraBsdf.AddBxDF(&lambertian);
+
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - texture hit Kd  % 14f % 14f % 14f\n", texColor.x, texColor.y, texColor.z);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
     rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);

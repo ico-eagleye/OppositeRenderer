@@ -61,7 +61,7 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
 
 #define OPTIX_PRINTFC_ENABLED 0
 #define OPTIX_PRINTFID_ENABLED 0
-#define OPTIX_PRINTFCID_ENABLED 1
+#define OPTIX_PRINTFCID_ENABLED 0
 RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
@@ -191,8 +191,7 @@ RT_FUNCTION void sampleScattering( SubpathPRD                   & aSubpathPrd,
     float bsdfRevPdfW = bsdfDirPdfW;
     bool isSpecularEvent = BxDF::matchFlags(sampledEvent, BxDF::Specular);
     if (!isSpecularEvent)       // evaluate pdf for non-specular event, otherwise it is the same as direct pdf
-        bsdfRevPdfW = aBsdf.pdf(aSubpathPrd.direction, true, BxDF::Type(BxDF::AllType & ~BxDF::Specular));
-    
+        bsdfRevPdfW = aBsdf.pdf(aSubpathPrd.direction, BxDF::Type(BxDF::All & ~BxDF::Specular), true);
     aSubpathPrd.isSpecularPath = (aSubpathPrd.isSpecularPath && isSpecularEvent);
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;

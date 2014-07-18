@@ -5,6 +5,9 @@
 */
 
 #pragma once
+
+#define OPTIX_PRINTFI_DEF
+
 #include "helpers.h"
 #include <optix.h>
 #include <optixu/optixu_math_namespace.h>
@@ -52,7 +55,7 @@ RT_FUNCTION static optix::float3 sampleUnitHemisphere(const optix::float3 & norm
 RT_FUNCTION static optix::float3 sampleUnitSphere(const optix::float2& sample, float * oPdfW = NULL)
 {
     optix::float3 v;
-    v.z = 1.f - 2.f * sample.x; // vmarz: needs to be in range [-1,1], actually is (-1,1) due random number range
+    v.z = 1.f - 2.f * sample.x; // vmarz: needs to be in range [-1,1], actually is (-1,1] due random number range [0,1}
     float phi =  2*M_PIf*sample.y;
     float r = sqrtf(1.f - v.z * v.z);
     v.x = r * cosf(phi);
@@ -99,7 +102,7 @@ RT_FUNCTION float powerCosHemispherePdfW( const optix::float3 & aNormal,
 
 RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamples,
                                                      const float           aPower,
-                                                     float               * oPdfW )
+                                                     float               * oPdfW = NULL )
 {
     using namespace optix;
     const float term1 = 2.f * M_1_PIf * aSamples.x;
@@ -112,6 +115,46 @@ RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamp
     }
 
     return make_float3( cosf(term1) * term3, sinf(term1) * term3, term2);
+}
+
+#define OPTIX_PRINTFI_ENABLED 0
+// Sample disc (normal must be normalized)
+RT_FUNCTION optix::float3 sampleCone(const optix::float2 & aSample, const float aTheta, 
+                                     const optix::float3 & aNormal, float * oPdfW = NULL, optix::uint2 * launchIdx = NULL)
+{
+    // TODO fix, seems to be a bug here
+    using namespace optix;
+    float3 U, V;
+    createCoordinateSystem( aNormal, U, V);
+
+    float cosTheta = cosf(aTheta);
+    float zSampleRange = 1.f - cosTheta;
+    float z = cosTheta + zSampleRange * aSample.x;
+    //OPTIX_PRINTFI((*launchIdx), "GenLi -              z= % 14f = 1 - cosTheta % 14f + zSampleRange % 14f * aSample.x \n", z, cosTheta, zSampleRange);
+
+    float phi =  2 * M_PIf * aSample.y;
+    float r = sqrtf(1.f - z * z);
+    float x = r * cosf(phi);
+    float y = r * sinf(phi);
+
+    //OPTIX_PRINTFI((*launchIdx), "GenLi -             phi % 14f              x % 14f              y % 14f \n", phi, x, y);
+
+    if (oPdfW)
+    {
+        float coneSolidAngle = 2.f * M_PIf * (1.f - cosTheta);
+        *oPdfW = coneSolidAngle * 0.25f * M_1_PIf; // div by sphere solid angle
+    }
+
+    //OPTIX_PRINTFI((*launchIdx), "GenLi -               U % 14f % 14f % 14f \n", U.x, U.y, U.z);
+    //OPTIX_PRINTFI((*launchIdx), "GenLi -               V % 14f % 14f % 14f \n", V.x, V.y, V.z);
+    optix::normalize(x*U + z*aNormal + y*V);
+}
+#define OPTIX_PRINTFI_ENABLED 0
+
+RT_FUNCTION float sampleConePdfW( const float aTheta )
+{
+    float coneSolidAngle = 2.f * M_PIf * (1.f - cosf(aTheta) );
+    return coneSolidAngle * 0.25f * M_1_PIf; // div by sphere solid angle
 }
 
 

@@ -215,7 +215,7 @@ RT_PROGRAM void vcmClosestHitCamera()
     Lambertian lambertian(Kd);
     cameraBsdf.AddBxDF(&lambertian);
 
-    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - incident Kd     % 14f % 14f % 14f\n", Kd.x, Kd.y, Kd.z);
+    OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - diffuse hit Kd  % 14f % 14f % 14f\n", Kd.x, Kd.y, Kd.z);
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
     rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);

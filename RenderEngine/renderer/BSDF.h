@@ -38,9 +38,11 @@
 
 #pragma once
 
-//#define OPTIX_PRINTF_DEF
-//#define OPTIX_PRINTFI_DEF
-//#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTF_DEF
+#define OPTIX_PRINTFI_DEF
+#define OPTIX_PRINTFID_DEF
+#define OPTIX_PRINTFC_DEF
+#define OPTIX_PRINTFCID_DEF
 
 #include <optix_world.h>
 #include <optixu/optixu_math_namespace.h>
@@ -126,7 +128,8 @@ public:
         // get BxDF list address and copy data
         // don't care if copy too much, extra bytes won't be used by target type anyway
         BxDF *pBxDF = reinterpret_cast<BxDF *>(&_bxdfList[_nBxDFs * MAX_BXDF_SIZE]);
-        memcpy(pBxDF, bxdf, MAX_BXDF_SIZE);
+        memcpy(pBxDF, bxdf, MAX_BXDF_SIZE); // don't care if copy too much, extra bytes won't be used by target type anyway
+        _nBxDFs++;
         return 1;
     }
 
@@ -369,7 +372,7 @@ protected:
         unsigned int nMatched = nBxDFs(aType);
         if (nMatched == 0) return 0;
 
-        oMatchedPickProbSum = sumContProb(aType);
+        oMatchedPickProbSum = sumPickProb(aType);
         float contProbPrev = 0.f;
         float contProb = 0.f;
         for (unsigned int i = 0; i < _nBxDFs; ++i)
@@ -390,7 +393,7 @@ protected:
     }
 
 
-    RT_FUNCTION float sumContProb(BxDF::Type aType) const
+    RT_FUNCTION float sumPickProb(BxDF::Type aType) const
     {
         float contProb = 0.f;
         for (unsigned int i = 0; i < _nBxDFs; ++i)
@@ -405,11 +408,13 @@ protected:
 
 public:
     // Evaulates pdf for given direction, returns reverse pdf if aEvalRevPdf == true
-    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, bool aEvalRevPdf, BxDF::Type aSampleType = BxDF::AllType) const
+    RT_FUNCTION float pdf( optix::float3 & oWorldDirGen, BxDF::Type aSampleType = BxDF::All, bool aEvalRevPdf = false ) const
     {      
         optix::float3 wi = _diffGemetry.ToLocal(oWorldDirGen);
 
-        float matchedBxdfPickProbSum = sumContProb(aSampleType);
+        float matchedBxdfPickProbSum = sumPickProb(aSampleType);
+        bool match = bxdfAt(0)->matchFlags(aSampleType);
+
         if (matchedBxdfPickProbSum == 0.f) return 0.f;
 
         float pdf = 0.f;
@@ -418,7 +423,7 @@ public:
             if (bxdfAt(i)->matchFlags(aSampleType))
             {
                 float compPdf = 0.f;
-                CALL_BXDF_CONST_VIRTUAL_FUNCTION(compPdf, +=, bxdfAt(i), pdf, _localDirFix, wi, true);
+                CALL_BXDF_CONST_VIRTUAL_FUNCTION(compPdf, +=, bxdfAt(i), pdf, _localDirFix, wi, aEvalRevPdf);
                 // scale by bxdf picking probability
                 pdf += compPdf *_bxdfPickProb[i] / matchedBxdfPickProbSum;
             }
@@ -593,7 +598,7 @@ public:
         else
             aSampleType = BxDF::Type(aSampleType & ~BxDF::Reflection);        // ignore BRDF
         
-        float matchedBxdfPickProbSum = sumContProb(aSampleType);
+        float matchedBxdfPickProbSum = sumPickProb(aSampleType);
         if (matchedBxdfPickProbSum == 0.f) return optix::make_float3(0.0f);
 
         // Sum all matched BxDF's f and probability
