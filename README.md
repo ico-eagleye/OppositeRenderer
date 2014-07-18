@@ -1,8 +1,14 @@
-
 # Opposite Renderer
 Forked from [apartridge/OppositeRenderer](https://github.com/apartridge/OppositeRenderer)
 
 In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented in [CUDA](https://wikipedia.org/wiki/CUDA) using [OptiX](https://en.wikipedia.org/wiki/OptiX) library. It allows importing [Collada](https://en.wikipedia.org/wiki/Collada) scenes files and then render them to an image using [Progressive Photon Mapping](http://www.cgg.unibe.ch/publications/2011/progressive-photon-mapping-a-probabilistic-approach).
+
+### This fork
+The project was forked to use it was basis for implementation of [Vertex Connection and Merging algorithm] (http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of Master's thesis project. The initially set goal has not been achieved, only Vertex Connection part has been implemented (no merging).
+
+The Server project hasn't been yet updated to work correctly due to changes in RenderEnging. So currently it compiles, but is non functional.
+
+The Sponza scene linked in the Stian's page has broken image references and fails to load. An updated version can be found [here] (http://dl.dropboxusercontent.com/u/3170426/Thesis/sponza.zip) the textures should be downloaded from [Crytek](http://www.crytek.com/cryengine/cryengine3/downloads) and extracted in same directory as the scene.
 
 ## Where To Start?
 If this is your first time hearing about *Opposite Renderer*, we recommend you start with the original website: [http://apartridge.github.io/OppositeRenderer/](http://apartridge.github.io/OppositeRenderer/).
@@ -17,25 +23,27 @@ If this is your first time hearing about *Opposite Renderer*, we recommend you s
 
 ### Dependencies
 
-- [Visual Studio 2012](http://www.visualstudio.com/)
-- [CUDA](https://developer.nvidia.com/cuda-downloads) v5.5 
-- [OptiX SDK](https://developer.nvidia.com/optix-download) v3.5
+- [Visual Studio 2010/2012](http://www.visualstudio.com/)
+- [CUDA](https://developer.nvidia.com/cuda-downloads) v5.5 (v6.0 nvcc has a bug failing on compilation) 
+- [OptiX SDK](https://developer.nvidia.com/optix-download) v3.5+
    - **Note:** You must register to [Nvidia Developer Zone](https://developer.nvidia.com/user/register) First
    - Take note that OptiX 3.0.1 [is not compatible](http://developer.download.nvidia.com/assets/tools/files/optix/3.0.1/NVIDIA-OptiX-SDK-3.0.1-OptiX_Release_Notes.pdf) with CUDA 5.5 
-- [Qt SDK](http://qt-project.org/downloads) 5.x for Windows (VS 201X)
+- [Qt SDK with OpenGL](http://qt-project.org/downloads) 5.x for Windows (VS 201X)
 - [FreeGlut](http://www.transmissionzero.co.uk/software/freeglut-devel/) MSVC Package
 - [GLEW](http://sourceforge.net/projects/glew/files/) - OpenGL Extension Wrangler Library  
 - [Open Asset Import Library](http://sourceforge.net/projects/assimp/files/)
 - A [CUDA compatible GPU](https://developer.nvidia.com/cuda-gpus) 2.0 or greater. Almost all recent GeForce GPUs support CUDA.
-- Windows 7 or newer, running on x64.
-
-
+- Windows 7 or newer
 
 ### Building
 
-The project needs some [environment variables](http://environmentvariables.org/Main_Page#Environment_variables) to be set so it can build. If you don't define them you will get missing files errors while compiling.
+The project is set up to use VS2010 toolset for Win32 build and VS2012 for x64. The variation is purely because of Qt with OpenGL packages that were available precompiled. 
+
+The solution is modular and consists of 5 projects. 
+
+The project needs some [environment variables](http://environmentvariables.org/Main_Page#Environment_variables) pointing to dependencies to be set so it can build. Alternatively you can set those values in `SDKs.props` file in the solution root directory .
  
-* [Define](http://environmentvariables.org/Getting_and_setting_environment_variables) the following environment variables:
+* [Define](http://environmentvariables.org/Getting_and_setting_environment_variables) the following environment variables or properties in SKDs.props:
 
 	- `QTDIR` should point to your QT instalation dir.
 	- `GLEW_PATH` point to where you extracted GLEW.
@@ -53,15 +61,9 @@ The project needs some [environment variables](http://environmentvariables.org/M
 	    ASSIMP_PATH=C:\Program Files\Assimp
 	    FREEGLUT_PATH=C:\Program Files\Common Files\freeglut
 	    OPTIX_PATH=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.5.1
-		CUDA_USE_VER=5.5
-		OPTIX_USE_VER=3.5.1
-		OPTIX_PATH_V3_5_1=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.5.1
-		OPTIX_PATH_V3_6_0=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0
+      CUDA_USE_VER=5.5
+      OPTIX_USE_VER=3.5.1
+      OPTIX_PATH_V3_5_1=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.5.1
+      OPTIX_PATH_V3_6_0=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0
 
 * Open the Visual Studio Solution `OppositeRenderer.sln` and build.
-
-### Running
-
-1. Go to the folder `%USER_ROOT%\VisualStudioBuilds\OppositeRenderer\Debug`
-2. Open `Server.exe` and `Client.exe` or just `Standalone.exe`
-3. Enjoy!
