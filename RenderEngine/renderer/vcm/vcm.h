@@ -238,9 +238,11 @@ RT_FUNCTION void sampleScattering( SubpathPRD                   & aSubpathPrd,
     float bsdfRevPdfW = bsdfDirPdfW;
     bool isSpecularEvent = BxDF::matchFlags(sampledEvent, BxDF::Specular);
     if (!isSpecularEvent)       // evaluate pdf for non-specular event, otherwise it is the same as direct pdf
-        bsdfRevPdfW = aBsdf.pdf(aSubpathPrd.direction, true, BxDF::Type(BxDF::AllType & ~BxDF::Specular));
+        bsdfRevPdfW = aBsdf.pdf(aSubpathPrd.direction, BxDF::Type(BxDF::All & ~BxDF::Specular), true);
     aSubpathPrd.isSpecularPath = (aSubpathPrd.isSpecularPath && isSpecularEvent);
     OPTIX_PRINTFID(aSubpathPrd.launchIndex, aSubpathPrd.depth, "Hit   -prd.specularPath % 14d   sampledEvent % 14d \n", aSubpathPrd.isSpecularPath, sampledEvent);
+    OPTIX_PRINTFID(aSubpathPrd.launchIndex, aSubpathPrd.depth, "Hit   -     bsdfDirPdfW % 14f    bsdfRevPdfW % 14f \n", bsdfDirPdfW, bsdfRevPdfW);
+    OPTIX_PRINTFID(aSubpathPrd.launchIndex, aSubpathPrd.depth, "Hit   -   bsdf.dirFix.z % 14f \n", aBsdf.localDirFix().z);
     bsdfDirPdfW *= contProb;
     bsdfRevPdfW *= contProb;
 
