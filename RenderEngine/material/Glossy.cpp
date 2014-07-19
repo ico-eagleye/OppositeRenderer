@@ -6,14 +6,27 @@
 
 #include "Glossy.h"
 #include "renderer/RayType.h"
+#include <optixu/optixu_math_namespace.h>
 
 bool Glossy::m_optixMaterialIsCreated = false;
 optix::Material Glossy::m_optixMaterial;
 
 Glossy::Glossy(const Vector3 & Kd, const Vector3 & Ks, const float exponent)
 {
-    this->m_Kd = Kd;
-    this->m_Ks = Ks;
+    Vector3 sumK = Kd + Ks;
+    float sumScale = 1.f / sumK.max();
+
+    if (sumScale < 1.f)
+    {
+        this->m_Kd = Kd * sumScale;
+        this->m_Ks = Ks * sumScale;
+    }
+    else
+    {
+        this->m_Kd = Kd;
+        this->m_Ks = Ks;
+    }
+
     this->m_exponent = exponent;
 }
 
