@@ -121,7 +121,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USE_MATH_DEFINES;NOMINMAX;GLUT_FOUND;GLUT_NO_LIB_PRAGMA;sutil_EXPORTS;RELEASE_PUBLIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(OptixIncludeDir);$(OptixIncludeDir)\optixu;$(MSBuildProjectDirectory);$(NVTOOLSEXT_PATH)\include;$(SolutionDir)/Gui;$(SolutionDir)/RenderEngine/;$(SolutionDir)/include/;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtOpenGL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

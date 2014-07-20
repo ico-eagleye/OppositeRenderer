@@ -6,6 +6,7 @@
 
 #pragma once
 #include <optixu_vector_types.h>
+#include "renderer/helpers/helpers.h"
 
 #ifdef __CUDACC__
 #define _VECTOR3_DEVICE_CODE_ __device__ __host__
