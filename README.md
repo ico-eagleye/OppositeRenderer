@@ -47,7 +47,7 @@ The project needs some [environment variables](http://environmentvariables.org/M
 
 	- `QTDIR` should point to your QT instalation dir.
 	- `GLEW_PATH` point to where you extracted GLEW.
-	- `ASSIMP_PATH` should point to Asset Import installation dir 
+	- `ASSIMP_PATH` should point to Asset Import Library SDK installation dir, [versions 3.0.0 tested](http://sourceforge.net/projects/assimp/files/assimp-3.0/)
 	- `FREEGLUT_PATH` should point to where you extracted FreeGlut.
 	- `OPTIX_PATH` points to OptiX installation directory
 	- `CUDA_USE_VER` (optional) needs to be set (e.g. "6.0", "5.5", controls wich Cuda toolkit will be used)
