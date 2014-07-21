@@ -100,21 +100,22 @@ RT_FUNCTION float powerCosHemispherePdfW( const optix::float3 & aNormal,
     return (aPower + 1.f) * powf(cosTheta, aPower) * (M_1_PIf * 0.5f);
 }
 
+// Details in "Importance Sampling of the Phong Reflectance Model" by Jason Lawrence
 RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamples,
                                                      const float           aPower,
                                                      float               * oPdfW = NULL )
 {
     using namespace optix;
-    const float term1 = 2.f * M_1_PIf * aSamples.x;
-    const float term2 = powf(aSamples.y, 1.f / (aPower + 1.f));
-    const float term3 = sqrt(1.f - term2 * term2);
+    const float phi = 2.f * M_1_PIf * aSamples.x;
+    const float z = powf(aSamples.y, 1.f / (aPower + 1.f));
+    const float r = sqrt(1.f - z * z);
 
     if (oPdfW)
     {
-        *oPdfW = (aPower + 1.f) * powf(term2, aPower) * (0.5f * M_1_PIf);
+        *oPdfW = (aPower + 1.f) * powf(z, aPower) * (0.5f * M_1_PIf);
     }
 
-    return make_float3( cosf(term1) * term3, sinf(term1) * term3, term2);
+    return make_float3( cosf(phi) * r, sinf(phi) * r, z);
 }
 
 #define OPTIX_PRINTFI_ENABLED 0

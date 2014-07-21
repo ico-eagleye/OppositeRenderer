@@ -6,6 +6,7 @@
 
 #pragma once
 #include <optixu_vector_types.h>
+#include "renderer/helpers/helpers.h"
 
 #ifdef __CUDACC__
 #define _VECTOR3_DEVICE_CODE_ __device__ __host__
@@ -56,6 +57,7 @@ public:
         optix::float3 __of3;
     };
     static float dot(const Vector3 & a, const Vector3 & b);
+    float max() { return maxf(maxf(x,y),z); }
 };
 
 __inline__ Vector3 operator += (Vector3 & a, float b)

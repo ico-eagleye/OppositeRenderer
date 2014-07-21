@@ -7,6 +7,7 @@
 #pragma once
 #include "config.h"
 #include "renderer/device_common.h"
+#include "optixu/optixu_math_namespace.h"
 
 // Printf issues
 //rtPrintf()
@@ -203,10 +204,9 @@ RT_FUNCTION bool isNaN(optix::float3 v)
 #if defined(__CUDACC__)
 #define CUDART_INF_F_POS __int_as_float(0x7f800000)
 #define CUDART_INF_F_NEG __int_as_float(0xff800000)
-#else
-#define CUDART_INF_F_POS std::numeric_limits<float>::infinity() 
-#define CUDART_INF_F_NEG -1*std::numeric_limits<float>::infinity()
-#endif
+//#else
+//#define CUDART_INF_F_POS std::numeric_limits<float>::infinity() 
+//#define CUDART_INF_F_NEG -1*std::numeric_limits<float>::infinity()
 
 RT_FUNCTION bool isInf(float v)
 {
@@ -222,6 +222,7 @@ RT_FUNCTION bool isInf(optix::float3 v)
 {
     return isInf(v.x) || isInf(v.y) || isInf(v.z);
 }
+#endif
 
 template<typename T>
 RT_FUNCTION void swap(T & t1, T & t2)
