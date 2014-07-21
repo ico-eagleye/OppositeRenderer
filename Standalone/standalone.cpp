@@ -59,7 +59,7 @@ int main( int argc, char** argv )
     QApplication qApplication(argc, argv);
     qApplication.setOrganizationName("Opposite Renderer");
     qApplication.setApplicationName("Opposite Renderer");
-    attachConEmu();
+    //attachConEmu();
 
     QTextStream out(stdout);
     QTextStream in(stdin);
