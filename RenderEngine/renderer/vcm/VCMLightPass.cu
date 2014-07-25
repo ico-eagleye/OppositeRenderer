@@ -39,15 +39,18 @@ void initLightPayload(SubpathPRD & aLightPrd);
 using namespace optix;
 
 rtDeclareVariable(rtObject, sceneRootObject, , );
+rtDeclareVariable(Sphere,   sceneBoundingSphere, , );
 rtBuffer<RandomState, 2> randomStates;
 rtBuffer<Light, 1> lights;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
+rtDeclareVariable(uint,  localIterationNumber, , );
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
 rtBuffer<uint, 2> lightSubpathVertexCountBuffer;
 //rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 //rtBuffer<LightVertex> lightVertexBuffer;
+rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 
 rtDeclareVariable(int, lightSubpathLengthBufferId, , ); // <uint, 2>
 rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
@@ -56,7 +59,10 @@ rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
 
 RT_PROGRAM void lightPass()
 {
+    // zero out output here instead of camera pass since we connect directly to camera from light hits
+    if (localIterationNumber == 0) outputBuffer[launchIndex] = make_float3(0.f);
     lightSubpathVertexCountBuffer[launchIndex] = 0u;
+
     if (lightVertexCountEstimatePass)
         { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
     else
@@ -153,7 +159,7 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     float emissionPdfW;
     float directPdfW;
     float cosAtLight;
-    aLightPrd.throughput = lightEmit(light, aLightPrd.randomState, aLightPrd.origin, aLightPrd.direction,
+    aLightPrd.throughput = lightEmit(sceneBoundingSphere, light, aLightPrd.randomState, aLightPrd.origin, aLightPrd.direction,
         emissionPdfW, directPdfW, cosAtLight, &aLightPrd.launchIndex);
     // vmarz?: do something similar as done for photon emission, emit towards scene when light far from scene?
 
