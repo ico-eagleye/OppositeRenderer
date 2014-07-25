@@ -719,7 +719,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     dbgPrintf("LVC size estimate launch time: %.4f.\n", t1-t0);
                 }
 
-                // get average stoted vertex count
+                // get average stored vertex count
                 optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathVertexCountBuffer->map());
                 const unsigned int subpathEstimateCount = estimateWidth * estimateHeight;
                 unsigned long long sumStoredVerts = 0;
@@ -759,6 +759,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_context["averageLightSubpathLength"]->setFloat(avgSubpathLength);
 #endif                
                 m_lightVertexCountEstimated = true;
+                m_context["lightVertexCountEstimatePass"]->setUint(0u);
 
                 dbgPrintf("VCM: cameraSubPathCount     %u \n", cameraSubPathCount);
                 dbgPrintf("VCM: lightSubpathsMerged    %u \n", lightSubpathsMerged);
@@ -777,7 +778,6 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
             // Light pass
             { 
-                m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
                 sutilCurrentTime( &t0 );
                 m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, 
@@ -788,7 +788,6 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
             // Camera pass
             { 
-                m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_CAMERA_PASS");
                 sutilCurrentTime( &t0 );
                 m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, m_width, m_height );

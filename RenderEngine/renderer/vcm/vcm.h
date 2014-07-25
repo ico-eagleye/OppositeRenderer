@@ -559,6 +559,7 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
 // Connects camera subpath vertex to light source, e.g. direct illumination, next event estimation.
 // Light subpath length=1 [tech. rep 44-45]
 RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootObject,
+                                       const Sphere               & aSceneBoundingSphere,
                                        const rtBufferId<Light, 1>   aLightsBuffer,
                                        SubpathPRD                 & aCameraPrd,
                                        const VcmBSDF              & aCameraBsdf,
@@ -585,7 +586,7 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     float cosAtLight;
     float distance;
     float3 dirToLight;
-    float3 radiance = lightIlluminate(light, aCameraPrd.randomState, aCameraHitpoint, dirToLight,
+    float3 radiance = lightIlluminate(aSceneBoundingSphere, light, aCameraPrd.randomState, aCameraHitpoint, dirToLight,
         distance, directPdfW, &emissionPdfW, &cosAtLight, &aCameraPrd.launchIndex);
     OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "connL-  light radiance % 14f % 14f % 14f \n", radiance.x, radiance.y, radiance.z);
     
@@ -721,6 +722,7 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
 
 #define OPTIX_PRINTFID_ENABLED 0
 RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObject,
+                            const Sphere                       & aSceneBoundingSphere,
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
                             const optix::float3                & aWorldNormal,
@@ -783,7 +785,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     {
         // Connect by sampling a vetex on light source, e.g. light path length = 1
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt1 color % 14f % 14f % 14f \n", aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
-        connectLightSourceS1(aSceneRootObject, aLightsBuffer, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
+        connectLightSourceS1(aSceneRootObject, aSceneBoundingSphere, aLightsBuffer, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Lgt2 color % 14f % 14f % 14f \n", aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
     }
 #endif

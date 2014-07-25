@@ -306,8 +306,9 @@ RT_PROGRAM void vcmClosestHitLight()
 
 
 //rtDeclareVariable(uint, vcmNumlightVertexConnections, , );
-rtDeclareVariable(float, averageLightSubpathLength, , );
-rtDeclareVariable(int,   lightsBufferId, , );                 // rtBufferId<uint, 1>
+rtDeclareVariable(Sphere, sceneBoundingSphere, , );
+rtDeclareVariable(float,  averageLightSubpathLength, , );
+rtDeclareVariable(int,    lightsBufferId, , );                 // rtBufferId<uint, 1>
 
  // Camra subpath program
 RT_PROGRAM void vcmClosestHitCamera()
@@ -350,7 +351,7 @@ RT_PROGRAM void vcmClosestHitCamera()
         cameraBsdf.AddBxDF(&reflection);
     }
 
-    cameraHit(sceneRootObject, subpathPrd, hitPoint, N, cameraBsdf, ray.direction, tHit, maxPathLen,
+    cameraHit(sceneRootObject, sceneBoundingSphere, subpathPrd, hitPoint, N, cameraBsdf, ray.direction, tHit, maxPathLen,
          misVcWeightFactor, misVmWeightFactor, 
          _lightsBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING

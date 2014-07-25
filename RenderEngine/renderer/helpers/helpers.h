@@ -25,12 +25,12 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 50
-#define OPTIX_DEBUG_ID_Y 18
+#define OPTIX_DEBUG_ID_X 250
+#define OPTIX_DEBUG_ID_Y 50
 
-#define OPTIX_DEBUG_PIX 0
-#define OPTIX_DEBUG_PIX_X 40
-#define OPTIX_DEBUG_PIX_Y 400
+#define OPTIX_DEBUG_PIX 1
+#define OPTIX_DEBUG_PIX_X 250
+#define OPTIX_DEBUG_PIX_Y 50
 
 #define IS_DEBUG_ID(launchIdx) (launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y)
 #define IS_DEBUG_PIX(pixelIndex) (pixelIndex.x == OPTIX_DEBUG_PIX_X && pixelIndex.y == OPTIX_DEBUG_PIX_Y)
@@ -231,3 +231,6 @@ RT_FUNCTION void swap(T & t1, T & t2)
     t1 = t2;
     t2 = tmp;
 }
+
+#define RAD_TO_DEG(radians) ((radians) * (180.0f / M_PIf))
+#define DEG_TO_RAD(angle) ((angle) / 180.0f * M_PIf)

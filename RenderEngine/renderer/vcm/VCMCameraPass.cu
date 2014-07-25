@@ -84,7 +84,6 @@ RT_PROGRAM void cameraPass()
     //outputBuffer[launchIndex] = avgColor;
 
     float3 bufColor = outputBuffer[launchIndex];
-    if (localIterationNumber == 0) bufColor = make_float3(0.f);
     bufColor = bufColor + cameraPrd.color;
     float3 avgColor = bufColor / (localIterationNumber + 1);
     //if (IS_DEBUG_ID(launchIndex))

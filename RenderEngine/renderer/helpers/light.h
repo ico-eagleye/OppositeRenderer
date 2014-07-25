@@ -17,6 +17,7 @@
 #include "renderer/TransmissionPRD.h"
 #include "renderer/helpers/samplers.h"
 #include "renderer/vcm/config_vcm.h"
+#include "math/Sphere.h"
 
 #define OPTIX_PRINTF_ENABLED 0
 #define OPTIX_PRINTFI_ENABLED 0
@@ -89,7 +90,7 @@ RT_FUNCTION optix::float3 getLightContribution(const Light & light, const optix:
 #define OPTIX_PRINTFI_ENABLED 0
 // Samples emission point and direction, returns particle energy/weight. Fills
 // emission and direct hit pdf, cosine at light source
-RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomState,
+RT_FUNCTION optix::float3 lightEmit(const Sphere & aSceneBoundingSphere, const Light & aLight, RandomState & aRandomState,
                                     float3 & oPosition, float3 & oDirection, float & oEmissionPdfW,
                                     float & oDirectPdfA, float & oCosThetaLight,
                                     optix::uint2 *launchIdx = NULL)
@@ -97,10 +98,10 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
     float3 radiance = optix::make_float3(0);
     float2 dirRnd = getRandomUniformFloat2(&aRandomState);
 
-    if (launchIdx)
-    {
-        OPTIX_PRINTFI((*launchIdx), "GenLi -      light type %d \n", aLight.lightType);
-    }
+    //if (launchIdx)
+    //{
+    //    OPTIX_PRINTFI((*launchIdx), "GenLi -      light type %d \n", aLight.lightType);
+    //}
 
     if(aLight.lightType == Light::AREA)
     {
@@ -122,7 +123,25 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
     else if(aLight.lightType == Light::POINT)
     {
         oPosition = aLight.position;
-        oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
+        //oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
+        
+        float3 lightToSceneCenter = aSceneBoundingSphere.center.__of3 - aLight.position;
+        float lightSceneCenterDistance = optix::length(lightToSceneCenter);
+        lightToSceneCenter /= lightSceneCenterDistance;
+        bool lightOutsideSphere = aSceneBoundingSphere.radius < lightSceneCenterDistance;
+        if (lightOutsideSphere)
+        {
+            // angle between dir to to center and sphere tangent
+            float theta = asinf(aSceneBoundingSphere.radius / lightSceneCenterDistance);
+            oDirection = sampleCone(dirRnd, theta, lightToSceneCenter, &oEmissionPdfW);
+
+            if (launchIdx != NULL)
+                OPTIX_PRINTFI((*launchIdx), "GenLi -  light emit dir % 14f % 14f % 14f\n", oDirection.x, oDirection.y, oDirection.z);
+        }
+        else
+        {
+            oDirection = sampleUnitSphere(dirRnd, &oEmissionPdfW);
+        }
 #if DEBUG_EMIT_DIR_FIXED
         oDirection = DEBUG_EMIT_DIR;
 #endif
@@ -141,8 +160,8 @@ RT_FUNCTION optix::float3 lightEmit(const Light & aLight, RandomState & aRandomS
 #define OPTIX_PRINTFI_ENABLED 0
 // Samples emission point on light source, returns radiance towards receiving point. Fills
 // emission and direct hit pdf, cosine at light source
-RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aRandomState, const float3 & aReceivePosition,
-                                          float3 & oDirectionToLight, float & oDistance,
+RT_FUNCTION optix::float3 lightIlluminate(const Sphere & aSceneBoundingSphere, const Light & aLight, RandomState & aRandomState, 
+                                          const float3 & aReceivePosition, float3 & oDirectionToLight, float & oDistance,
                                           float & oDirectPdfW, float * oEmissionPdfW = NULL,
                                           float * oCosThetaLight = NULL, optix::uint2 *launchIdx = NULL)
 {
@@ -195,9 +214,25 @@ RT_FUNCTION optix::float3 lightIlluminate(const Light & aLight, RandomState & aR
         oDirectionToLight = aLight.position - aReceivePosition;
         oDistance = length(oDirectionToLight);
         oDirectionToLight /= oDistance;
+
+        float3 lightToSceneCenter = aSceneBoundingSphere.center.__of3 - aLight.position;
+        float lightSceneCenterDistance = optix::length(lightToSceneCenter);
+        lightToSceneCenter /= lightSceneCenterDistance;
+        bool lightOutsideSphere = aSceneBoundingSphere.radius < lightSceneCenterDistance;        
+        if (lightOutsideSphere)
+        {
+            float theta = asinf(aSceneBoundingSphere.radius / lightSceneCenterDistance);
+            if (oEmissionPdfW)
+                *oEmissionPdfW = sampleConePdfW(theta);
+        }
+        else
+        {
+
+            if (oEmissionPdfW)
+                *oEmissionPdfW = 0.25f * M_1_PIf; // uniform sphere sampling pdf
+        }
+
         oDirectPdfW = sqr(oDistance);
-        if (oEmissionPdfW)
-            *oEmissionPdfW = 0.25f * M_1_PIf; // uniform sphere sampling pdf
         if (oCosThetaLight)
             *oCosThetaLight = 1.f;
         radiance = aLight.intensity;
