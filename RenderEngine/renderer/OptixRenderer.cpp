@@ -336,9 +336,9 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBufferIndexBuffer->unmap();
 
     // Size is set in light pass length estimate pass
-    m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 0u, 0u );
-    m_context["lightSubpathLengthBuffer"]->set(m_lightSubpathLengthBuffer);
-    m_context["lightSubpathLengthBufferId"]->setInt(m_lightSubpathLengthBuffer->getId());
+    m_lightSubpathVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 0u, 0u );
+    m_context["lightSubpathVertexCountBuffer"]->set(m_lightSubpathVertexCountBuffer);
+    m_context["lightSubpathVertexCountBufferId"]->setInt(m_lightSubpathVertexCountBuffer->getId());
 
     m_context["lightVertexCountEstimatePass"]->setUint(1u);
     m_context["vcmNumlightVertexConnections"]->setUint(VCM_NUM_LIGHT_PATH_CONNECTIONS);
@@ -700,7 +700,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 unsigned int estimateWidth = m_width;
                 unsigned int estimateHeight = m_height;
 
-                m_lightSubpathLengthBuffer->setSize(estimateWidth, estimateHeight);
+                m_lightSubpathVertexCountBuffer->setSize(estimateWidth, estimateHeight);
 
                 // Transfer any data to the GPU (trigger an empty launch)
                 dbgPrintf("VCM: init empty launch\n");
@@ -719,34 +719,34 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     dbgPrintf("LVC size estimate launch time: %.4f.\n", t1-t0);
                 }
 
-                // get average path length / vertex count
-                optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathLengthBuffer->map());
+                // get average stoted vertex count
+                optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathVertexCountBuffer->map());
                 const unsigned int subpathEstimateCount = estimateWidth * estimateHeight;
-                unsigned long long sumPathLengths = 0;
-                unsigned int maxLen = 0;
+                unsigned long long sumStoredVerts = 0;
+                unsigned int maxPathVerts = 0;
 
                 for(int i = 0; i < subpathEstimateCount ; i++)
                 {
                     unsigned int count = buffer_Host[i];
-                    if (maxLen < count) maxLen = count;
-                    if (0 < count) sumPathLengths += count;
+                    if (maxPathVerts < count) maxPathVerts = count;
+                    if (0 < count) sumStoredVerts += count;
                 }
-                m_lightSubpathLengthBuffer->unmap();
+                m_lightSubpathVertexCountBuffer->unmap();
 
-                float avgSubpathLength = float(sumPathLengths) / subpathEstimateCount;
-                dbgPrintf("LVC estimate. paths: %u  vertices: %llu  avgLen: %f  maxLen: %u\n",
-                    subpathEstimateCount, sumPathLengths, avgSubpathLength, maxLen);
+                float avgSubpathVerts = float(sumStoredVerts) / subpathEstimateCount;
+                dbgPrintf("LVC estimate. paths: %u  vertices: %llu  avgStoredVertices: %f  maxPathVertices: %u\n",
+                    subpathEstimateCount, sumStoredVerts, avgSubpathVerts, maxPathVerts);
 
                 // Init light vertex buffer based on average length.
                 // Estimate currently is inaccurate in case when with distance light source so add big safety margin,
                 // if it happens to be bigger than allowed length then just use that one instead
-                avgSubpathLength = std::min(avgSubpathLength / 0.6f, float(VCM_MAX_PATH_LENGTH-1));
-                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength);
+                avgSubpathVerts = std::min(avgSubpathVerts / 0.5f, float(VCM_MAX_PATH_LENGTH-1));
+                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathVerts);
                 m_lightVertexBuffer->setSize(vertBufSize);
                 dbgPrintf("Vertex buffer size set to: %u \n", vertBufSize);
                 
                 // Resize vertex count buffer for regular light pass
-                m_lightSubpathLengthBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight);
+                m_lightSubpathVertexCountBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
                 m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);

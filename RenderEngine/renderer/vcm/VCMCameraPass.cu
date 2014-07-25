@@ -126,7 +126,7 @@ RT_PROGRAM void exception()
 {
     rtPrintf("Exception VCM Camera ray! d: %d\n", cameraPrd.depth);
     rtPrintExceptionDetails();
-    cameraPrd.throughput = make_float3(1,0,0);
+    //cameraPrd.throughput = make_float3(0,0,0);
 }
 
 

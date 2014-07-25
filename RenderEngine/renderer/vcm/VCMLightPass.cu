@@ -45,7 +45,7 @@ rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
-rtBuffer<uint, 2> lightSubpathLengthBuffer;
+rtBuffer<uint, 2> lightSubpathVertexCountBuffer;
 //rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 //rtBuffer<LightVertex> lightVertexBuffer;
 
@@ -56,6 +56,7 @@ rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
 
 RT_PROGRAM void lightPass()
 {
+    lightSubpathVertexCountBuffer[launchIndex] = 0u;
     if (lightVertexCountEstimatePass)
         { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
     else
@@ -86,7 +87,6 @@ RT_PROGRAM void lightPass()
     }
 
     randomStates[launchIndex] = lightPrd.randomState;
-    lightSubpathLengthBuffer[launchIndex] = lightPrd.depth;
 }
 
 
@@ -109,7 +109,7 @@ RT_PROGRAM void exception()
 {
     rtPrintf("Exception Light ray! d: %d\n", lightPrd.depth);
     rtPrintExceptionDetails();
-    lightPrd.throughput = make_float3(0,0,0);
+    //lightPrd.throughput = make_float3(0,0,0);
 }
 
 
@@ -132,7 +132,6 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     aLightPrd.done = false;
     aLightPrd.isSpecularPath = true;
     aLightPrd.randomState = randomStates[launchIndex];
-    lightSubpathLengthBuffer[launchIndex] = 0u;
 
     float *pVertPickPdf = NULL;
 #if VCM_UNIFORM_VERTEX_SAMPLING

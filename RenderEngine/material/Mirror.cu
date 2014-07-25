@@ -91,11 +91,11 @@ rtDeclareVariable(uint,       maxPathLen, , );
 
 rtBuffer<LightVertex>  lightVertexBuffer;
 rtBuffer<uint>         lightVertexBufferIndexBuffer; // single element buffer with index for lightVertexBuffer
-rtBuffer<uint, 2>      lightSubpathLengthBuffer;
+rtBuffer<uint, 2>      lightSubpathVertexCountBuffer;
 
 rtDeclareVariable(int, lightVertexBufferId, , );            // rtBufferId<LightVertex>
 rtDeclareVariable(int, lightVertexBufferIndexBufferId, , ); // rtBufferId<uint>
-rtDeclareVariable(int, lightSubpathLengthBufferId, , );     // rtBufferId<uint, 2>
+rtDeclareVariable(int, lightSubpathVertexCountBufferId, , );// rtBufferId<uint, 2>
 rtDeclareVariable(int, outputBufferId, , );                 // rtBufferId<float3, 2>
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
@@ -120,6 +120,7 @@ RT_PROGRAM void vcmClosestHitLight()
     rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
     rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
     rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
+    rtBufferId<uint, 2>     _lightSubpathVertexCountBufferId = rtBufferId<uint, 2>(lightSubpathVertexCountBufferId);
 #if !VCM_UNIFORM_VERTEX_SAMPLING
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
@@ -135,7 +136,7 @@ RT_PROGRAM void vcmClosestHitLight()
     lightHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
         lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
         camera, pixelSizeFactor,
-        _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+        _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId, 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
         _lightSubpathVertexIndexBufferId
 #else
@@ -156,9 +157,9 @@ RT_PROGRAM void vcmClosestHitCamera()
     float3 hitPoint = ray.origin + tHit*ray.direction;
 
     rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
-    rtBufferId<uint, 2>     _lightSubpathLengthBufferId      = rtBufferId<uint, 2>(lightSubpathLengthBufferId);
     rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
     rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
+    rtBufferId<uint, 2>     _lightSubpathVertexCountBufferId = rtBufferId<uint, 2>(lightSubpathVertexCountBufferId);
 #if !VCM_UNIFORM_VERTEX_SAMPLING
     rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
 #endif
@@ -173,7 +174,7 @@ RT_PROGRAM void vcmClosestHitCamera()
 
     cameraHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
          misVcWeightFactor, misVmWeightFactor, 
-         _lightsBufferId, _lightSubpathLengthBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId,
+         _lightsBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId, 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
          _lightSubpathVertexIndexBufferId
 #else
