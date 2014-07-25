@@ -293,6 +293,12 @@ public:
     {
         using namespace optix;
 
+        if (aWo.z < EPS_COSINE || aWi.z < EPS_COSINE)
+        {
+            if (oPdfW) *oPdfW = 0.f;
+            return make_float3(0.f);
+        }
+
         const float3 reflLocalDirIn = localReflect(aWo);
         const float dot_R_Wi = dot(reflLocalDirIn, aWi);
 
@@ -332,6 +338,12 @@ public:
         using namespace optix;
 
         *oWi = samplePowerCosHemisphereW(aSample, _exponent, NULL);
+
+        if (aWo.z < EPS_COSINE || oWi->z < EPS_COSINE)
+        {
+            if (oPdfW) *oPdfW = 0.f;
+            return make_float3(0.f);
+        }
 
         // Comment from SmallVCN:
         // Due to numeric issues in MIS, we actually need to compute all pdfs

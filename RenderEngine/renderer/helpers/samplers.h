@@ -100,15 +100,15 @@ RT_FUNCTION float powerCosHemispherePdfW( const optix::float3 & aNormal,
     return (aPower + 1.f) * powf(cosTheta, aPower) * (M_1_PIf * 0.5f);
 }
 
-// Details in "Importance Sampling of the Phong Reflectance Model" by Jason Lawrence
+// Details in "Using the modified Phong reflectance model for Physically based rendering" by Lafortune
 RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamples,
                                                      const float           aPower,
                                                      float               * oPdfW = NULL )
 {
     using namespace optix;
-    const float phi = 2.f * M_1_PIf * aSamples.x;
+    const float phi = 2.f * M_PIf * aSamples.x;
     const float z = powf(aSamples.y, 1.f / (aPower + 1.f));
-    const float r = sqrt(1.f - z * z);
+    const float r = sqrtf(1.f - z * z);
 
     if (oPdfW)
     {
@@ -123,7 +123,6 @@ RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamp
 RT_FUNCTION optix::float3 sampleCone(const optix::float2 & aSample, const float aThetaRad, 
                                      const optix::float3 & aNormal, float * oPdfW = NULL)
 {
-    // TODO fix, seems to be a bug here
     using namespace optix;
     float3 U, V;
     createCoordinateSystem( aNormal, U, V);
