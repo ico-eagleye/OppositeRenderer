@@ -133,12 +133,13 @@ RT_PROGRAM void exception()
 
 rtDeclareVariable(Camera,   camera, , );
 rtDeclareVariable(float2,   pixelSizeFactor, , );
-rtDeclareVariable(float,    lightSubpathCount, , );
+rtDeclareVariable(uint,     lightSubpathCount, , );
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
 RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
 {
-    aCameraPrd.launchIndex = launchIndex;
+    aCameraPrd.launchIndex   = launchIndex;
+    aCameraPrd.launchIndex1D = getBufIndex1D(launchIndex, launchDim);
     aCameraPrd.randomState = randomStates[launchIndex];
     aCameraPrd.throughput = make_float3(1.0f);
     aCameraPrd.color = make_float3(0.0f);

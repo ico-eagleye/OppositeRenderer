@@ -206,7 +206,7 @@ rtDeclareVariable(float, vertexPickPdf, , );                // used for uniform 
 #endif
 
 
-rtDeclareVariable(float, lightSubpathCount, , );
+rtDeclareVariable(uint,  lightSubpathCount, , );
 rtDeclareVariable(float, misVcWeightFactor, , ); // 1/etaVCM
 rtDeclareVariable(float, misVmWeightFactor, , ); // etaVCM
 
@@ -224,24 +224,24 @@ RT_PROGRAM void vcmClosestHitLight()
     Lambertian lambertian = Lambertian(texColor);
     lightBsdf.AddBxDF(&lambertian);
 
-    rtBufferId<float3, 2>   _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
-    rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
-    rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
-    rtBufferId<uint, 2>     _lightSubpathVertexCountBufferId = rtBufferId<uint, 2>(lightSubpathVertexCountBufferId);
+    rtBufferId<float3, 2>      _outputBufferId                  = rtBufferId<float3, 2>(outputBufferId);
+    rtBufferId<LightVertex, 1> _lightVertexBufferId             = rtBufferId<LightVertex, 1>(lightVertexBufferId);
+    rtBufferId<uint, 1>        _lightVertexBufferIndexBufferId  = rtBufferId<uint, 1>(lightVertexBufferIndexBufferId);
+    rtBufferId<uint, 1>        _lightSubpathVertexCountBufferId = rtBufferId<uint, 1>(lightSubpathVertexCountBufferId);
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-    rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
+    rtBufferId<uint, 2>        _lightSubpathVertexIndexBufferId = rtBufferId<uint, 2>(lightSubpathVertexIndexBufferId);
 #endif
 
-    lightHit( sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
-              lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
-              camera, pixelSizeFactor,
-              _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId,
+    lightHit(sceneRootObject, subpathPrd, hitPoint, worldGeometricNormal, lightBsdf, ray.direction, tHit, maxPathLen,
+             lightVertexCountEstimatePass, lightSubpathCount, misVcWeightFactor, misVmWeightFactor,
+             camera, pixelSizeFactor,
+             _outputBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-               _lightSubpathVertexIndexBufferId
+             _lightSubpathVertexIndexBufferId
 #else
-               &vertexPickPdf
+             &vertexPickPdf
 #endif
-            );
+        );
 }
 
 
@@ -265,22 +265,22 @@ RT_PROGRAM void vcmClosestHitCamera()
 
     OPTIX_PRINTFID(launchIndex, subpathPrd.depth, "Hit C - texture hit Kd  % 14f % 14f % 14f\n", texColor.x, texColor.y, texColor.z);
 
-    rtBufferId<Light>       _lightsBufferId                  = rtBufferId<Light>(lightsBufferId);
-    rtBufferId<LightVertex> _lightVertexBufferId             = rtBufferId<LightVertex>(lightVertexBufferId);
-    rtBufferId<uint>        _lightVertexBufferIndexBufferId  = rtBufferId<uint>(lightVertexBufferIndexBufferId);
-    rtBufferId<uint, 2>     _lightSubpathVertexCountBufferId = rtBufferId<uint, 2>(lightSubpathVertexCountBufferId);
+    rtBufferId<Light, 1>       _lightsBufferId                  = rtBufferId<Light, 1>(lightsBufferId);
+    rtBufferId<LightVertex, 1> _lightVertexBufferId             = rtBufferId<LightVertex, 1>(lightVertexBufferId);
+    rtBufferId<uint, 1>        _lightVertexBufferIndexBufferId  = rtBufferId<uint, 1>(lightVertexBufferIndexBufferId);
+    rtBufferId<uint, 1>        _lightSubpathVertexCountBufferId = rtBufferId<uint, 1>(lightSubpathVertexCountBufferId);
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-    rtBufferId<uint, 3>     _lightSubpathVertexIndexBufferId = rtBufferId<uint, 3>(lightSubpathVertexIndexBufferId);
+    rtBufferId<uint, 2>        _lightSubpathVertexIndexBufferId = rtBufferId<uint, 2>(lightSubpathVertexIndexBufferId);
 #endif
 
-    cameraHit( sceneRootObject, sceneBoundingSphere, subpathPrd, hitPoint, worldGeometricNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
-               misVcWeightFactor, misVmWeightFactor, 
-               _lightsBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId, 
+    cameraHit(sceneRootObject, sceneBoundingSphere, subpathPrd, hitPoint, worldGeometricNormal, cameraBsdf, ray.direction, tHit, maxPathLen,
+              lightSubpathCount, misVcWeightFactor, misVmWeightFactor, 
+              _lightsBufferId, _lightVertexBufferId, _lightVertexBufferIndexBufferId, _lightSubpathVertexCountBufferId,
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-               _lightSubpathVertexIndexBufferId
+              _lightSubpathVertexIndexBufferId
 #else
-               averageLightSubpathLength,
-               &vertexPickPdf
+             averageLightSubpathLength,
+             &vertexPickPdf
 #endif
         );
 }

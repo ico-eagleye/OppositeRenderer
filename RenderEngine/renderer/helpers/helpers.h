@@ -170,13 +170,13 @@ static RT_FUNCTION bool isZero(const optix::float3 & v )
 }
 
 
-__host__ RT_FUNCTION unsigned int getBufIndex1D(
+__host__ RT_FUNCTION optix::uint getBufIndex1D(
     const optix::uint3 & index3D, const optix::uint3& bufSize )
 {
     return index3D.x + index3D.y * bufSize.x + index3D.z * bufSize.x * bufSize.y;
 }
 
-__host__ RT_FUNCTION unsigned int getBufIndex1D(
+__host__ RT_FUNCTION optix::uint getBufIndex1D(
     const optix::uint2 & index2D, const optix::uint2& bufSize )
 {
     return index2D.x + index2D.y * bufSize.x;

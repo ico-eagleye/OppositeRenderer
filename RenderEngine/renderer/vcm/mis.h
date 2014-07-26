@@ -80,7 +80,7 @@ RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight,
 
 
 // Initialize camera payload partial MIS terms [tech. rep. (31)-(33)]
-RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCameraPdfW, const float aVcmLightSubpathCount)
+RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCameraPdfW, const optix::uint aVcmLightSubpathCount)
 {
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
     aCameraPrd.dVC = .0f;

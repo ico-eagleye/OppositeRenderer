@@ -49,19 +49,19 @@ rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
 rtDeclareVariable(uint,  localIterationNumber, , );
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
-rtBuffer<uint, 2> lightSubpathVertexCountBuffer;
+rtBuffer<uint, 1>   lightSubpathVertexCountBuffer;
+rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 //rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 //rtBuffer<LightVertex> lightVertexBuffer;
-rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 
-rtDeclareVariable(int, lightSubpathLengthBufferId, , );      // <uint, 2>
-rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
+rtDeclareVariable(int, lightSubpathLengthBufferId, , );      // <uint, 1>
+rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 2>
 rtDeclareVariable(int, lightVertexBufferId, , );             // <LightVertex, 1>
 
 
 RT_PROGRAM void lightPass()
 {
-    lightSubpathVertexCountBuffer[launchIndex] = 0u;
+    lightSubpathVertexCountBuffer[getBufIndex1D(launchIndex, launchDim)] = 0u;
 
     if (lightVertexCountEstimatePass)
         { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
@@ -129,7 +129,8 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
 {
     using namespace optix;
 
-    aLightPrd.launchIndex = launchIndex;
+    aLightPrd.launchIndex   = launchIndex;
+    aLightPrd.launchIndex1D = getBufIndex1D(launchIndex, launchDim);
     aLightPrd.throughput = make_float3(1.f);
     aLightPrd.depth = 0.f;
     aLightPrd.dVC = 0.f;

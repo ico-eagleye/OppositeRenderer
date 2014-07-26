@@ -67,7 +67,7 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
                                   const optix::float3   & aLightHitpoint,
-                                  const float           & aLightSubpathCount,
+                                  const optix::uint     & aLightSubpathCount,
                                   const float             aMisVmWeightFactor,
                                   const Camera          & aCamera,
                                   const optix::float2   & aPixelSizeFactor,
@@ -170,7 +170,7 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
     const float wLight = vcmMis(lightHitpointRevPdfA / aLightSubpathCount) * // * p0connect/p0trace *
         (aMisVmWeightFactor + aLightPrd.dVCM + aLightPrd.dVC * vcmMis(bsdfRevPdfW));
     OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -          wLight = (lgthHitRevPdfA / lightPathCount) * (vmWeightFactor +     light.dVCM +      light.dVC *    bsdfRevPdfW) \n");
-    OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -  % 14f = (% 14f / % 14f) * (% 14f + % 14e + % 14e * % 14f) \n", 
+    OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -  % 14f = (% 14f / % 14u) * (% 14f + % 14e + % 14e * % 14f) \n", 
         wLight, lightHitpointRevPdfA, aLightSubpathCount, aMisVmWeightFactor, aLightPrd.dVCM, aLightPrd.dVC, bsdfRevPdfW);
 
     // Partial eye sub-path weight is 0 [tech. rep. (47)]
@@ -186,7 +186,7 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
     // We also divide by the number of samples this technique makes, which is equal to the number of light sub-paths
     float3 contrib = misWeight * aLightPrd.throughput * bsdfFactor / (aLightSubpathCount * cameraPdfAConvertedToImagePdfA);
     OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -       misWeight % 14f         wLight % 14f \n", misWeight, wLight);
-    OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC - cameraImagePdfA % 14f lghtPathCount % 14f \n", cameraPdfAConvertedToImagePdfA, aLightSubpathCount);
+    OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC - cameraImagePdfA % 14f lghtPathCount % 14u \n", cameraPdfAConvertedToImagePdfA, aLightSubpathCount);
     OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC -   prd.througput % 14f % 14f % 14f \n", aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
     OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC - unweigh contrib % 14f % 14f % 14f \n", contrib.x, contrib.y, contrib.z);
     OPTIX_PRINTFCID(dbgCond, dbgIdx, aLightPrd.depth, "HitLC - unweigh contrib = light.throughpt *     bsdfFactor / (lightPathCount * srfToImgFactor \n");
@@ -285,17 +285,17 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            const float                    aRayTHit,
                            const optix::uint              aMaxPathLen,
                            const optix::uint              aLightVertexCountEstimatePass,
-                           const float                    aLightSubpathCount,
+                           const optix::uint              aLightSubpathCount,
                            const float                    aMisVcWeightFactor,
                            const float                    aMisVmWeightFactor,
                            const Camera                 & aCamera,
-                           const float2                   aPixelSizeFactor,
+                           const optix::float2            aPixelSizeFactor,
                            rtBufferId<float3, 2>          aOutputBuffer,
-                           rtBufferId<LightVertex>        aLightVertexBuffer,
-                           rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
-                           rtBufferId<optix::uint, 2>     aLightSubpathVertexCountBuffer,
+                           rtBufferId<LightVertex, 1>     aLightVertexBuffer,
+                           rtBufferId<optix::uint, 1>     aLightVertexBufferIndexBuffer,
+                           rtBufferId<optix::uint, 1>     aLightSubpathVertexCountBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                         // for 1 to 1 camera - light path connections
-                           rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer
+                           rtBufferId<optix::uint, 2>     aLightSubpathVertexIndexBuffer
 #else                                                    // uniform vertex sampling
                            const float                  * aVertexPickPdf
 #endif
@@ -326,14 +326,14 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
 
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - cosThetaIn      % 14f         rayLen % 14f\n", cosThetaIn, aRayTHit);
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS preUpd  dVC % 14f            dVM % 14f           dVCM % 14f\n", aLightPrd.dVC, aLightPrd.dVM, aLightPrd.dVCM);
-    updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);;
+    updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);
     OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit C - MIS postUpd dVC % 14f            dVM % 14f           dVCM % 14f\n", aLightPrd.dVC, aLightPrd.dVM, aLightPrd.dVCM);
 
     bool isBsdfSpecular = aLightBsdf.isSpecular();
     if (!isBsdfSpecular)
     {
-         // vertex count can be lower that path length since not stored on specular surfaces
-        aLightSubpathVertexCountBuffer[aLightPrd.launchIndex]++;
+        // vertex count can be lower that path length since not stored on specular surfaces
+        uint currPathVertIdx = aLightSubpathVertexCountBuffer[aLightPrd.launchIndex1D]++;
         
         // store path vertex
         if (!aLightVertexCountEstimatePass)
@@ -353,9 +353,6 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
             // equations in [tech. rep. (38-47)]
 #endif
             lightVertex.bsdf = aLightBsdf;
-            //lightVertex.bsdf = VcmBSDF(aWorldNormal, -aRayWorldDir);
-            //lightVertex.bsdf.AddBxDF(bxdf1);
-            //if (bxdf2) lightVertex.bsdf.AddBxDF(bxdf2);
 
             DifferentialGeometry dg = lightVertex.bsdf.differentialGeometry();
             //OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L - frame vectors b % 14f % 14f % 14f\n", dg.bitangent.x, dg.bitangent.y, dg.bitangent.z);
@@ -374,9 +371,9 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
             //uint3 pathVertIdx = make_uint3(launchIndex, aLightPrd.depth-1); // getting this ?? 1072693248 0 0 or 1072693248 1 0
-            uint3 pathVertIdx = make_uint3(aLightPrd.launchIndex.x, aLightPrd.launchIndex.y, aLightPrd.depth-1);
-            OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L- Store VertIdx %u v.pathLen %d pathVertIdx %u %u %u\n",
-                vertIdx, lightVertex.pathLen, pathVertIdx.x, pathVertIdx.y, pathVertIdx.z);
+            uint2 pathVertIdx = make_uint2(aLightPrd.launchIndex1D, currPathVertIdx);  // can't use depth for index since not storing vertex at every hit
+            OPTIX_PRINTFID(aLightPrd.launchIndex, aLightPrd.depth, "Hit L- Store VertIdx %u v.pathLen %d pathVertIdx %u %u \n",
+                vertIdx, lightVertex.pathLen, pathVertIdx.x, pathVertIdx.y);
             aLightSubpathVertexIndexBuffer[pathVertIdx] = vertIdx;
 #endif
         }
@@ -732,14 +729,15 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
                             const optix::float3                  aRayWorldDir,  // not passing ray dir by reference sine it's OptiX semantic type
                             const float                          aRayTHit,
                             const optix::uint                    aMaxPathLen,
+                            const optix::uint                    aLightSubpathCount,
                             const float                          aMisVcWeightFactor,
                             const float                          aMisVmWeightFactor,
                             const rtBufferId<Light, 1>           aLightsBuffer,
                             const rtBufferId<LightVertex>        aLightVertexBuffer,
                             const rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
-                            const rtBufferId<optix::uint, 2>     aLightSubpathVertexCountBuffer,
+                            const rtBufferId<optix::uint>        aLightSubpathVertexCountBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                                // for 1 to 1 camera - light path connections
-                            const rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer
+                            const rtBufferId<optix::uint, 2>     aLightSubpathVertexIndexBuffer
 #else                                                           // uniform vertex sampling
                             const float                          averageLightSubpathLength,
                             const float                        * aVertexPickPdf
@@ -821,19 +819,18 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         // CAUTION: this loop can cause weird issues, out of bound access with crazy indices, though they are based 
         // failing on launch index and loop variable, rtTrace crashing within the loop etc.
         // update: It seems it was caused multiple uses of std::printf
-        uint lightSubpathVertexCount = aLightSubpathVertexCountBuffer[launchIndex]; // vertex count can be lower that path length since not stored on specular surfaces
+        uint pathIndex = aCameraPrd.launchIndex1D % aLightSubpathCount;
+        uint lightSubpathVertexCount = aLightSubpathVertexCountBuffer[pathIndex]; // vertex count can be lower that path length since not stored on specular surfaces
         OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- lghtSubpathVer %u \n", lightSubpathVertexCount);
         for (uint i = 0; i < lightSubpathVertexCount; ++i)
         {
-            uint3 pathVertIdx = make_uint3(launchIndex.x, launchIndex.y, i);
-            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- %u conn pathVertIdx %u %u %u \n",
-                i, pathVertIdx.x, pathVertIdx.y, pathVertIdx.z);
+            uint2 pathVertIdx = make_uint2(pathIndex, i);
+            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- %u conn pathVertIdx %u %u \n", i, pathVertIdx.x, pathVertIdx.y);
             uint vertIdx = aLightSubpathVertexIndexBuffer[pathVertIdx];
             OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C- %u conn vertIdx %u \n", i, vertIdx);
             LightVertex lightVertex = aLightVertexBuffer[vertIdx];
             connectVertices(aSceneRootObject, lightVertex, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
-            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Ver%u color % 14f % 14f % 14f \n",
-                i, aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
+            OPTIX_PRINTFID(aCameraPrd.launchIndex, aCameraPrd.depth, "Hit C-  conn Ver%u color % 14f % 14f % 14f \n", i, aCameraPrd.color.x, aCameraPrd.color.y, aCameraPrd.color.z);
         }
 #endif
 #endif
