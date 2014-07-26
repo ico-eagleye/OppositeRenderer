@@ -542,6 +542,14 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             this->resizeBuffers(details.getWidth(), details.getHeight());
         }
 
+        // zero out output buf before first iteration
+        if (localIterationNumber == 0)
+        {
+            float3* buffer = reinterpret_cast<float3*>( m_outputBuffer->map() );
+            memset(buffer, 0, sizeof(optix::float3) * m_width * m_height);
+            m_outputBuffer->unmap();
+        }
+
         const Camera & camera = details.getCamera();
         const RenderMethod::E renderMethod = details.getRenderMethod();
 
@@ -783,8 +791,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             { 
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
                 sutilCurrentTime( &t0 );
-                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, 
-                    m_lightPassLaunchWidth, m_lightPassLaunchHeight );
+                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, m_lightPassLaunchWidth, m_lightPassLaunchHeight );
                 sutilCurrentTime( &t1 );
                 dbgPrintf("Light pass launch time: %.4f.\n", t1-t0);
             }

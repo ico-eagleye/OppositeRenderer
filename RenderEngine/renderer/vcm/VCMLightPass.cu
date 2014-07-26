@@ -54,15 +54,13 @@ rtBuffer<uint, 2> lightSubpathVertexCountBuffer;
 //rtBuffer<LightVertex> lightVertexBuffer;
 rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 
-rtDeclareVariable(int, lightSubpathLengthBufferId, , ); // <uint, 2>
+rtDeclareVariable(int, lightSubpathLengthBufferId, , );      // <uint, 2>
 rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
-rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
+rtDeclareVariable(int, lightVertexBufferId, , );             // <LightVertex, 1>
 
 
 RT_PROGRAM void lightPass()
 {
-    // zero out output here instead of camera pass since we connect directly to camera from light hits
-    if (localIterationNumber == 0) outputBuffer[launchIndex] = make_float3(0.f);
     lightSubpathVertexCountBuffer[launchIndex] = 0u;
 
     if (lightVertexCountEstimatePass)
