@@ -19,6 +19,11 @@
 * SUCH DAMAGES
 */
 
+/*
+* Contributions: Stian Pedersen
+*                Valdis Vilcans
+*/
+
 #include "Camera.h"
 #include <optixu/optixu_matrix_namespace.h>
 #include <iostream>

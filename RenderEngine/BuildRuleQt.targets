@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 
+ * Copyright (c) 2014 Opposite Renderer
+ * For the full copyright and license information, please view the LICENSE.txt
+ * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Ignacio Avas
+ *                Valdis Vilcans
+-->
+
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
  
   <!-- QT path. Default x64, otherwise Win32. -->

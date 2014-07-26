@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Valdis Vilcans
 */
 
 #define OPTIX_PRINTF_DEF
@@ -66,7 +68,7 @@ rtDeclareVariable(float3, Kd, , );
 rtDeclareVariable(float3, Ks, , );
 rtDeclareVariable(float, exponent, , );
 
-// TODO Implement coorectly PT and PPM here, now behave as it was Diffuse
+// TODO Implement coorectly PT and PPM here, now behaves as if it was Diffuse
 
 // Radiance Program
 RT_PROGRAM void closestHitRadiance()

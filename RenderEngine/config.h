@@ -1,7 +1,10 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Valdis Vilcans
 */
 
 #pragma once
@@ -33,7 +36,7 @@
 #define PHOTON_TRACING_RR_START_DEPTH 3
 #define PATH_TRACING_RR_START_DEPTH 3
 
-#define USE_CHEAP_RANDOM 0 // vmarz: cheap random seems broken (generates weird results)
+#define USE_CHEAP_RANDOM 0
 
 #define RAY_LEN_MIN 0.0001f
 #define EPS_COSINE 1e-6f

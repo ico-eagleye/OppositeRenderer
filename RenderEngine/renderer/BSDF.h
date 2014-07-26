@@ -32,6 +32,8 @@
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
  *
+ * Contributions: Valdis Vilcans
+ *
  * BSDF, BxDF, Fresnel code is partially based on pbrt, idea of "fake virtual" functions via macros
  * borrowed from https://github.com/LittleCVR/MaoPPM
 */
