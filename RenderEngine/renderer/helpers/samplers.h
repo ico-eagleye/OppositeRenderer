@@ -123,6 +123,7 @@ RT_FUNCTION optix::float3 samplePowerCosHemisphereW( const optix::float2 & aSamp
 
 #define OPTIX_PRINTFI_ENABLED 0
 // Sample cone (normal must be normalized)
+// Based on suggestion here http://math.stackexchange.com/questions/56784/generate-a-random-direction-within-a-cone?newreg=5e564757045c455dbaca98cf8fbf43eb/
 RT_FUNCTION optix::float3 sampleCone(const optix::float2 & aSample, const float aThetaRad, 
                                      const optix::float3 & aNormal, float * oPdfW = NULL)
 {
