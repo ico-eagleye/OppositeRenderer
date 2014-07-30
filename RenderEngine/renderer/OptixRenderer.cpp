@@ -687,6 +687,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             const float ppmRadiusSquared = PPMRadius*PPMRadius; // vmarz TODO change radius reduction scheme
                 
             // 1/(PI*r*r) from VM path pdf [tech. rep. (10)], 1/lightSubPathCount from MIS estimator (not weight) [tech. rep. (11)]
+            // 1 / (radius^2 * PI) comes density estimation kernel Kr [VCM paper (18)], in this case simply scales by area
             // used to normalize VM estimator
             const float vmNormalizationFactor = 1.f / (ppmRadiusSquared * M_PIf * lightSubPathCount);
                 
