@@ -458,6 +458,8 @@ void OptixRenderer::initScene( IScene & scene )
 
     try
     {
+        m_lightVertexCountEstimated = false;
+
         m_sceneRootGroup = scene.getSceneRootGroup(m_context);
         m_context["sceneRootObject"]->set(m_sceneRootGroup);
         m_sceneAABB = scene.getSceneAABB();
