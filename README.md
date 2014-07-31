@@ -4,13 +4,13 @@ Forked from [apartridge/OppositeRenderer](https://github.com/apartridge/Opposite
 In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented in [CUDA](https://wikipedia.org/wiki/CUDA) using [OptiX](https://en.wikipedia.org/wiki/OptiX) library. It allows importing [Collada](https://en.wikipedia.org/wiki/Collada) scenes files and then render them to an image using [Progressive Photon Mapping](http://www.cgg.unibe.ch/publications/2011/progressive-photon-mapping-a-probabilistic-approach).
 
 ### This fork
-The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of Master's thesis project. The initially set goal has not been achieved, only Vertex Connection part has been implemented (no merging).
+The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of Master's thesis project. Due ot delays in development, the current implementation contains only vertex connection part with recursive MIS weight computation (no merging).
 
 [tech. rep. (xx)] comments in the code refer to formulas of tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
 
 The Server project hasn't been yet updated to work correctly due to changes in RenderEngine. So currently it compiles, but is non functional.
 
-Sponza and Conference scenes get be obtained [here](http://www.dropbox.com/sh/ha3evkuy5qryz99/AADL-nc1QKgGL7KUVFztMznKa/Thesis/scenes)
+Sponza and Conference test scenes can be obtained [here](http://www.dropbox.com/sh/ha3evkuy5qryz99/AADL-nc1QKgGL7KUVFztMznKa/Thesis/scenes)
 
 ## Where To Start?
 If this is your first time hearing about *Opposite Renderer*, we recommend you start with the original website: [http://apartridge.github.io/OppositeRenderer/](http://apartridge.github.io/OppositeRenderer/).
