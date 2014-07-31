@@ -8,7 +8,7 @@ The project was forked to use it as basis for implementation of [Vertex Connecti
 
 [tech. rep. (xx)] comments in the code refer to formulas of tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
 
-The Server project hasn't been yet updated to work correctly due to changes in RenderEnging. So currently it compiles, but is non functional.
+The Server project hasn't been yet updated to work correctly due to changes in RenderEngine. So currently it compiles, but is non functional.
 
 Sponza and Conference scenes get be obtained [here](http://www.dropbox.com/sh/ha3evkuy5qryz99/AADL-nc1QKgGL7KUVFztMznKa/Thesis/scenes)
 
