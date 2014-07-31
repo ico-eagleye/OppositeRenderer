@@ -1,7 +1,10 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Valdis Vilcans
 */
 
 #include "Application.hxx"
@@ -32,11 +35,13 @@ Application::Application(QApplication & qApplication) :
     
     m_outputSettingsModel.setWidth(512);
     m_outputSettingsModel.setHeight(512);
+    //m_outputSettingsModel.setWidth(100);
+    //m_outputSettingsModel.setHeight(100);
     m_outputSettingsModel.setGamma(2.2f);
     m_PPMSettingsModel.setPPMInitialRadius(0.20);
     //m_sceneManager.setScene("Cornell");
     //m_sceneManager.setScene("CornellSmall");
-    //m_sceneManager.setScene("CornellSmallLightUpwards");
+    //m_sceneManager.setScene("CornellSmallPointTest");
     
     connect(&m_outputSettingsModel, SIGNAL(resolutionUpdated()), this, SLOT(onOutputSettingsUpdated()));
     connect(&m_PPMSettingsModel, SIGNAL(updated()), this, SLOT(onPPMSettingsUpdated()));

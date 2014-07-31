@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Valdis Vilcans
 */
 
 #pragma once
@@ -78,7 +80,7 @@ RT_FUNCTION void initLightMisTerms(SubpathPRD & aLightPrd, const Light & aLight,
 
 
 // Initialize camera payload partial MIS terms [tech. rep. (31)-(33)]
-RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCameraPdfW, const float aVcmLightSubpathCount)
+RT_FUNCTION void initCameraMisTerms(SubpathPRD & aCameraPrd, const float aCameraPdfW, const optix::uint aVcmLightSubpathCount)
 {
     // Initialize sub-path MIS quantities, partially [tech. rep. (31)-(33)]
     aCameraPrd.dVC = .0f;

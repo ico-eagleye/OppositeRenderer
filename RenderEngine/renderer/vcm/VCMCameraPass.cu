@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Valdis Vilcans
 */
 
 #define OPTIX_PRINTF_DEF
@@ -84,7 +86,6 @@ RT_PROGRAM void cameraPass()
     //outputBuffer[launchIndex] = avgColor;
 
     float3 bufColor = outputBuffer[launchIndex];
-    if (localIterationNumber == 0) bufColor = make_float3(0.f);
     bufColor = bufColor + cameraPrd.color;
     float3 avgColor = bufColor / (localIterationNumber + 1);
     //if (IS_DEBUG_ID(launchIndex))
@@ -126,18 +127,19 @@ RT_PROGRAM void exception()
 {
     rtPrintf("Exception VCM Camera ray! d: %d\n", cameraPrd.depth);
     rtPrintExceptionDetails();
-    cameraPrd.throughput = make_float3(1,0,0);
+    //cameraPrd.throughput = make_float3(0,0,0);
 }
 
 
 rtDeclareVariable(Camera,   camera, , );
 rtDeclareVariable(float2,   pixelSizeFactor, , );
-rtDeclareVariable(float,    lightSubpathCount, , );
+rtDeclareVariable(uint,     lightSubpathCount, , );
 
 // Initialize camera payload - partial MIS terms [tech. rep. (31)-(33)]
 RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
 {
-    aCameraPrd.launchIndex = launchIndex;
+    aCameraPrd.launchIndex   = launchIndex;
+    aCameraPrd.launchIndex1D = getBufIndex1D(launchIndex, launchDim);
     aCameraPrd.randomState = randomStates[launchIndex];
     aCameraPrd.throughput = make_float3(1.0f);
     aCameraPrd.color = make_float3(0.0f);

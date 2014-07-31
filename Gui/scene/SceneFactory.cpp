@@ -1,7 +1,10 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Valdis Vilcans
 */
 
 #include "SceneFactory.h"
@@ -50,6 +53,14 @@ IScene* SceneFactory::getSceneByName( const char* name )
     {
         return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | //CornellSmall::FloorGlossy |
             CornellSmall::LightPointDistant | CornellSmall::SmallGlassSphere | CornellSmall::SmallMirrorSphere);
+    }
+    else if (strcmp(name, "CornellSmallPointTest") == 0)
+    {
+        return new CornellSmall(CornellSmall::SmallVCMColors | CornellSmall::BackwallBlue | //CornellSmall::FloorGlossy |
+            //CornellSmall::SmallMirrorSphere |
+            CornellSmall::SmallGlassSphere |
+            CornellSmall::FloorGlossy |
+            CornellSmall::LightPointStrong);
     }
     else
     {

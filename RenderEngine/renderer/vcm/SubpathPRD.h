@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Valdis Vilcans
 */
 
 #pragma once
@@ -16,7 +18,8 @@ struct SubpathPRD
     optix::float3 direction;
     optix::float3 throughput;
     optix::float3 color;        // accumulated full path contributions
-    uint2 launchIndex;
+    optix::uint2 launchIndex;
+    optix::uint  launchIndex1D;
     optix::uint depth;
     RandomState randomState;
     float dVCM;

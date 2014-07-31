@@ -1,3 +1,8 @@
+/*
+* Contributions: Stian Pedersen
+*                Valdis Vilcans
+*/
+
 #pragma once
 
 #include "render_engine_export_api.h"

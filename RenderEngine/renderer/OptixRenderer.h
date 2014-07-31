@@ -1,7 +1,10 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Valdis Vilcans
 */
 
 #pragma once
@@ -101,7 +104,7 @@ private:
 
     optix::Buffer m_lightVertexBuffer;              // light vertices
     optix::Buffer m_lightVertexBufferIndexBuffer;   // indices for m_lightVertexBuffer
-    optix::Buffer m_lightSubpathLengthBuffer;              // light subpath lengths
+    optix::Buffer m_lightSubpathVertexCountBuffer;         // light subpath stored vertex count (can be smaller that subpath length since do not store on specular surfaces)
     optix::Buffer m_lightSubpathVertexIndexBuffer;         // light subpath indices for m_lightVertexBufferIndexBuffer
 
     bool m_vcmUseVM;

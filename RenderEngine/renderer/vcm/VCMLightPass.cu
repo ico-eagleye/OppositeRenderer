@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Valdis Vilcans
 */
 
 #define OPTIX_PRINTF_DEF
@@ -39,23 +41,28 @@ void initLightPayload(SubpathPRD & aLightPrd);
 using namespace optix;
 
 rtDeclareVariable(rtObject, sceneRootObject, , );
+rtDeclareVariable(Sphere,   sceneBoundingSphere, , );
 rtBuffer<RandomState, 2> randomStates;
 rtBuffer<Light, 1> lights;
 rtDeclareVariable(uint2, launchIndex, rtLaunchIndex, );
 rtDeclareVariable(uint2, launchDim, rtLaunchDim, );
+rtDeclareVariable(uint,  localIterationNumber, , );
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
-rtBuffer<uint, 2> lightSubpathLengthBuffer;
+rtBuffer<uint, 1>   lightSubpathVertexCountBuffer;
+rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
 //rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
 //rtBuffer<LightVertex> lightVertexBuffer;
 
-rtDeclareVariable(int, lightSubpathLengthBufferId, , ); // <uint, 2>
-rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 3>
-rtDeclareVariable(int, lightVertexBufferId, , ); // <LightVertex>
+rtDeclareVariable(int, lightSubpathLengthBufferId, , );      // <uint, 1>
+rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 2>
+rtDeclareVariable(int, lightVertexBufferId, , );             // <LightVertex, 1>
 
 
 RT_PROGRAM void lightPass()
 {
+    lightSubpathVertexCountBuffer[getBufIndex1D(launchIndex, launchDim)] = 0u;
+
     if (lightVertexCountEstimatePass)
         { OPTIX_PRINTFID(launchIndex, 0u, "\n\nGenCL - LIGHT ESTIMATE PASS -----------------------------------------------------------------\n"); }
     else
@@ -86,7 +93,6 @@ RT_PROGRAM void lightPass()
     }
 
     randomStates[launchIndex] = lightPrd.randomState;
-    lightSubpathLengthBuffer[launchIndex] = lightPrd.depth;
 }
 
 
@@ -109,7 +115,7 @@ RT_PROGRAM void exception()
 {
     rtPrintf("Exception Light ray! d: %d\n", lightPrd.depth);
     rtPrintExceptionDetails();
-    lightPrd.throughput = make_float3(0,0,0);
+    //lightPrd.throughput = make_float3(0,0,0);
 }
 
 
@@ -123,7 +129,8 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
 {
     using namespace optix;
 
-    aLightPrd.launchIndex = launchIndex;
+    aLightPrd.launchIndex   = launchIndex;
+    aLightPrd.launchIndex1D = getBufIndex1D(launchIndex, launchDim);
     aLightPrd.throughput = make_float3(1.f);
     aLightPrd.depth = 0.f;
     aLightPrd.dVC = 0.f;
@@ -132,7 +139,6 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     aLightPrd.done = false;
     aLightPrd.isSpecularPath = true;
     aLightPrd.randomState = randomStates[launchIndex];
-    lightSubpathLengthBuffer[launchIndex] = 0u;
 
     float *pVertPickPdf = NULL;
 #if VCM_UNIFORM_VERTEX_SAMPLING
@@ -154,7 +160,7 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     float emissionPdfW;
     float directPdfW;
     float cosAtLight;
-    aLightPrd.throughput = lightEmit(light, aLightPrd.randomState, aLightPrd.origin, aLightPrd.direction,
+    aLightPrd.throughput = lightEmit(sceneBoundingSphere, light, aLightPrd.randomState, aLightPrd.origin, aLightPrd.direction,
         emissionPdfW, directPdfW, cosAtLight, &aLightPrd.launchIndex);
     // vmarz?: do something similar as done for photon emission, emit towards scene when light far from scene?
 

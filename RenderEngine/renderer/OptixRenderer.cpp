@@ -1,7 +1,10 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Valdis Vilcans
 */
 
 #include <cuda.h>
@@ -317,7 +320,7 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBuffer->setSize( 1u );
     m_context["lightVertexBuffer"]->set(m_lightVertexBuffer);
     m_context["lightVertexBufferId"]->setInt(m_lightVertexBuffer->getId());
-    m_context["lightSubpathCount"]->setFloat(float(m_lightPassLaunchWidth * m_lightPassLaunchHeight));
+    m_context["lightSubpathCount"]->setUint(m_lightPassLaunchWidth * m_lightPassLaunchHeight);
 
     // VCM light vertex buffer index counter buffer
     m_lightVertexBufferIndexBuffer = m_context->createBuffer(RT_BUFFER_INPUT_OUTPUT, RT_FORMAT_UNSIGNED_INT, 1u);
@@ -329,16 +332,16 @@ void OptixRenderer::initialize(const ComputeDevice & device)
     m_lightVertexBufferIndexBuffer->unmap();
 
     // Size is set in light pass length estimate pass
-    m_lightSubpathLengthBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 0u, 0u );
-    m_context["lightSubpathLengthBuffer"]->set(m_lightSubpathLengthBuffer);
-    m_context["lightSubpathLengthBufferId"]->setInt(m_lightSubpathLengthBuffer->getId());
+    m_lightSubpathVertexCountBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT, 0u );
+    m_context["lightSubpathVertexCountBuffer"]->set(m_lightSubpathVertexCountBuffer);
+    m_context["lightSubpathVertexCountBufferId"]->setInt(m_lightSubpathVertexCountBuffer->getId());
 
     m_context["lightVertexCountEstimatePass"]->setUint(1u);
     m_context["vcmNumlightVertexConnections"]->setUint(VCM_NUM_LIGHT_PATH_CONNECTIONS);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
     m_lightSubpathVertexIndexBuffer = m_context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_INT,
-        m_width, m_height, VCM_MAX_PATH_LENGTH-1 );
+        m_lightPassLaunchWidth * m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1 );
     m_context["lightSubpathVertexIndexBuffer"]->set(m_lightSubpathVertexIndexBuffer);
     m_context["lightSubpathVertexIndexBufferId"]->setInt(m_lightSubpathVertexIndexBuffer->getId());
 #endif
@@ -531,6 +534,14 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             this->resizeBuffers(details.getWidth(), details.getHeight());
         }
 
+        // zero out output buf before first iteration
+        if (localIterationNumber == 0)
+        {
+            float3* buffer = reinterpret_cast<float3*>( m_outputBuffer->map() );
+            memset(buffer, 0, sizeof(optix::float3) * m_width * m_height);
+            m_outputBuffer->unmap();
+        }
+
         const Camera & camera = details.getCamera();
         const RenderMethod::E renderMethod = details.getRenderMethod();
 
@@ -668,6 +679,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             const float ppmRadiusSquared = PPMRadius*PPMRadius; // vmarz TODO change radius reduction scheme
                 
             // 1/(PI*r*r) from VM path pdf [tech. rep. (10)], 1/lightSubPathCount from MIS estimator (not weight) [tech. rep. (11)]
+            // 1 / (radius^2 * PI) comes density estimation kernel Kr [VCM paper (18)], in this case simply scales by area
             // used to normalize VM estimator
             const float vmNormalizationFactor = 1.f / (ppmRadiusSquared * M_PIf * lightSubPathCount);
                 
@@ -684,15 +696,10 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
             // Estimate average light subpath length and initialize vertex buffer with appropriate size
             if (!m_lightVertexCountEstimated)
             {
-                //float estimateWidth = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_WIDTH;
-                //float estimateHeight = VCM_SUBPATH_LEN_ESTIMATE_LAUNCH_HEIGHT;
-                // For now do estimate on same launch dimensions as main passes since have seen some buffer access
-                // exceptions using distant point light, e.g. too few rays hit the scene in estimate pass.
-                // Should change it to shoot rays towards the scene.
-                unsigned int estimateWidth = m_width;
-                unsigned int estimateHeight = m_height;
+                unsigned int estimateWidth = m_lightPassLaunchWidth;
+                unsigned int estimateHeight = m_lightPassLaunchHeight;
 
-                m_lightSubpathLengthBuffer->setSize(estimateWidth, estimateHeight);
+                m_lightSubpathVertexCountBuffer->setSize(estimateWidth * estimateHeight);
 
                 // Transfer any data to the GPU (trigger an empty launch)
                 dbgPrintf("VCM: init empty launch\n");
@@ -711,37 +718,37 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                     dbgPrintf("LVC size estimate launch time: %.4f.\n", t1-t0);
                 }
 
-                // get average path length / vertex count
-                optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathLengthBuffer->map());
+                // get average stored vertex count
+                optix::uint* buffer_Host = static_cast<optix::uint*>(m_lightSubpathVertexCountBuffer->map());
                 const unsigned int subpathEstimateCount = estimateWidth * estimateHeight;
-                unsigned long long sumPathLengths = 0;
-                unsigned int maxLen = 0;
+                unsigned long long sumStoredVerts = 0;
+                unsigned int maxPathVerts = 0;
 
                 for(int i = 0; i < subpathEstimateCount ; i++)
                 {
                     unsigned int count = buffer_Host[i];
-                    if (maxLen < count) maxLen = count;
-                    if (0 < count) sumPathLengths += count;
+                    if (maxPathVerts < count) maxPathVerts = count;
+                    if (0 < count) sumStoredVerts += count;
                 }
-                m_lightSubpathLengthBuffer->unmap();
+                m_lightSubpathVertexCountBuffer->unmap();
 
-                float avgSubpathLength = float(sumPathLengths) / subpathEstimateCount;
-                dbgPrintf("LVC estimate. paths: %u  vertices: %llu  avgLen: %f  maxLen: %u\n",
-                    subpathEstimateCount, sumPathLengths, avgSubpathLength, maxLen);
+                float avgSubpathVerts = float(sumStoredVerts) / subpathEstimateCount;
+                dbgPrintf("LVC estimate. paths: %u  vertices: %llu  avgStoredVertices: %f  maxPathVertices: %u\n",
+                    subpathEstimateCount, sumStoredVerts, avgSubpathVerts, maxPathVerts);
 
                 // Init light vertex buffer based on average length.
                 // Estimate currently is inaccurate in case when with distance light source so add big safety margin,
                 // if it happens to be bigger than allowed length then just use that one instead
-                avgSubpathLength = std::min(avgSubpathLength / 0.6f, float(VCM_MAX_PATH_LENGTH-1));
-                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathLength);
+                avgSubpathVerts = std::min(avgSubpathVerts / 0.5f, float(VCM_MAX_PATH_LENGTH-1));
+                const unsigned int vertBufSize = (lightSubPathCount * avgSubpathVerts);
                 m_lightVertexBuffer->setSize(vertBufSize);
                 dbgPrintf("Vertex buffer size set to: %u \n", vertBufSize);
                 
                 // Resize vertex count buffer for regular light pass
-                m_lightSubpathLengthBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight);
+                m_lightSubpathVertexCountBuffer->setSize(m_lightPassLaunchWidth * m_lightPassLaunchHeight);
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
-                m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
+                m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth * m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
                 //m_context["maxPathLen"]->setUint(VCM_MAX_PATH_LENGTH); increase?
 #else
                 // vertex pick pdf
@@ -751,6 +758,7 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
                 m_context["averageLightSubpathLength"]->setFloat(avgSubpathLength);
 #endif                
                 m_lightVertexCountEstimated = true;
+                m_context["lightVertexCountEstimatePass"]->setUint(0u);
 
                 dbgPrintf("VCM: cameraSubPathCount     %u \n", cameraSubPathCount);
                 dbgPrintf("VCM: lightSubpathsMerged    %u \n", lightSubpathsMerged);
@@ -769,18 +777,15 @@ void OptixRenderer::renderNextIteration(unsigned long long iterationNumber, unsi
 
             // Light pass
             { 
-                m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_LIGHT_PASS");
                 sutilCurrentTime( &t0 );
-                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, 
-                    m_lightPassLaunchWidth, m_lightPassLaunchHeight );
+                m_context->launch( OptixEntryPoint::VCM_LIGHT_PASS, m_lightPassLaunchWidth, m_lightPassLaunchHeight );
                 sutilCurrentTime( &t1 );
                 dbgPrintf("Light pass launch time: %.4f.\n", t1-t0);
             }
 
             // Camera pass
             { 
-                m_context["lightVertexCountEstimatePass"]->setUint(0u);
                 nvtx::ScopedRange r("OptixEntryPoint::VCM_CAMERA_PASS");
                 sutilCurrentTime( &t0 );
                 m_context->launch( OptixEntryPoint::VCM_CAMERA_PASS, m_width, m_height );
@@ -832,8 +837,8 @@ void OptixRenderer::resizeBuffers(unsigned int width, unsigned int height)
 #if !VCM_UNIFORM_VERTEX_SAMPLING // when using uniform sampling then there is no need to align with output buffer size
     m_lightPassLaunchWidth = m_width;
     m_lightPassLaunchHeight = m_height;
-    m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth, m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
-    m_context["lightSubpathCount"]->setFloat(float(m_lightPassLaunchWidth * m_lightPassLaunchHeight));
+    m_lightSubpathVertexIndexBuffer->setSize(m_lightPassLaunchWidth * m_lightPassLaunchHeight, VCM_MAX_PATH_LENGTH-1);
+    m_context["lightSubpathCount"]->setUint(m_lightPassLaunchWidth * m_lightPassLaunchHeight);
 #endif
     // used to scale camera_u and camera_v for VCM
     m_context["pixelSizeFactor"]->setFloat(1.0f / width, 1.0f / height);

@@ -1,7 +1,10 @@
 /* 
- * Copyright (c) 2013 Opposite Renderer
+ * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Stian Pedersen
+ *                Valdis Vilcans
 */
 
 #pragma once
@@ -25,12 +28,12 @@
 #define OPTIX_PRINTFI_IDX 1         // printing multiple consecutive spaces seems random - doesn't always work
 //#define OPTIX_DEBUG_ID_X 245 // light pt
 //#define OPTIX_DEBUG_ID_Y 460
-#define OPTIX_DEBUG_ID_X 50
-#define OPTIX_DEBUG_ID_Y 18
+#define OPTIX_DEBUG_ID_X 135
+#define OPTIX_DEBUG_ID_Y 10
 
 #define OPTIX_DEBUG_PIX 0
-#define OPTIX_DEBUG_PIX_X 40
-#define OPTIX_DEBUG_PIX_Y 400
+#define OPTIX_DEBUG_PIX_X 0
+#define OPTIX_DEBUG_PIX_Y 250
 
 #define IS_DEBUG_ID(launchIdx) (launchIdx.x == OPTIX_DEBUG_ID_X && launchIdx.y == OPTIX_DEBUG_ID_Y)
 #define IS_DEBUG_PIX(pixelIndex) (pixelIndex.x == OPTIX_DEBUG_PIX_X && pixelIndex.y == OPTIX_DEBUG_PIX_Y)
@@ -167,13 +170,13 @@ static RT_FUNCTION bool isZero(const optix::float3 & v )
 }
 
 
-__host__ RT_FUNCTION unsigned int getBufIndex1D(
+__host__ RT_FUNCTION optix::uint getBufIndex1D(
     const optix::uint3 & index3D, const optix::uint3& bufSize )
 {
     return index3D.x + index3D.y * bufSize.x + index3D.z * bufSize.x * bufSize.y;
 }
 
-__host__ RT_FUNCTION unsigned int getBufIndex1D(
+__host__ RT_FUNCTION optix::uint getBufIndex1D(
     const optix::uint2 & index2D, const optix::uint2& bufSize )
 {
     return index2D.x + index2D.y * bufSize.x;
@@ -231,3 +234,6 @@ RT_FUNCTION void swap(T & t1, T & t2)
     t1 = t2;
     t2 = tmp;
 }
+
+#define RAD_TO_DEG(radians) ((radians) * (180.0f / M_PIf))
+#define DEG_TO_RAD(angle) ((angle) / 180.0f * M_PIf)

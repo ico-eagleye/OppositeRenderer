@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Opposite Renderer
  * For the full copyright and license information, please view the LICENSE.txt
  * file that was distributed with this source code.
+ *
+ * Contributions: Valdis Vilcans
 */
 
 #pragma once
@@ -66,7 +68,7 @@ RT_FUNCTION void connectCameraT1( const rtObject        & aSceneRootObject,
                                   SubpathPRD            & aLightPrd,
                                   const VcmBSDF         & aLightBsdf,
                                   const optix::float3   & aLightHitpoint,
-                                  const float           & aLightSubpathCount,
+                                  const optix::uint     & aLightSubpathCount,
                                   const float             aMisVmWeightFactor,
                                   const Camera          & aCamera,
                                   const optix::float2   & aPixelSizeFactor,
@@ -216,16 +218,17 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
                            const float                    aRayTHit,
                            const optix::uint              aMaxPathLen,
                            const optix::uint              aLightVertexCountEstimatePass,
-                           const float                    aLightSubpathCount,
+                           const optix::uint              aLightSubpathCount,
                            const float                    aMisVcWeightFactor,
                            const float                    aMisVmWeightFactor,
                            const Camera                 & aCamera,
-                           const float2                   aPixelSizeFactor,
+                           const optix::float2            aPixelSizeFactor,
                            rtBufferId<float3, 2>          aOutputBuffer,
-                           rtBufferId<LightVertex>        aLightVertexBuffer,
-                           rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
+                           rtBufferId<LightVertex, 1>     aLightVertexBuffer,
+                           rtBufferId<optix::uint, 1>     aLightVertexBufferIndexBuffer,
+                           rtBufferId<optix::uint, 1>     aLightSubpathVertexCountBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                         // for 1 to 1 camera - light path connections
-                           rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer
+                           rtBufferId<optix::uint, 2>     aLightSubpathVertexIndexBuffer
 #else                                                    // uniform vertex sampling
                            const float                  * aVertexPickPdf
 #endif
@@ -249,36 +252,40 @@ RT_FUNCTION void lightHit( const rtObject               & aSceneRootObject,
         return;
     }   
 
-    updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);;
+    updateMisTermsOnHit(aLightPrd, cosThetaIn, aRayTHit);
 
     bool isBsdfSpecular = aLightBsdf.isSpecular();
     if (!isBsdfSpecular)
     {
-        LightVertex lightVertex;
-        lightVertex.launchIndex = aLightPrd.launchIndex;
-        lightVertex.hitPoint = aHitPoint;
-        lightVertex.throughput = aLightPrd.throughput;
-        lightVertex.pathLen = aLightPrd.depth;
-        lightVertex.dVCM = aLightPrd.dVCM;
-        lightVertex.dVC = aLightPrd.dVC;
-        lightVertex.dVM = aLightPrd.dVM;
-#if VCM_UNIFORM_VERTEX_SAMPLING
-        lightVertex.dVC = aLightPrd.dVC_unif_vert;
-        // There is no dVC_unif_vert in LightVertex since vertices are used only for connection between each other,
-        // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
-        // equations in [tech. rep. (38-47)]
-#endif
-        lightVertex.bsdf = aLightBsdf;
-
+        // vertex count can be lower that path length since not stored on specular surfaces
+        uint currPathVertIdx = aLightSubpathVertexCountBuffer[aLightPrd.launchIndex1D]++;
+        
         // store path vertex
         if (!aLightVertexCountEstimatePass)
         {
+            LightVertex lightVertex;
+            lightVertex.launchIndex = aLightPrd.launchIndex;
+            lightVertex.hitPoint = aHitPoint;
+            lightVertex.throughput = aLightPrd.throughput;
+            lightVertex.pathLen = aLightPrd.depth;
+            lightVertex.dVCM = aLightPrd.dVCM;
+            lightVertex.dVC = aLightPrd.dVC;
+            lightVertex.dVM = aLightPrd.dVM;
+#if VCM_UNIFORM_VERTEX_SAMPLING
+            lightVertex.dVC = aLightPrd.dVC_unif_vert;
+            // There is no dVC_unif_vert in LightVertex since vertices are used only for connection between each other,
+            // and do not affect connection to camera/light source and dVC is not present in weight equation for VM.
+            // equations in [tech. rep. (38-47)]
+#endif
+            lightVertex.bsdf = aLightBsdf;
+
+            // Store in buffer
             uint vertIdx = atomicAdd(&aLightVertexBufferIndexBuffer[0], 1u);
             aLightVertexBuffer[vertIdx] = lightVertex;
 
 #if !VCM_UNIFORM_VERTEX_SAMPLING
             //uint3 pathVertIdx = make_uint3(launchIndex, aLightPrd.depth-1); // getting this ?? 1072693248 0 0 or 1072693248 1 0
-            uint3 pathVertIdx = make_uint3(aLightPrd.launchIndex.x, aLightPrd.launchIndex.y, aLightPrd.depth-1);
+            uint2 pathVertIdx = make_uint2(aLightPrd.launchIndex1D, currPathVertIdx);  // can't use depth for index since not storing vertex at every hit
             aLightSubpathVertexIndexBuffer[pathVertIdx] = vertIdx;
 #endif
         }
@@ -399,7 +406,8 @@ RT_FUNCTION void connectVertices( const rtObject        & aSceneRootObject,
 // Connects camera subpath vertex to light source, e.g. direct illumination, next event estimation.
 // Light subpath length=1 [tech. rep 44-45]
 RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootObject,
-                                       const rtBufferId<Light, 1>   alightsBuffer,
+                                       const Sphere               & aSceneBoundingSphere,
+                                       const rtBufferId<Light, 1>   aLightsBuffer,
                                        SubpathPRD                 & aCameraPrd,
                                        const VcmBSDF              & aCameraBsdf,
                                        const optix::float3        & aCameraHitpoint,
@@ -409,22 +417,22 @@ RT_FUNCTION void connectLightSourceS1( const rtObject             & aSceneRootOb
     using namespace optix;
 
     int lightIndex = 0;
-    if (1 < alightsBuffer.size())
+    if (1 < aLightsBuffer.size())
     {
         float sample = getRandomUniformFloat(&aCameraPrd.randomState);
-        lightIndex = intmin((int)(sample*alightsBuffer.size()), int(alightsBuffer.size()-1));
+        lightIndex = intmin((int)(sample*aLightsBuffer.size()), int(aLightsBuffer.size()-1));
     }
 
-    const Light light               = alightsBuffer[lightIndex];
-    const float inverseLightPickPdf = alightsBuffer.size();
-    const float lightPickProb        = 1.f / alightsBuffer.size();
+    const Light light               = aLightsBuffer[lightIndex];
+    const float inverseLightPickPdf = aLightsBuffer.size();
+    const float lightPickProb        = 1.f / aLightsBuffer.size();
 
     float emissionPdfW;
     float directPdfW;
     float cosAtLight;
     float distance;
     float3 dirToLight;
-    float3 radiance = lightIlluminate(light, aCameraPrd.randomState, aCameraHitpoint, dirToLight,
+    float3 radiance = lightIlluminate(aSceneBoundingSphere, light, aCameraPrd.randomState, aCameraHitpoint, dirToLight,
         distance, directPdfW, &emissionPdfW, &cosAtLight);
     
     if (isZero(radiance))
@@ -519,21 +527,23 @@ RT_FUNCTION void connectLightSourceS0(SubpathPRD & aCameraPrd, const optix::floa
 
 #define OPTIX_PRINTFID_ENABLED 0
 RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObject,
+                            const Sphere                       & aSceneBoundingSphere,
                             SubpathPRD                         & aCameraPrd,
                             const optix::float3                & aHitPoint,
                             const optix::float3                & aWorldNormal,
                             const VcmBSDF                      & aCameraBsdf,
                             const optix::float3                  aRayWorldDir,  // not passing ray dir by reference since it's OptiX semantic type
                             const float                          aRayTHit,
-                            optix::uint                          aMaxPathLen,
+                            const optix::uint                    aMaxPathLen,
+                            const optix::uint                    aLightSubpathCount,
                             const float                          aMisVcWeightFactor,
                             const float                          aMisVmWeightFactor,
-                            const rtBufferId<Light, 1>           alightsBuffer,
-                            const rtBufferId<optix::uint, 2>     aLightSubpathLengthBuffer,
+                            const rtBufferId<Light, 1>           aLightsBuffer,
                             const rtBufferId<LightVertex>        aLightVertexBuffer,
                             const rtBufferId<optix::uint>        aLightVertexBufferIndexBuffer,
+                            const rtBufferId<optix::uint>        aLightSubpathVertexCountBuffer,
 #if !VCM_UNIFORM_VERTEX_SAMPLING                                // for 1 to 1 camera - light path connections
-                            const rtBufferId<optix::uint, 3>     aLightSubpathVertexIndexBuffer
+                            const rtBufferId<optix::uint, 2>     aLightSubpathVertexIndexBuffer
 #else                                                           // uniform vertex sampling
                             const float                          averageLightSubpathLength,
                             const float                        * aVertexPickPdf
@@ -565,7 +575,7 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
     if (!isBsdfSpecular)
     {
         // Connect by sampling a vetex on light source, e.g. light path length = 1
-        connectLightSourceS1(aSceneRootObject, alightsBuffer, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
+        connectLightSourceS1(aSceneRootObject, aSceneBoundingSphere, aLightsBuffer, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);
     }
 #endif
     
@@ -596,10 +606,11 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
         // CAUTION: this loop can cause weird issues, out of bound access with crazy indices, though they are based 
         // failing on launch index and loop variable, rtTrace crashing within the loop etc.
         // update: It seems it was caused multiple uses of std::printf
-        uint lightSubpathLen = aLightSubpathLengthBuffer[aCameraPrd.launchIndex];
-        for (uint i = 0; i < lightSubpathLen; ++i)
+        uint pathIndex = aCameraPrd.launchIndex1D % aLightSubpathCount;
+        uint lightSubpathVertexCount = aLightSubpathVertexCountBuffer[pathIndex]; // vertex count can be lower that path length since not stored on specular surfaces
+        for (uint i = 0; i < lightSubpathVertexCount; ++i)
         {
-            uint3 pathVertIdx = make_uint3(aCameraPrd.launchIndex.x, aCameraPrd.launchIndex.y, i);
+            uint2 pathVertIdx = make_uint2(pathIndex, i);
             uint vertIdx = aLightSubpathVertexIndexBuffer[pathVertIdx];
             LightVertex lightVertex = aLightVertexBuffer[vertIdx];
             connectVertices(aSceneRootObject, lightVertex, aCameraPrd, aCameraBsdf, aHitPoint, aMisVmWeightFactor);

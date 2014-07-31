@@ -77,9 +77,9 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <widget class="QMenu" name="menuOpen_buil_in_scene">
+    <widget class="QMenu" name="menuOpen_built_in_scene">
      <property name="title">
-      <string>Open buil-in scene</string>
+      <string>Open built-in scene</string>
      </property>
      <addaction name="actionCornell"/>
      <addaction name="actionCornellSmall"/>
@@ -90,7 +90,7 @@
      <addaction name="actionOpenBuiltInScene"/>
     </widget>
     <addaction name="actionOpen_scene"/>
-    <addaction name="menuOpen_buil_in_scene"/>
+    <addaction name="menuOpen_built_in_scene"/>
     <addaction name="actionReload_scene"/>
     <addaction name="separator"/>
     <addaction name="actionSaveImageBMP"/>

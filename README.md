@@ -4,13 +4,13 @@ Forked from [apartridge/OppositeRenderer](https://github.com/apartridge/Opposite
 In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented in [CUDA](https://wikipedia.org/wiki/CUDA) using [OptiX](https://en.wikipedia.org/wiki/OptiX) library. It allows importing [Collada](https://en.wikipedia.org/wiki/Collada) scenes files and then render them to an image using [Progressive Photon Mapping](http://www.cgg.unibe.ch/publications/2011/progressive-photon-mapping-a-probabilistic-approach).
 
 ### This fork
-The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm] (http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of Master's thesis project. The initially set goal has not been achieved, only Vertex Connection part has been implemented (no merging).
+The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of Master's thesis project. The initially set goal has not been achieved, only Vertex Connection part has been implemented (no merging).
 
-[tech. rep. (xx)] comments in the code refer to formulas in tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
+[tech. rep. (xx)] comments in the code refer to formulas of tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
 
 The Server project hasn't been yet updated to work correctly due to changes in RenderEnging. So currently it compiles, but is non functional.
 
-Sponza and Conference scenes get be obtained [here] (https://www.dropbox.com/sh/ha3evkuy5qryz99/AADL-nc1QKgGL7KUVFztMznKa/Thesis/scenes)
+Sponza and Conference scenes get be obtained [here](http://www.dropbox.com/sh/ha3evkuy5qryz99/AADL-nc1QKgGL7KUVFztMznKa/Thesis/scenes)
 
 ## Where To Start?
 If this is your first time hearing about *Opposite Renderer*, we recommend you start with the original website: [http://apartridge.github.io/OppositeRenderer/](http://apartridge.github.io/OppositeRenderer/).
@@ -69,3 +69,10 @@ The project needs some [environment variables](http://environmentvariables.org/M
 	    OPTIX_PATH_V3_6_0=C:\ProgramData\NVIDIA Corporation\OptiX SDK 3.6.0
 
 * Open the Visual Studio Solution `OppositeRenderer.sln` and build.
+
+### Running
+Start Standalone.exe.
+
+Note that first launch can take even 60+ seconds before image appears on the screen due to Optix just in time compilation (JIT), algorithm and scene initializations, acceleration structure build, buffer transfers to GPUs.
+
+For slower GPUs you might want to increase [Timeout Detection and Recovery delay](http://msdn.microsoft.com/en-us/library/windows/hardware/ff569918.aspx) (`TdrDelay` key in registry) otherwise operating system might interrupt the video driver before it has finished its done work (screen flash and a baloon message that video driver stopped responding).
