@@ -117,7 +117,7 @@ public:
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
                                        float               * oPdf,
-                                       const bool            aRadianceFromCamera = false ) const
+                                       const bool            aComputeAdjoint = false ) const
     {
         *oWi = localReflect(aWo);
         *oPdf = 0.f;
@@ -205,7 +205,7 @@ public:
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
                                        float               * oPdfW,
-                                       const bool            aRadianceFromCamera = false ) const
+                                       const bool            aComputeAdjoint = false ) const
     {
         if (aWo.z < EPS_COSINE)
         {
@@ -335,7 +335,7 @@ public:
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
                                        float               * oPdfW,
-                                       const bool            aRadianceFromCamera = false ) const
+                                       const bool            aComputeAdjoint = false ) const
     {
         using namespace optix;
 
@@ -452,7 +452,7 @@ public:
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
                                        float               * oPdfW,
-                                       const bool            aRadianceFromCamera = false ) const
+                                       const bool            aComputeAdjoint = false ) const
     {
         *oWi = optix::make_float3(-aWo.x, -aWo.y, aWo.z);
         *oPdfW = 1.0f;
@@ -526,7 +526,7 @@ public:
                                        optix::float3       * oWi,
                                        const optix::float2 & aSample,
                                        float               * oPdfW,
-                                       const bool            aRadianceFromCamera = false ) const
+                                       const bool            aComputeAdjoint = false ) const
     {
         using namespace optix;
         
@@ -552,12 +552,14 @@ public:
         float R = fresnel()->evaluate(localCosTheta(aWo));
         float T = 1.f - R;
 
-        // aRadianceFromCamera used for VCM when radiance flows from camera and particle importance/weights from light.
+        // aComputeAdjoint used for bidirectional tracing since need evaluate adjoint/reverse BSDF
+        // when tracing light path since we're evaluating importance emitted from camera towards light source [see Veach PhD 5.2]
+        // 
         // etas are swapped, hence the scaling
-        if (aRadianceFromCamera)
-            return /*(ei*ei)/(et*et) * */ T * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
-        else
+        if (aComputeAdjoint)
             return /*(ei*ei)/(et*et) * */ T * _transmittance / fabsf(localCosTheta(*oWi));
+        else
+            return /*(ei*ei)/(et*et) * */ T * _transmittance * sqr(sintOverSini) / fabsf(localCosTheta(*oWi));
     }
 
     // Evaluation for VCM returning also reverse pdfs, localDirFix in VcmBSDF should be passed as aWo 
