@@ -10,6 +10,8 @@ The project was forked to use it as basis for implementation of [Vertex Connecti
 
 The Server project hasn't been yet updated to work correctly due to changes in RenderEngine. So currently it compiles, but is non functional.
 
+A pre-compiled Windows 64-bit version can be found [here](https://dl.dropboxusercontent.com/u/3170426/Thesis/Release_x64.zip)
+
 Sponza and Conference test scenes can be obtained [here](http://www.dropbox.com/sh/ha3evkuy5qryz99/AADL-nc1QKgGL7KUVFztMznKa/Thesis/scenes)
 
 ## Where To Start?
