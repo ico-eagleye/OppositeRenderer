@@ -4,7 +4,7 @@ Forked from [apartridge/OppositeRenderer](https://github.com/apartridge/Opposite
 In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented in [CUDA](https://wikipedia.org/wiki/CUDA) using [OptiX](https://en.wikipedia.org/wiki/OptiX) library. It allows importing [Collada](https://en.wikipedia.org/wiki/Collada) scenes files and then render them to an image using [Progressive Photon Mapping](http://www.cgg.unibe.ch/publications/2011/progressive-photon-mapping-a-probabilistic-approach).
 
 ### This fork
-The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of [Valdis Vilcan's master's thesis project at DTU](https://www.dropbox.com/s/ex9b7iso7lu4d96/Thesis.pdf?dl=0). Due to delays in development, the current implementation contains only vertex connection part (bidirectional path tracer) with recursive MIS weight computation (no merging).
+The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of [Valdis Vilcans's master's thesis project at DTU](https://www.dropbox.com/s/ex9b7iso7lu4d96/Thesis.pdf?dl=0). Due to delays in development, the current implementation contains only vertex connection part (bidirectional path tracer) with recursive MIS weight computation (no merging).
 
 [tech. rep. (xx)] comments in the code refer to formulas of tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
 
