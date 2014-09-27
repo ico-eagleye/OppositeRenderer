@@ -6,7 +6,7 @@ In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented 
 ### This fork
 The project was forked to use it as basis for implementation of [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of [Valdis Vilcans's master's thesis project at DTU](https://www.dropbox.com/s/ex9b7iso7lu4d96/Thesis.pdf?dl=0). Due to delays in development, the current implementation contains only vertex connection part (bidirectional path tracer) with recursive MIS weight computation (no merging).
 
-[tech. rep. (xx)] comments in the code refer to formulas of tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
+[tech. rep. (xx)] comments in the code refer to formulas of the tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
 
 The Server project hasn't been yet updated to work correctly due to changes in RenderEngine. So currently it compiles, but is non functional.
 
