@@ -61,48 +61,21 @@ RT_PROGRAM void cameraPass()
     // Trace    
     for (int i=0;;i++)
     {
-        //OPTIX_PRINTFI(cameraPrd.depth, "G %d - tra dir %f %f %f\n",
-        //    i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
         rtTrace( sceneRootObject, cameraRay, cameraPrd );
 
         if (cameraPrd.done)
         {
-            //OPTIX_PRINTFI(cameraPrd.depth, "Stop trace \n");
             break;
         }
 
         cameraRay.origin = cameraPrd.origin;
         cameraRay.direction = cameraPrd.direction;
-
-        //OPTIX_PRINTFI(cameraPrd.depth, "G %d - new org %f %f %f\n", i, cameraRay.origin.x, cameraRay.origin.y, cameraRay.origin.z);
-        //OPTIX_PRINTFI(cameraPrd.depth, "G %d - new dir %f %f %f\n", i, cameraRay.direction.x, cameraRay.direction.y, cameraRay.direction.z);
     }
-
-    //OPTIX_PRINTF("%d , %d - d %d - iter %d prd.color %f %f %f avColor %f %f %f\n", 
-    //    launchIndex.x, launchIndex.y, cameraPrd.depth, localIterationNumber,
-    //    cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z, avgColor.x, avgColor.y, avgColor.z);
-
-    //float3 avgColor = averageInNewRadiance(cameraPrd.color,  outputBuffer[launchIndex], localIterationNumber);
-    //outputBuffer[launchIndex] = avgColor;
 
     float3 bufColor = outputBuffer[launchIndex];
     bufColor = bufColor + cameraPrd.color;
     float3 avgColor = bufColor / (localIterationNumber + 1);
-    //if (IS_DEBUG_ID(launchIndex))
-    //    bufColor = make_float3(1.f) * (localIterationNumber + 1);
-    //if (isNAN(bufColor))
-    //{
-    //    OPTIX_PRINTF(launchIndex, cameraPrd.depth, "Gen C - ENCOUNTERED NAN ! \n");
-    //}
-    
-    OPTIX_PRINTFCID(isNaN(bufColor), launchIndex, cameraPrd.depth, "Gen C - ENCOUNTERED NAN ! \n");
-    OPTIX_PRINTFCID(isInf(bufColor), launchIndex, cameraPrd.depth, "Gen C - ENCOUNTERED INF ! \n");
-
     outputBuffer[launchIndex] = bufColor;
-    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C - DONE colr % 14f % 14f % 14f \n", cameraPrd.color.x, cameraPrd.color.y, cameraPrd.color.z);
-    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             avg  % 14f % 14f % 14f \n", avgColor.x, avgColor.y, avgColor.z);
-    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "             buf  % 14f % 14f % 14f \n", bufColor.x, bufColor.y, bufColor.z);
-
     randomStates[launchIndex] = cameraPrd.randomState;
 }
 
@@ -114,10 +87,6 @@ rtDeclareVariable(SubpathPRD, cameraPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     cameraPrd.done = true;
-    //OPTIX_PRINTFI(cameraPrd.depth, "Miss\n");
-    OPTIX_PRINTFID(launchIndex, cameraPrd.depth, "Gen C -      MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
-                      cameraPrd.direction.x, cameraPrd.direction.y, cameraPrd.direction.z,
-                      cameraPrd.origin.x, cameraPrd.origin.y, cameraPrd.origin.z);
 }
 
 
@@ -173,9 +142,5 @@ RT_FUNCTION void initCameraPayload(SubpathPRD & aCameraPrd)
     //float p0connect = areaSamplePdf;      // cancel out
     //float p0trace = areaSamplePdf;        // cancel out
     float cameraPdfW = areaSamplePdf * imageToSolidAngleFactor;
-    //OPTIX_PRINTFID(launchIndex, aCameraPrd.depth, "Gen C - imgSolAngleFac =  imgPtCamDist^2 *    cosAtCamera) \n");
-    //OPTIX_PRINTFID(launchIndex, aCameraPrd.depth, "Gen C - % 14f = % 14f  * % 14f\n", imageToSolidAngleFactor, imagePointToCameraDist, cosAtCamera);
-    //OPTIX_PRINTFID(launchIndex, aCameraPrd.depth, "Gen C -      cameraPdfW % 14f \n", cameraPdfW);
-
     initCameraMisTerms(aCameraPrd, cameraPdfW, lightSubpathCount /*, p0trace, p0connect */);
 }

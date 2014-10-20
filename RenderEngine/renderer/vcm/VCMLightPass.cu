@@ -50,9 +50,7 @@ rtDeclareVariable(uint,  localIterationNumber, , );
 
 rtDeclareVariable(uint, lightVertexCountEstimatePass, , );
 rtBuffer<uint, 1>   lightSubpathVertexCountBuffer;
-rtBuffer<float3, 2> outputBuffer;                   // TODO change to float4
-//rtBuffer<uint, 3> lightSubpathVertexIndexBuffer;
-//rtBuffer<LightVertex> lightVertexBuffer;
+rtBuffer<float3, 2> outputBuffer;                            // TODO change to float4
 
 rtDeclareVariable(int, lightSubpathLengthBufferId, , );      // <uint, 1>
 rtDeclareVariable(int, lightSubpathVertexIndexBufferId, , ); // <uint, 2>
@@ -75,8 +73,6 @@ RT_PROGRAM void lightPass()
 
     for (int i=0;;i++)
     {
-        //OPTIX_PRINTFI(lightPrd.depth, "G %d - tra dir %f %f %f\n",
-        //    i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
         rtTrace( sceneRootObject, lightRay, lightPrd );
 
         if (lightPrd.done)
@@ -87,9 +83,6 @@ RT_PROGRAM void lightPass()
 
         lightRay.origin = lightPrd.origin;
         lightRay.direction = lightPrd.direction;
-
-        //OPTIX_PRINTFI(lightPrd.depth, "G %d - new org %f %f %f\n", i, lightRay.origin.x, lightRay.origin.y, lightRay.origin.z);
-        //OPTIX_PRINTFI(lightPrd.depth, "G %d - new dir %f %f %f\n", i, lightRay.direction.x, lightRay.direction.y, lightRay.direction.z);
     }
 
     randomStates[launchIndex] = lightPrd.randomState;
@@ -102,10 +95,6 @@ rtDeclareVariable(SubpathPRD, lightPrd, rtPayload, );
 RT_PROGRAM void miss()
 {
     lightPrd.done = true;
-    //OPTIX_PRINTFI(lightPrd.depth, "Miss\n");
-    OPTIX_PRINTFID(launchIndex, lightPrd.depth, "GenCL -       MISS dirW % 14f % 14f % 14f           from % 14f % 14f % 14f \n",
-                      lightPrd.direction.x, lightPrd.direction.y, lightPrd.direction.z,
-                      lightPrd.origin.x, lightPrd.origin.y, lightPrd.origin.z);
 }
 
 
@@ -168,12 +157,6 @@ RT_FUNCTION void initLightPayload(SubpathPRD & aLightPrd)
     directPdfW   *= lightPickPdf;
     aLightPrd.throughput /= emissionPdfW;
     aLightPrd.isGenByFiniteLight = light.isFinite;
-
-    //lightPrd.isFinite = isDelta.isFinite ... vmarz?
-    OPTIX_PRINTFID(aLightPrd.launchIndex, 0u, "GenLi - emission Pdf    % 14f     directPdfW % 14f     cosAtLight % 14f \n", 
-        emissionPdfW, directPdfW, cosAtLight);
-    OPTIX_PRINTFID(aLightPrd.launchIndex, 0u, "GenLi - prd throughput  % 14f % 14f % 14f\n", 
-        aLightPrd.throughput.x, aLightPrd.throughput.y, aLightPrd.throughput.z);
 
     initLightMisTerms(aLightPrd, light, cosAtLight, directPdfW, emissionPdfW, misVcWeightFactor, pVertPickPdf);
 }
