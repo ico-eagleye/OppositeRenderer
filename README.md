@@ -6,7 +6,7 @@ In short *Opposite Renderer* is a GPU Photon Mapping Rendering Tool implemented 
 ### This fork
 The project was forked to use it as basis for implementation of the [Vertex Connection and Merging algorithm](http://cgg.mff.cuni.cz/~jaroslav/papers/2012-vcm/) as part of [Valdis Vilcans's master's thesis project at DTU](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6830). Due to delays in development, the current implementation contains only vertex connection part (bidirectional path tracer) with recursive MIS weight computation (no merging).
 
-- The files with notable modifications compared to the original project have authors listed in the header.
+- The files with notable modifications compared to the original project have authors listed in the header. Most important are added files in "RenderEngine/renderer/vcm" directory, BSDF and BxDF classes, modifications in OptixRenderer class and files in "RenderEngine/material".
 - [tech. rep. (xx)] comments in the code refer to formulas of the tech report ["Implementing Vertex Connection and Merging"](http://iliyan.com/publications/ImplementingVCM/ImplementingVCM_TechRep2012_rev2.pdf)
 - The Server project hasn't been yet updated to work correctly due to changes in RenderEngine. So currently it compiles, but is non functional.
 
@@ -30,7 +30,7 @@ If this is your first time hearing about *Opposite Renderer*, we recommend you s
 - [Visual Studio 2010/2012](http://www.visualstudio.com/)
 - [CUDA](https://developer.nvidia.com/cuda-downloads) v5.5 (v6.0 nvcc has a bug failing on compilation) 
 - [OptiX SDK](https://developer.nvidia.com/optix-download) v3.5+
-   - **Note:** You must register to [Nvidia Developer Zone](https://developer.nvidia.com/user/register) First
+   - **Note:** You must register as [OptiX Developer](https://developer.nvidia.com/optix) first
    - Take note that OptiX 3.0.1 [is not compatible](http://developer.download.nvidia.com/assets/tools/files/optix/3.0.1/NVIDIA-OptiX-SDK-3.0.1-OptiX_Release_Notes.pdf) with CUDA 5.5 
 - [Qt SDK with OpenGL](http://qt-project.org/downloads) 5.x for Windows (VS 201X)
 - [FreeGlut](http://www.transmissionzero.co.uk/software/freeglut-devel/) MSVC Package
