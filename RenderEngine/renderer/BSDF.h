@@ -62,6 +62,7 @@
 #define OPTIX_PRINTFID_ENABLED 0
 #define OPTIX_PRINTFC_ENABLED 0
 
+// [Update 21.10.14]: Cuda does support virtual functions, so this macro should be removed (Programming Guide - C/C++ Language Support)
 #define CALL_BXDF_CONST_VIRTUAL_FUNCTION(lvalue, op, bxdf, function, ...) \
     if (bxdf->type() & BxDF::Lambertian) \
         lvalue op reinterpret_cast<const Lambertian *>(bxdf)->function(__VA_ARGS__); \

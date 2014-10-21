@@ -49,6 +49,7 @@
 
 
 // Cuda doesn't support virtual functions, hence resort to macro below
+// [Update 21.10.14]: Cuda does support virtual functions, so this macro should be removed (Programming Guide - C/C++ Language Support)
 #define CALL_FRESNEL_CONST_VIRTUAL_FUNCTION(lvalue, op, fresnel, function, ...) \
     if (fresnel->type() & Fresnel::NoOp) \
     lvalue op reinterpret_cast<const FresnelNoOp *>(fresnel)->function(__VA_ARGS__); \
