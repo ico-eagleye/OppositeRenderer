@@ -53,8 +53,6 @@ RT_FUNCTION int isOccluded( const rtObject      & aSceneRootObject,
     shadowPrd.attenuation = 1.0f;
     Ray occlusionRay(aPoint, aDirection, RayType::SHADOW, EPS_RAY, aTMax - 2.f*EPS_RAY);
 
-    //OPTIX_PRINTF("isOccluded aPoint %f %f %f direction %f %f %f dist %f \n", 
-    //    aPoint.x, aPoint.y, aPoint.z, aDirection.x, aDirection.y, aDirection.z, aTMax);
     rtTrace(aSceneRootObject, occlusionRay, shadowPrd);
     return shadowPrd.attenuation == 0.f;
 }
@@ -603,8 +601,8 @@ RT_FUNCTION void cameraHit( const rtObject                     & aSceneRootObjec
             connectVertices(aSceneRootObject, lightVertex, aCameraPrd, cameraBsdf, aHitPoint, aMisVmWeightFactor, pVertexPickPdf);
         }
 #else
-        // CAUTION: this loop can cause weird issues, out of bound access with crazy indices, though they are based 
-        // failing on launch index and loop variable, rtTrace crashing within the loop etc.
+        // CAUTION: this loop can cause weird issues, out of bound access with crazy indices (though they are based 
+        // on launch index and loop variable), rtTrace crashing within the loop etc.
         // update: It seems it was caused multiple uses of std::printf
         uint pathIndex = aCameraPrd.launchIndex1D % aLightSubpathCount;
         uint lightSubpathVertexCount = aLightSubpathVertexCountBuffer[pathIndex]; // vertex count can be lower that path length since not stored on specular surfaces
